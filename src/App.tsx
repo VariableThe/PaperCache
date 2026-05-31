@@ -705,7 +705,11 @@ function App() {
     // Sync global shortcut on load
     const shortcut = localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N';
     if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut('', shortcut);
+      window.electronAPI.updateGlobalShortcut('new-note', '', shortcut);
+    }
+    const toggleShortcut = localStorage.getItem('papercache-shortcut-toggle') || 'Option+A';
+    if (window.electronAPI.updateGlobalShortcut) {
+      window.electronAPI.updateGlobalShortcut('toggle', '', toggleShortcut);
     }
     
     // Listen for global new note shortcut

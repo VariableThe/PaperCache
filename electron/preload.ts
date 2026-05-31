@@ -15,7 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSwipeGesture: (callback: (direction: string) => void) => {
     ipcRenderer.on('swipe-gesture', (_event, direction) => callback(direction))
   },
-  updateGlobalShortcut: (oldShortcut: string, newShortcut: string) => ipcRenderer.send('update-global-shortcut', { oldShortcut, newShortcut }),
+  updateGlobalShortcut: (action: string, oldShortcut: string, newShortcut: string) => ipcRenderer.send('update-global-shortcut', { action, oldShortcut, newShortcut }),
   onTriggerNewNote: (callback: () => void) => {
     ipcRenderer.on('trigger-new-note', () => callback())
   }

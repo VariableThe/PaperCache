@@ -158,16 +158,10 @@ app.whenReady().then(() => {
   tray.setToolTip('PaperCache')
   tray.setContextMenu(contextMenu)
 
-  // Register global hotkeys
-  globalShortcut.register('Option+A', toggleWindow)
+  // Default hotkeys are now handled via IPC from App.tsx on load
 
   // Wait for settings to load before registering new note shortcut to get custom one
-  // Default is CommandOrControl+Shift+N
-  let newNoteShortcut = 'CommandOrControl+Shift+N';
-  try {
-    const settingsRaw = fs.readFileSync(path.join(os.homedir(), 'Library/Application Support/PaperCache/Local Storage/leveldb/'), 'utf-8'); // LocalStorage is hard to read from main process
-    // Actually we will just read from renderer on start via IPC or assume default and let renderer update it
-  } catch (e) {}
+  // Registration is handled via IPC from the renderer on startup
 
   const registerNewNoteShortcut = (combo: string) => {
     try {
@@ -176,22 +170,35 @@ app.whenReady().then(() => {
       }
       globalShortcut.register(combo, () => {
         if (win) {
+          win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
           win.show();
           win.focus();
+          win.setVisibleOnAllWorkspaces(false)
           win.webContents.send('trigger-new-note');
         }
       });
     } catch(e) {}
   };
 
-  registerNewNoteShortcut(newNoteShortcut);
-  
-  ipcMain.on('update-global-shortcut', (event, { oldShortcut, newShortcut }) => {
+  const registerToggleShortcut = (combo: string) => {
     try {
-      if (globalShortcut.isRegistered(oldShortcut)) {
+      if (globalShortcut.isRegistered(combo)) {
+        globalShortcut.unregister(combo);
+      }
+      globalShortcut.register(combo, toggleWindow);
+    } catch(e) {}
+  };
+  
+  ipcMain.on('update-global-shortcut', (event, { action, oldShortcut, newShortcut }) => {
+    try {
+      if (oldShortcut && globalShortcut.isRegistered(oldShortcut)) {
         globalShortcut.unregister(oldShortcut);
       }
-      registerNewNoteShortcut(newShortcut);
+      if (action === 'new-note') {
+        registerNewNoteShortcut(newShortcut);
+      } else if (action === 'toggle') {
+        registerToggleShortcut(newShortcut);
+      }
     } catch(e) {}
   });
 
@@ -208,12 +215,16 @@ function toggleWindow() {
       if (win.isFocused()) {
         win.hide()
       } else {
+        win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
         win.show()
         win.focus()
+        win.setVisibleOnAllWorkspaces(false)
       }
     } else {
+      win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
       win.show()
       win.focus()
+      win.setVisibleOnAllWorkspaces(false)
     }
   }
 }

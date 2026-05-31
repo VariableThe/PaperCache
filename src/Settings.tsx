@@ -9,6 +9,7 @@ export default function Settings() {
 
   // Shortcuts
   const [globalShortcutNewNote, setGlobalShortcutNewNote] = useState(localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N')
+  const [globalShortcutToggle, setGlobalShortcutToggle] = useState(localStorage.getItem('papercache-shortcut-toggle') || 'Option+A')
 
   // Appearance State
   const [fontFamily, setFontFamily] = useState(localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace")
@@ -47,7 +48,13 @@ export default function Settings() {
     const oldShortcut = localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N'
     localStorage.setItem('papercache-shortcut-newnote', globalShortcutNewNote)
     if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut(oldShortcut, globalShortcutNewNote)
+      window.electronAPI.updateGlobalShortcut('new-note', oldShortcut, globalShortcutNewNote)
+    }
+
+    const oldToggleShortcut = localStorage.getItem('papercache-shortcut-toggle') || 'Option+A'
+    localStorage.setItem('papercache-shortcut-toggle', globalShortcutToggle)
+    if (window.electronAPI.updateGlobalShortcut) {
+      window.electronAPI.updateGlobalShortcut('toggle', oldToggleShortcut, globalShortcutToggle)
     }
     
     // Dispatch storage event manually for the same window to pick it up immediately
@@ -113,6 +120,15 @@ export default function Settings() {
 
         <section>
           <h3>Global Shortcuts</h3>
+          <div className="setting-group">
+            <label>Toggle App Visibility</label>
+            <input 
+              type="text" 
+              value={globalShortcutToggle} 
+              onChange={e => setGlobalShortcutToggle(e.target.value)} 
+              placeholder="e.g. Option+A"
+            />
+          </div>
           <div className="setting-group">
             <label>New Note (Global)</label>
             <input 
