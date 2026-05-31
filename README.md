@@ -37,10 +37,16 @@ Available for **macOS** and **Windows**.
 You can download the latest standalone `.app` (macOS) or `.exe` (Windows) directly from the [Releases](https://github.com/VariableThe/PaperCache/releases) page.
 
 ### Homebrew (macOS)
-*(Coming soon)*
 ```bash
+brew tap variablethe/tap
 brew install --cask papercache
 ```
+
+> [!NOTE]
+> If you manually download the `.zip` from Releases and macOS blocks the app from opening because it is from an "unidentified developer", simply run this command in your terminal to clear the quarantine flag:
+> ```bash
+> xattr -cr /Applications/PaperCache.app
+> ```
 
 ---
 
