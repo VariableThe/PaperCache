@@ -15,6 +15,8 @@ Available for **macOS**, **Windows**, and **Linux**.
 
 - **Live Markdown**: Write in markdown and see it instantly rendered inline. Click any text to jump back into raw edit mode.
 - **Math & Variables**: Define variables (`/var x = 10`) and write equations (`x * 3 =`). PaperCache auto-calculates the result as you type. Change the variable, and the math updates instantly.
+- **Color & Format Recognition**: Automatically detects and highlights hex colors (e.g., `#D97757`), dates (`2024-05-31`), and times (`14:30`) with elegant inline pills.
+- **Tags**: Add tags to your notes using `!tag` and instantly filter by tags directly from the search menu.
 - **Inline AI Assistance**: Type `/ai <prompt>` and press enter to summon an AI assistant directly into your document. (Requires your own OpenAI API key, configured in Settings).
 - **Frictionless Organization**: Create folders simply by using `/` in your note names (e.g., `projects/app`).
 - **Global Hotkey**: Summon PaperCache from anywhere on your system with a custom global shortcut to quickly jot down a thought.

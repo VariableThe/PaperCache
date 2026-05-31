@@ -342,6 +342,92 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
             }
           }
         }
+
+        // Color Formats
+        const reColor = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g
+        while ((match = reColor.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({
+                class: 'cm-color-pill',
+                attributes: { style: `--pill-color: ${match[0]}` },
+              }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({
+                class: 'cm-color-highlight',
+                attributes: { style: `--pill-color: ${match[0]}` },
+              }),
+            })
+          }
+        }
+
+        // Date Formats (YYYY-MM-DD)
+        const reDate = /\b\d{4}-\d{2}-\d{2}\b/g
+        while ((match = reDate.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-date-pill' }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-date-highlight' }),
+            })
+          }
+        }
+
+        // Time Formats (HH:MM or HH:MM:SS)
+        const reTime = /\b\d{2}:\d{2}(?::\d{2})?\b/g
+        while ((match = reTime.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-time-pill' }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-time-highlight' }),
+            })
+          }
+        }
+
+        // Tags (!tag)
+        const reTag = /![a-zA-Z0-9_-]+/g
+        while ((match = reTag.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-tag-pill' }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-tag-highlight' }),
+            })
+          }
+        }
       } // end of visibleRanges iteration
 
       // Traverse AST for Code Blocks
@@ -1039,8 +1125,18 @@ function App() {
           const filteredNotes = notes.filter(
             (n) =>
               n.content.toLowerCase().includes(noteSearchQuery.toLowerCase()) ||
-              n.id.includes(noteSearchQuery),
+              n.id.toLowerCase().includes(noteSearchQuery.toLowerCase()),
           )
+          
+          const allTags = new Set<string>()
+          notes.forEach((n) => {
+            const matches = n.content.match(/![a-zA-Z0-9_-]+/g)
+            if (matches) {
+              matches.forEach((m) => allTags.add(m.toLowerCase()))
+            }
+          })
+          const tagArray = Array.from(allTags).sort()
+          
           return (
             <div
               className="note-search-overlay"
@@ -1137,6 +1233,25 @@ function App() {
                     setShowNoteActionMenu(false)
                   }}
                 />
+                {tagArray.length > 0 && (
+                  <div style={{ padding: '8px 16px', display: 'flex', gap: '6px', flexWrap: 'wrap', borderBottom: '1px solid rgba(128,128,128,0.1)' }}>
+                    {tagArray.map(tag => (
+                      <span
+                        key={tag}
+                        className="cm-tag-pill"
+                        style={{ cursor: 'pointer', margin: 0, fontSize: '11px' }}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          const newQ = noteSearchQuery ? noteSearchQuery + ' ' + tag : tag
+                          setNoteSearchQuery(newQ)
+                          searchInputRef.current?.focus()
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="note-search-list">
                   {filteredNotes.map((n, index) => {
                     const isAuto = /^\d+\.md$/.test(n.id)

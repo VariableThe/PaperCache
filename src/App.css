@@ -513,3 +513,80 @@ body {
   background-color: rgba(147, 51, 234, 0.1);
   border-radius: 2px;
 }
+
+/* Format Pills */
+.cm-color-pill {
+  display: inline-block;
+  background-color: color-mix(in srgb, var(--pill-color) 15%, transparent);
+  color: color-mix(in srgb, var(--pill-color) 80%, black);
+  padding: 0px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.95em;
+  margin: 0 2px;
+  border: 1px solid color-mix(in srgb, var(--pill-color) 30%, transparent);
+}
+
+.cm-color-highlight {
+  color: color-mix(in srgb, var(--pill-color) 80%, black);
+  background-color: color-mix(in srgb, var(--pill-color) 10%, transparent);
+  border-radius: 2px;
+}
+
+.cm-date-pill {
+  display: inline-block;
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #059669;
+  padding: 0px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.95em;
+  margin: 0 2px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.cm-date-highlight {
+  color: #059669;
+  background-color: rgba(16, 185, 129, 0.1);
+  border-radius: 2px;
+}
+
+.cm-time-pill {
+  display: inline-block;
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+  padding: 0px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.95em;
+  margin: 0 2px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.cm-time-highlight {
+  color: #d97706;
+  background-color: rgba(245, 158, 11, 0.1);
+  border-radius: 2px;
+}
+
+.cm-tag-pill {
+  display: inline-block;
+  background-color: rgba(59, 130, 246, 0.15); /* Blue */
+  color: #3b82f6;
+  padding: 0px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.95em;
+  margin: 0 2px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.cm-tag-highlight {
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+  border-radius: 2px;
+}

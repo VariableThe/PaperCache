@@ -31,7 +31,9 @@ if (!fs.existsSync(NOTES_DIR)) {
 const COMMANDS_DIR = path.join(NOTES_DIR, 'commands')
 if (!fs.existsSync(COMMANDS_DIR)) {
   fs.mkdirSync(COMMANDS_DIR)
-  fs.writeFileSync(
+}
+
+fs.writeFileSync(
     path.join(COMMANDS_DIR, 'basics.md'),
     `# Basics
 
@@ -68,14 +70,16 @@ Next: [Variables](/file commands/variables.md)
 PaperCache is a smart scratchpad. You can define variables and write math equations that auto-calculate.
 
 **Local Variables:** (Only works in this note)
-\`/var x = 10\`
+/var x = 10
 
 *Example use:* Type \`x * 3 =\` below and watch it calculate!
+x * 3 = \u200B30
 
 **Global Variables:** (Works across ALL your notes)
-\`/globvar API_KEY = "sk-123"\`
+/globvar API_KEY = "sk-123"
 
-*Example use:* Just type \`API_KEY\` anywhere and see it highlight when your cursor leaves the word!
+*Example use:* Just type API_KEY anywhere and see it highlight when your cursor leaves the word!
+API_KEY
 
 Next: [Markdown & Code](/file commands/markdown.md)
 `,
@@ -106,14 +110,69 @@ Type \`/ai <prompt>\` and press enter to summon an AI assistant directly into yo
 *Example use:*
 \`/ai Write a python function to reverse a string\`
 
+Next: [Formats & Colors](/file commands/formats.md)
+`,
+  )
+
+  fs.writeFileSync(
+    path.join(COMMANDS_DIR, 'formats.md'),
+    `# Formats & Colors
+
+PaperCache automatically recognizes and highlights common formats so you can easily spot them in your notes.
+
+## Colors
+Type any hex color, and it will be highlighted with a matching pill!
+*Example use:* #D97757 or #3B82F6 or #10B981
+
+## Dates & Times
+Dates and times are also highlighted to help you keep track of your schedule.
+*Example use:* 
+Meeting on 2024-05-31 at 14:30.
+
+Next: [Tags](/file commands/tags.md)
+`,
+  )
+
+  fs.writeFileSync(
+    path.join(COMMANDS_DIR, 'tags.md'),
+    `# Tags
+
+You can tag your notes anywhere by typing an exclamation mark followed by a word (e.g., !important or !work).
+
+*Example use:*
+This is a note about a !project. 
+
+When you open the search menu (\`Cmd+P\`), you'll see all your unique tags at the top. Click any tag to instantly filter your notes!
+
+Next: [Ready](/file commands/ready.md)
+
+[Back to Welcome](/file Welcome.md)
+`,
+  )
+
+  fs.writeFileSync(
+    path.join(COMMANDS_DIR, 'ready.md'),
+    `# Ready to get started?
+
+You're all set to use PaperCache! Start jotting down your thoughts, creating folders, and exploring the capabilities.
+
 [Back to Welcome](/file Welcome.md)
 `,
   )
 
   const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
-  fs.writeFileSync(
-    welcomePath,
-    `# Welcome to PaperCache!
+  let shouldWriteWelcome = true
+  if (fs.existsSync(welcomePath)) {
+    const content = fs.readFileSync(welcomePath, 'utf-8')
+    if (content.includes('[6. Tags]')) {
+      shouldWriteWelcome = false
+    }
+  }
+
+  if (shouldWriteWelcome) {
+    fs.writeFileSync(
+      welcomePath,
+      `# Welcome to PaperCache!
 
 PaperCache is your intelligent, minimalist markdown scratchpad. 
 
@@ -124,6 +183,8 @@ Try Cmd+Clicking these to learn the ropes:
 - [2. Folders](/file commands/folders.md)
 - [3. Variables](/file commands/variables.md)
 - [4. Markdown & Code](/file commands/markdown.md)
+- [5. Formats & Colors](/file commands/formats.md)
+- [6. Tags](/file commands/tags.md)
 
 *(Press \`Cmd+K\` at any time to open the main menu!)*
 `,
@@ -136,6 +197,9 @@ Try Cmd+Clicking these to learn the ropes:
 // Hide dock icon for stealth mode
 if (app.dock) {
   app.dock.hide()
+}
+if (process.platform === 'darwin') {
+  app.setActivationPolicy('accessory')
 }
 
 function getWindowState() {
@@ -203,7 +267,14 @@ function createWindow() {
   win.on('blur', () => {
     // Only hide if we aren't in the middle of opening a native dialog like export
     if (!isExporting && win) {
-      win.hide()
+      if (settingsWin && !settingsWin.isDestroyed() && settingsWin.isFocused()) {
+        win.hide()
+      } else {
+        win.hide()
+        if (process.platform === 'darwin') {
+          app.hide()
+        }
+      }
     }
   })
 
@@ -339,6 +410,9 @@ function toggleWindow() {
     if (win.isVisible()) {
       if (win.isFocused()) {
         win.hide()
+        if (process.platform === 'darwin') {
+          app.hide()
+        }
       } else {
         bringToActiveSpace(win)
       }
@@ -353,7 +427,11 @@ ipcMain.handle('close-window', (event) => {
   const senderWin = BrowserWindow.fromWebContents(event.sender)
   if (senderWin) {
     if (senderWin === win) {
-      win.hide()
+      if (process.platform === 'darwin') {
+        app.hide()
+      } else {
+        win.hide()
+      }
     } else {
       senderWin.close()
     }
