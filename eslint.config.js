@@ -22,7 +22,7 @@ export default defineConfig([
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-require-imports': 'warn',
       'no-empty': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
