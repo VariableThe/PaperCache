@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, globalShortcut, screen, nativeTheme, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, globalShortcut, screen, nativeTheme, shell, dialog } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
@@ -207,24 +207,11 @@ app.whenReady().then(() => {
 })
 
 function bringToActiveSpace(win: BrowserWindow) {
-  const point = screen.getCursorScreenPoint();
-  const currentDisplay = screen.getDisplayNearestPoint(point);
-  
-  const bounds = win.getBounds();
-  const workArea = currentDisplay.workArea;
-  
-  // Center window on current active display
-  win.setBounds({
-    x: Math.round(workArea.x + (workArea.width - bounds.width) / 2),
-    y: Math.round(workArea.y + (workArea.height - bounds.height) / 2),
-    width: bounds.width,
-    height: bounds.height
-  });
-
   win.setAlwaysOnTop(true, "floating");
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  win.show();
+  app.show();
   app.focus({ steal: true });
+  win.show();
   win.focus();
   win.setAlwaysOnTop(false);
   win.setVisibleOnAllWorkspaces(false);
