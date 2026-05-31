@@ -304,7 +304,7 @@ app.whenReady().then(() => {
   function updateTrayIcon() {
     if (!tray) return
     const isDark = nativeTheme.shouldUseDarkColors
-    const logoName = isDark ? 'PaperCache Logo white.png' : 'PaperCache Logo black.png'
+    const logoName = isDark ? 'logo-white.png' : 'logo-black.png'
     const isDev = !!process.env.VITE_DEV_SERVER_URL
     const publicDir = isDev ? path.join(__dirname, '../public') : path.join(__dirname, '../dist')
     const iconPath = path.join(publicDir, logoName)
