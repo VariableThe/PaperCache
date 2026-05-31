@@ -24,9 +24,18 @@ Available for **macOS** and **Windows**.
 
 ## 📸 Screenshots
 
-*(Add screenshots of your application here)*
 <div align="center">
-  <img src="src/assets/hero.png" width="600" alt="App Screenshot">
+  <img src="preview%20images/editor.png" width="700" alt="Live Markdown Editor">
+  <p><strong>Live Markdown Editor</strong> — Inline rendering, math, variables, and internal links.</p>
+  <br>
+  <img src="preview%20images/ai-assistance.png" width="700" alt="Inline AI Assistance">
+  <p><strong>Inline AI Assistance</strong> — Type <code>/ai &lt;prompt&gt;</code> and get answers instantly.</p>
+  <br>
+  <img src="preview%20images/graph-view.png" width="700" alt="Graph View">
+  <p><strong>Graph View</strong> — Visualize your connected notes and folders.</p>
+  <br>
+  <img src="preview%20images/sidebar.png" width="700" alt="Note Sidebar">
+  <p><strong>Frictionless Organization</strong> — Search, folders, and quick navigation.</p>
 </div>
 
 ---
