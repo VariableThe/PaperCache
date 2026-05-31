@@ -13,11 +13,7 @@ function Root() {
     return () => window.removeEventListener('hashchange', handleHashChange)
   }, [])
 
-  return (
-    <StrictMode>
-      {hash === '#/settings' ? <Settings /> : <App />}
-    </StrictMode>
-  )
+  return <StrictMode>{hash === '#/settings' ? <Settings /> : <App />}</StrictMode>
 }
 
 createRoot(document.getElementById('root')!).render(<Root />)

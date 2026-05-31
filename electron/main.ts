@@ -1,4 +1,16 @@
-import { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, globalShortcut, screen, nativeTheme, shell, dialog } from 'electron'
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  Tray,
+  Menu,
+  nativeImage,
+  globalShortcut,
+  screen,
+  nativeTheme,
+  shell,
+  dialog,
+} from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
@@ -19,7 +31,9 @@ if (!fs.existsSync(NOTES_DIR)) {
 const COMMANDS_DIR = path.join(NOTES_DIR, 'commands')
 if (!fs.existsSync(COMMANDS_DIR)) {
   fs.mkdirSync(COMMANDS_DIR)
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'basics.md'), `# Basics
+  fs.writeFileSync(
+    path.join(COMMANDS_DIR, 'basics.md'),
+    `# Basics
 
 - **Zoom**: \`Cmd + +\` to zoom in, \`Cmd + -\` to zoom out, \`Cmd + 0\` to reset.
 - **New Note**: \`Cmd + N\` from anywhere when app is running.
@@ -30,9 +44,12 @@ if (!fs.existsSync(COMMANDS_DIR)) {
 *Example use:* Press \`Cmd+K\` right now, select "Settings", and set your global hotkey!
 
 Next: [Folders](/file commands/folders.md)
-`)
+`,
+  )
 
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'folders.md'), `# Folders
+  fs.writeFileSync(
+    path.join(COMMANDS_DIR, 'folders.md'),
+    `# Folders
 
 Organize your notes by using a \`/\` in the note title.
 Folders automatically receive a unique color identifier in the Graph View and Search list.
@@ -41,9 +58,12 @@ Folders automatically receive a unique color identifier in the Graph View and Se
 If you rename this note (click the title at the top left) to \`projects/PaperCache.md\`, it will automatically be placed inside a \`projects\` folder!
 
 Next: [Variables](/file commands/variables.md)
-`)
+`,
+  )
 
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'variables.md'), `# Variables & Math
+  fs.writeFileSync(
+    path.join(COMMANDS_DIR, 'variables.md'),
+    `# Variables & Math
 
 PaperCache is a smart scratchpad. You can define variables and write math equations that auto-calculate.
 
@@ -58,9 +78,12 @@ PaperCache is a smart scratchpad. You can define variables and write math equati
 *Example use:* Just type \`API_KEY\` anywhere and see it highlight when your cursor leaves the word!
 
 Next: [Markdown & Code](/file commands/markdown.md)
-`)
+`,
+  )
 
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'markdown.md'), `# Markdown & Code
+  fs.writeFileSync(
+    path.join(COMMANDS_DIR, 'markdown.md'),
+    `# Markdown & Code
 
 PaperCache supports full markdown with seamless inline editing.
 
@@ -84,10 +107,13 @@ Type \`/ai <prompt>\` and press enter to summon an AI assistant directly into yo
 \`/ai Write a python function to reverse a string\`
 
 [Back to Welcome](/file Welcome.md)
-`)
+`,
+  )
 
   const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
-  fs.writeFileSync(welcomePath, `# Welcome to PaperCache!
+  fs.writeFileSync(
+    welcomePath,
+    `# Welcome to PaperCache!
 
 PaperCache is your intelligent, minimalist markdown scratchpad. 
 
@@ -100,7 +126,8 @@ Try Cmd+Clicking these to learn the ropes:
 - [4. Markdown & Code](/file commands/markdown.md)
 
 *(Press \`Cmd+K\` at any time to open the main menu!)*
-`)
+`,
+  )
 
   const now = new Date()
   fs.utimesSync(welcomePath, now, new Date(now.getTime() + 10000))
@@ -202,29 +229,34 @@ app.whenReady().then(() => {
 
   // Setup Tray
   tray = new Tray(nativeImage.createEmpty()) // empty initially
-  
+
   function updateTrayIcon() {
-    if (!tray) return;
-    const isDark = nativeTheme.shouldUseDarkColors;
-    const logoName = isDark ? 'PaperCache Logo white.png' : 'PaperCache Logo black.png';
-    const isDev = !!process.env.VITE_DEV_SERVER_URL;
-    const publicDir = isDev ? path.join(__dirname, '../public') : path.join(__dirname, '../dist');
-    const iconPath = path.join(publicDir, logoName);
-    
-    let icon = nativeImage.createFromPath(iconPath);
-    icon = icon.resize({ width: 20, height: 20 });
-    
-    tray.setImage(icon);
-    tray.setTitle('');
+    if (!tray) return
+    const isDark = nativeTheme.shouldUseDarkColors
+    const logoName = isDark ? 'PaperCache Logo white.png' : 'PaperCache Logo black.png'
+    const isDev = !!process.env.VITE_DEV_SERVER_URL
+    const publicDir = isDev ? path.join(__dirname, '../public') : path.join(__dirname, '../dist')
+    const iconPath = path.join(publicDir, logoName)
+
+    let icon = nativeImage.createFromPath(iconPath)
+    icon = icon.resize({ width: 20, height: 20 })
+
+    tray.setImage(icon)
+    tray.setTitle('')
   }
 
-  updateTrayIcon();
-  nativeTheme.on('updated', updateTrayIcon);
+  updateTrayIcon()
+  nativeTheme.on('updated', updateTrayIcon)
 
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Show/Hide PaperCache', click: toggleWindow },
     { type: 'separator' },
-    { label: 'Quit', click: () => { app.quit() } }
+    {
+      label: 'Quit',
+      click: () => {
+        app.quit()
+      },
+    },
   ])
   tray.setToolTip('PaperCache')
   tray.setContextMenu(contextMenu)
@@ -237,38 +269,38 @@ app.whenReady().then(() => {
   const registerNewNoteShortcut = (combo: string) => {
     try {
       if (globalShortcut.isRegistered(combo)) {
-        globalShortcut.unregister(combo);
+        globalShortcut.unregister(combo)
       }
       globalShortcut.register(combo, () => {
         if (win) {
-          bringToActiveSpace(win);
-          win.webContents.send('trigger-new-note');
+          bringToActiveSpace(win)
+          win.webContents.send('trigger-new-note')
         }
-      });
-    } catch(e) {}
-  };
+      })
+    } catch (e) {}
+  }
 
   const registerToggleShortcut = (combo: string) => {
     try {
       if (globalShortcut.isRegistered(combo)) {
-        globalShortcut.unregister(combo);
+        globalShortcut.unregister(combo)
       }
-      globalShortcut.register(combo, toggleWindow);
-    } catch(e) {}
-  };
-  
+      globalShortcut.register(combo, toggleWindow)
+    } catch (e) {}
+  }
+
   ipcMain.on('update-global-shortcut', (event, { action, oldShortcut, newShortcut }) => {
     try {
       if (oldShortcut && globalShortcut.isRegistered(oldShortcut)) {
-        globalShortcut.unregister(oldShortcut);
+        globalShortcut.unregister(oldShortcut)
       }
       if (action === 'new-note') {
-        registerNewNoteShortcut(newShortcut);
+        registerNewNoteShortcut(newShortcut)
       } else if (action === 'toggle') {
-        registerToggleShortcut(newShortcut);
+        registerToggleShortcut(newShortcut)
       }
-    } catch(e) {}
-  });
+    } catch (e) {}
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -278,28 +310,28 @@ app.whenReady().then(() => {
 })
 
 function bringToActiveSpace(win: BrowserWindow) {
-  const currentDisplay = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-  const winBounds = win.getBounds();
-  const winDisplay = screen.getDisplayMatching(winBounds);
+  const currentDisplay = screen.getDisplayNearestPoint(screen.getCursorScreenPoint())
+  const winBounds = win.getBounds()
+  const winDisplay = screen.getDisplayMatching(winBounds)
 
   if (currentDisplay.id !== winDisplay.id) {
-    const xRatio = (winBounds.x - winDisplay.workArea.x) / Math.max(1, winDisplay.workArea.width);
-    const yRatio = (winBounds.y - winDisplay.workArea.y) / Math.max(1, winDisplay.workArea.height);
+    const xRatio = (winBounds.x - winDisplay.workArea.x) / Math.max(1, winDisplay.workArea.width)
+    const yRatio = (winBounds.y - winDisplay.workArea.y) / Math.max(1, winDisplay.workArea.height)
 
-    const newX = currentDisplay.workArea.x + (currentDisplay.workArea.width * xRatio);
-    const newY = currentDisplay.workArea.y + (currentDisplay.workArea.height * yRatio);
+    const newX = currentDisplay.workArea.x + currentDisplay.workArea.width * xRatio
+    const newY = currentDisplay.workArea.y + currentDisplay.workArea.height * yRatio
 
     win.setBounds({
       x: Math.round(newX),
       y: Math.round(newY),
       width: winBounds.width,
-      height: winBounds.height
-    });
+      height: winBounds.height,
+    })
   }
 
-  app.show();
-  win.show();
-  app.focus({ steal: true });
+  app.show()
+  win.show()
+  app.focus({ steal: true })
 }
 
 function toggleWindow() {
@@ -318,19 +350,19 @@ function toggleWindow() {
 
 // IPC Handlers
 ipcMain.handle('close-window', (event) => {
-  const senderWin = BrowserWindow.fromWebContents(event.sender);
+  const senderWin = BrowserWindow.fromWebContents(event.sender)
   if (senderWin) {
     if (senderWin === win) {
-      win.hide();
+      win.hide()
     } else {
-      senderWin.close();
+      senderWin.close()
     }
   }
 })
 
 // Helper to get all files recursively
 function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
-  if (!fs.existsSync(dirPath)) return arrayOfFiles;
+  if (!fs.existsSync(dirPath)) return arrayOfFiles
   const files = fs.readdirSync(dirPath)
   files.forEach((file) => {
     const fullPath = path.join(dirPath, file)
@@ -347,27 +379,29 @@ function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
 
 // Helper to clean empty directories
 function cleanEmptyFoldersRecursively(folder: string) {
-  if (folder === NOTES_DIR || !folder.startsWith(NOTES_DIR)) return;
-  if (!fs.existsSync(folder)) return;
-  const files = fs.readdirSync(folder);
+  if (folder === NOTES_DIR || !folder.startsWith(NOTES_DIR)) return
+  if (!fs.existsSync(folder)) return
+  const files = fs.readdirSync(folder)
   if (files.length === 0) {
-    fs.rmdirSync(folder);
-    cleanEmptyFoldersRecursively(path.dirname(folder));
+    fs.rmdirSync(folder)
+    cleanEmptyFoldersRecursively(path.dirname(folder))
   }
 }
 
 ipcMain.handle('get-notes', () => {
   const files = getAllFiles(NOTES_DIR)
-  const notes = files.map(filePath => {
-    const stats = fs.statSync(filePath)
-    const id = path.relative(NOTES_DIR, filePath).split(path.sep).join('/')
-    return {
-      id,
-      content: fs.readFileSync(filePath, 'utf-8'),
-      mtime: stats.mtime.getTime()
-    }
-  }).sort((a, b) => b.mtime - a.mtime)
-  
+  const notes = files
+    .map((filePath) => {
+      const stats = fs.statSync(filePath)
+      const id = path.relative(NOTES_DIR, filePath).split(path.sep).join('/')
+      return {
+        id,
+        content: fs.readFileSync(filePath, 'utf-8'),
+        mtime: stats.mtime.getTime(),
+      }
+    })
+    .sort((a, b) => b.mtime - a.mtime)
+
   return notes
 })
 
@@ -380,7 +414,7 @@ ipcMain.handle('save-note', (event, { id, content }) => {
 
 ipcMain.handle('delete-note', (event, id) => {
   if (id.startsWith('commands/')) {
-    return false;
+    return false
   }
   const filePath = path.join(NOTES_DIR, id)
   if (fs.existsSync(filePath)) {
@@ -441,7 +475,7 @@ ipcMain.on('quit-app', () => {
 ipcMain.on('set-launch-startup', (_, value: boolean) => {
   app.setLoginItemSettings({
     openAtLogin: value,
-    openAsHidden: true
+    openAsHidden: true,
   })
 })
 
@@ -450,24 +484,24 @@ ipcMain.handle('read-note', async (_, id) => {
 })
 
 ipcMain.handle('export-note', async (_, filename: string, content: string) => {
-  isExporting = true;
+  isExporting = true
   try {
     const { filePath } = await dialog.showSaveDialog({
       defaultPath: filename,
       filters: [
         { name: 'Markdown', extensions: ['md'] },
-        { name: 'All Files', extensions: ['*'] }
-      ]
-    });
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    })
     if (filePath) {
-      fs.writeFileSync(filePath, content, 'utf-8');
-      return true;
+      fs.writeFileSync(filePath, content, 'utf-8')
+      return true
     }
-    return false;
+    return false
   } finally {
-    isExporting = false;
+    isExporting = false
   }
-});
+})
 
 ipcMain.on('open-external', (_, url) => {
   shell.openExternal(url)

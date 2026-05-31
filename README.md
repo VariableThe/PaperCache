@@ -13,12 +13,13 @@ Available for **macOS** and **Windows**.
 
 ## ⚡️ Features
 
-* **Live Markdown**: Write in markdown and see it instantly rendered inline. Click any text to jump back into raw edit mode.
-* **Math & Variables**: Define variables (`/var x = 10`) and write equations (`x * 3 =`). PaperCache auto-calculates the result as you type. Change the variable, and the math updates instantly.
-* **Inline AI Assistance**: Type `/ai <prompt>` and press enter to summon an AI assistant directly into your document.
-* **Frictionless Organization**: Create folders simply by using `/` in your note names (e.g., `projects/app`). 
-* **Global Hotkey**: Summon PaperCache from anywhere on your system with a custom global shortcut to quickly jot down a thought.
-* **Graph View**: Visualize your connected thoughts and folders.
+- **Live Markdown**: Write in markdown and see it instantly rendered inline. Click any text to jump back into raw edit mode.
+- **Math & Variables**: Define variables (`/var x = 10`) and write equations (`x * 3 =`). PaperCache auto-calculates the result as you type. Change the variable, and the math updates instantly.
+- **Inline AI Assistance**: Type `/ai <prompt>` and press enter to summon an AI assistant directly into your document. (Requires your own OpenAI API key, configured in Settings).
+- **Frictionless Organization**: Create folders simply by using `/` in your note names (e.g., `projects/app`).
+- **Global Hotkey**: Summon PaperCache from anywhere on your system with a custom global shortcut to quickly jot down a thought.
+- **Graph View**: Visualize your connected thoughts and folders.
+- **Local & Private**: Your notes live as plain markdown files on your local disk in the `~/.papercache` directory. AI queries go directly to OpenAI, with no middlemen.
 
 ---
 
@@ -43,9 +44,11 @@ Available for **macOS** and **Windows**.
 ## 📥 Download & Installation
 
 ### Releases
+
 You can download the latest standalone `.app` (macOS) or `.exe` (Windows) directly from the [Releases](https://github.com/VariableThe/PaperCache/releases) page.
 
 ### Homebrew (macOS)
+
 ```bash
 brew tap variablethe/tap
 brew install --cask papercache
@@ -53,6 +56,7 @@ brew install --cask papercache
 
 > [!NOTE]
 > If you manually download the `.zip` from Releases and macOS blocks the app from opening because it is from an "unidentified developer", simply run this command in your terminal to clear the quarantine flag:
+>
 > ```bash
 > xattr -cr /Applications/PaperCache.app
 > ```
@@ -64,17 +68,20 @@ brew install --cask papercache
 PaperCache is built using **Electron**, **React**, **TypeScript**, and **Vite**.
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/VariableThe/PaperCache.git
    cd PaperCache
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Run in development mode**
+
    ```bash
    npm run dev
    ```
@@ -90,13 +97,14 @@ PaperCache is built using **Electron**, **React**, **TypeScript**, and **Vite**.
 
 ## ⌨️ Shortcuts
 
-* **`Cmd/Ctrl + P`**: Quick Search / Switch Notes
-* **`Cmd/Ctrl + K`**: Open Main Action Menu
-* **`Cmd/Ctrl + N`**: Create New Note
-* **`Cmd/Ctrl + + / -`**: Zoom In / Out
-* **`Cmd/Ctrl + Click`**: Open internal file links or external web links
+- **`Cmd/Ctrl + P`**: Quick Search / Switch Notes
+- **`Cmd/Ctrl + K`**: Open Main Action Menu
+- **`Cmd/Ctrl + N`**: Create New Note
+- **`Cmd/Ctrl + + / -`**: Zoom In / Out
+- **`Cmd/Ctrl + Click`**: Open internal file links or external web links
 
 ---
 
 ## 📄 License
+
 MIT License.

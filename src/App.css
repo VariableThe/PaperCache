@@ -197,7 +197,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.2s, background 0.2s;
+  transition:
+    opacity 0.2s,
+    background 0.2s;
   z-index: 10;
 }
 
@@ -253,7 +255,8 @@ body {
   background-color: transparent !important;
 }
 
-.cm-selectionBackground, .cm-focused .cm-selectionBackground {
+.cm-selectionBackground,
+.cm-focused .cm-selectionBackground {
   background-color: rgba(128, 128, 128, 0.3) !important;
 }
 
@@ -263,13 +266,18 @@ body {
   font-weight: bold;
 }
 
-.blueprint .cm-custom-symbol { color: #fca5a5; }
+.blueprint .cm-custom-symbol {
+  color: #fca5a5;
+}
 
 /* Note Search Palette */
 .note-search-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
   z-index: 9999;
   display: flex;
   justify-content: center;
@@ -283,11 +291,11 @@ body {
   width: 400px;
   max-width: 90vw;
   border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid rgba(128,128,128,0.2);
+  border: 1px solid rgba(128, 128, 128, 0.2);
 }
 
 .note-search-input {
@@ -297,7 +305,7 @@ body {
   color: var(--text-color, #000);
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(128,128,128,0.2);
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
   outline: none;
   box-sizing: border-box;
   font-family: 'JetBrains Mono', monospace;
@@ -318,7 +326,8 @@ body {
   position: relative;
 }
 
-.note-search-item:hover, .note-search-item.selected {
+.note-search-item:hover,
+.note-search-item.selected {
   background: var(--bg-secondary);
 }
 
@@ -333,7 +342,7 @@ body {
   display: flex;
   gap: 8px;
   padding: 6px 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
 }
 
@@ -348,7 +357,8 @@ body {
   border-radius: 4px;
 }
 
-.note-action-menu button.focused, .note-action-menu button:hover {
+.note-action-menu button.focused,
+.note-action-menu button:hover {
   background: var(--border-color);
 }
 
@@ -357,7 +367,7 @@ body {
   top: 40px;
   right: 20px;
   transform: none;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
   z-index: 1000;
 }
 
@@ -392,7 +402,8 @@ body {
   font-weight: bold;
 }
 
-.cm-custom-clickable-link, .cm-custom-clickable-link * {
+.cm-custom-clickable-link,
+.cm-custom-clickable-link * {
   cursor: pointer;
   color: #3b82f6 !important; /* Blue */
   text-decoration: underline;
@@ -402,7 +413,8 @@ body {
   text-decoration-thickness: 2px;
 }
 
-.cm-custom-file-link, .cm-custom-file-link * {
+.cm-custom-file-link,
+.cm-custom-file-link * {
   cursor: pointer;
   color: #f59e0b !important; /* Amber/Orange */
   text-decoration: underline;
@@ -417,7 +429,8 @@ body {
   font-style: italic;
 }
 
-.cm-custom-math, .cm-custom-math .cm-custom-number {
+.cm-custom-math,
+.cm-custom-math .cm-custom-number {
   color: var(--custom-color-math, #f59e0b) !important;
   font-weight: bold;
 }
@@ -438,7 +451,11 @@ body {
 }
 
 .show-rulings.paper-light .cm-scroller {
-  background-image: repeating-linear-gradient(transparent, transparent 23px, rgba(128, 128, 128, 0.15) 24px);
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 23px,
+    rgba(128, 128, 128, 0.15) 24px
+  );
   background-attachment: local;
 }
 
@@ -452,7 +469,7 @@ body {
 }
 
 .show-rulings.grid-dark .cm-scroller {
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 20px 20px;
@@ -471,7 +488,7 @@ body {
 }
 
 .show-rulings.blueprint .cm-scroller {
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.2) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.2) 1px, transparent 1px);
   background-size: 20px 20px;
