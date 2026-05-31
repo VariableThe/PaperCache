@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+<div align="center">
+  <img src="public/icon.png" width="128" height="128" alt="PaperCache Logo">
+  
+  # PaperCache
+  **Your intelligent, minimalist markdown scratchpad.**
+</div>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PaperCache is a lightning-fast, keyboard-centric scratchpad designed for developers, thinkers, and tinkerers. It combines the simplicity of markdown with powerful inline features like live math calculation, interactive variables, AI assistance, and seamless internal linking.
 
-Currently, two official plugins are available:
+Available for **macOS** and **Windows**.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ⚡️ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* **Live Markdown**: Write in markdown and see it instantly rendered inline. Click any text to jump back into raw edit mode.
+* **Math & Variables**: Define variables (`/var x = 10`) and write equations (`x * 3 =`). PaperCache auto-calculates the result as you type. Change the variable, and the math updates instantly.
+* **Inline AI Assistance**: Type `/ai <prompt>` and press enter to summon an AI assistant directly into your document.
+* **Frictionless Organization**: Create folders simply by using `/` in your note names (e.g., `projects/app`). 
+* **Global Hotkey**: Summon PaperCache from anywhere on your system with a custom global shortcut to quickly jot down a thought.
+* **Graph View**: Visualize your connected thoughts and folders.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 📸 Screenshots
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+*(Add screenshots of your application here)*
+<div align="center">
+  <img src="src/assets/hero.png" width="600" alt="App Screenshot">
+</div>
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 📥 Download & Installation
+
+### Releases
+You can download the latest standalone `.app` (macOS) or `.exe` (Windows) directly from the [Releases](https://github.com/VariableThe/PaperCache/releases) page.
+
+### Homebrew (macOS)
+*(Coming soon)*
+```bash
+brew install --cask papercache
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛠 Build from Source
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+PaperCache is built using **Electron**, **React**, **TypeScript**, and **Vite**.
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/VariableThe/PaperCache.git
+   cd PaperCache
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Run in development mode**
+   ```bash
+   npm run dev
+   ```
+
+4. **Package the app**
+   To build a standalone executable for your operating system:
+   ```bash
+   npm run package
+   ```
+   The compiled application will be located in the `release/` directory.
+
+---
+
+## ⌨️ Shortcuts
+
+* **`Cmd/Ctrl + P`**: Quick Search / Switch Notes
+* **`Cmd/Ctrl + K`**: Open Main Action Menu
+* **`Cmd/Ctrl + N`**: Create New Note
+* **`Cmd/Ctrl + + / -`**: Zoom In / Out
+* **`Cmd/Ctrl + Click`**: Open internal file links or external web links
+
+---
+
+## 📄 License
+MIT License.
