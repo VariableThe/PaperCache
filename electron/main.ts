@@ -170,10 +170,7 @@ app.whenReady().then(() => {
       }
       globalShortcut.register(combo, () => {
         if (win) {
-          win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-          win.show();
-          win.focus();
-          win.setVisibleOnAllWorkspaces(false)
+          bringToActiveSpace(win);
           win.webContents.send('trigger-new-note');
         }
       });
@@ -209,22 +206,40 @@ app.whenReady().then(() => {
   })
 })
 
+function bringToActiveSpace(win: BrowserWindow) {
+  const point = screen.getCursorScreenPoint();
+  const currentDisplay = screen.getDisplayNearestPoint(point);
+  
+  const bounds = win.getBounds();
+  const workArea = currentDisplay.workArea;
+  
+  // Center window on current active display
+  win.setBounds({
+    x: Math.round(workArea.x + (workArea.width - bounds.width) / 2),
+    y: Math.round(workArea.y + (workArea.height - bounds.height) / 2),
+    width: bounds.width,
+    height: bounds.height
+  });
+
+  win.setAlwaysOnTop(true, "floating");
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  win.show();
+  app.focus({ steal: true });
+  win.focus();
+  win.setAlwaysOnTop(false);
+  win.setVisibleOnAllWorkspaces(false);
+}
+
 function toggleWindow() {
   if (win) {
     if (win.isVisible()) {
       if (win.isFocused()) {
         win.hide()
       } else {
-        win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-        win.show()
-        win.focus()
-        win.setVisibleOnAllWorkspaces(false)
+        bringToActiveSpace(win)
       }
     } else {
-      win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
-      win.show()
-      win.focus()
-      win.setVisibleOnAllWorkspaces(false)
+      bringToActiveSpace(win)
     }
   }
 }

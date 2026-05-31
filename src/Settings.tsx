@@ -9,7 +9,7 @@ export default function Settings() {
 
   // Shortcuts
   const [globalShortcutNewNote, setGlobalShortcutNewNote] = useState(localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N')
-  const [globalShortcutToggle, setGlobalShortcutToggle] = useState(localStorage.getItem('papercache-shortcut-toggle') || 'Option+A')
+  const [globalShortcutToggle, setGlobalShortcutToggle] = useState(localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C')
 
   // Appearance State
   const [fontFamily, setFontFamily] = useState(localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace")
@@ -51,7 +51,7 @@ export default function Settings() {
       window.electronAPI.updateGlobalShortcut('new-note', oldShortcut, globalShortcutNewNote)
     }
 
-    const oldToggleShortcut = localStorage.getItem('papercache-shortcut-toggle') || 'Option+A'
+    const oldToggleShortcut = localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C'
     localStorage.setItem('papercache-shortcut-toggle', globalShortcutToggle)
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('toggle', oldToggleShortcut, globalShortcutToggle)
@@ -126,7 +126,7 @@ export default function Settings() {
               type="text" 
               value={globalShortcutToggle} 
               onChange={e => setGlobalShortcutToggle(e.target.value)} 
-              placeholder="e.g. Option+A"
+              placeholder="e.g. CommandOrControl+Shift+C"
             />
           </div>
           <div className="setting-group">

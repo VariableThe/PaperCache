@@ -707,7 +707,7 @@ function App() {
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('new-note', '', shortcut);
     }
-    const toggleShortcut = localStorage.getItem('papercache-shortcut-toggle') || 'Option+A';
+    const toggleShortcut = localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C';
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('toggle', '', toggleShortcut);
     }
