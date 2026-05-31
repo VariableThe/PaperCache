@@ -95,7 +95,7 @@ function createWindow() {
     hasShadow: true,
     maximizable: false,
     show: false, // Don't show until ready
-    icon: path.join(__dirname, '../public/PaperCache Logo app.png'),
+    icon: path.join(__dirname, '../public/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
@@ -316,7 +316,7 @@ ipcMain.on('open-settings', () => {
     width: 900,
     height: 700,
     titleBarStyle: 'hiddenInset',
-    icon: path.join(__dirname, '../public/PaperCache Logo app.png'),
+    icon: path.join(__dirname, '../public/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
