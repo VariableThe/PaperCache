@@ -13,7 +13,7 @@
     "test": "vitest run",
     "test:ui": "vitest",
     "preview": "vite preview",
-    "package": "npm run build && electron-builder --mac --win"
+    "package": "npm run build && electron-builder --mac --win --linux"
   },
   "build": {
     "appId": "com.variablethe.papercache",
@@ -39,6 +39,14 @@
       "target": [
         "nsis",
         "zip"
+      ]
+    },
+    "linux": {
+      "icon": "public/icon.png",
+      "category": "Office",
+      "target": [
+        "AppImage",
+        "deb"
       ]
     }
   },

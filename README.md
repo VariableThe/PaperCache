@@ -7,7 +7,7 @@
 
 PaperCache is a lightning-fast, keyboard-centric scratchpad designed for developers, thinkers, and tinkerers. It combines the simplicity of markdown with powerful inline features like live math calculation, interactive variables, AI assistance, and seamless internal linking.
 
-Available for **macOS** and **Windows**.
+Available for **macOS**, **Windows**, and **Linux**.
 
 ---
 
@@ -45,7 +45,7 @@ Available for **macOS** and **Windows**.
 
 ### Releases
 
-You can download the latest standalone `.app` (macOS) or `.exe` (Windows) directly from the [Releases](https://github.com/VariableThe/PaperCache/releases) page.
+You can download the latest standalone `.app` (macOS), `.exe` (Windows), or `.AppImage` (Linux) directly from the [Releases](https://github.com/VariableThe/PaperCache/releases) page.
 
 ### Homebrew (macOS)
 
