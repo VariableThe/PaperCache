@@ -11,6 +11,9 @@ export default function Settings() {
   const [globalShortcutNewNote, setGlobalShortcutNewNote] = useState(localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N')
   const [globalShortcutToggle, setGlobalShortcutToggle] = useState(localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C')
 
+  // Startup
+  const [launchAtStartup, setLaunchAtStartup] = useState(localStorage.getItem('papercache-launch-startup') === 'true')
+
   // Appearance State
   const [fontFamily, setFontFamily] = useState(localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace")
   const [showRulings, setShowRulings] = useState(localStorage.getItem('papercache-show-rulings') === 'true')
@@ -44,6 +47,12 @@ export default function Settings() {
     localStorage.setItem('papercache-color-ai', aiColor)
     localStorage.setItem('papercache-color-math', mathColor)
     
+    // Startup
+    localStorage.setItem('papercache-launch-startup', launchAtStartup.toString())
+    if (window.electronAPI.setLaunchAtStartup) {
+      window.electronAPI.setLaunchAtStartup(launchAtStartup)
+    }
+
     // Shortcuts
     const oldShortcut = localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N'
     localStorage.setItem('papercache-shortcut-newnote', globalShortcutNewNote)
@@ -136,6 +145,19 @@ export default function Settings() {
               value={globalShortcutNewNote} 
               onChange={e => setGlobalShortcutNewNote(e.target.value)} 
               placeholder="e.g. CommandOrControl+Shift+N"
+            />
+          </div>
+        </section>
+
+        <section>
+          <h3>System</h3>
+          <div className="setting-group">
+            <label>Launch at Startup</label>
+            <input 
+              type="checkbox" 
+              checked={launchAtStartup} 
+              onChange={e => setLaunchAtStartup(e.target.checked)} 
+              style={{ width: 'auto', marginRight: 'auto' }}
             />
           </div>
         </section>

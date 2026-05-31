@@ -376,6 +376,13 @@ ipcMain.on('quit-app', () => {
   app.quit()
 })
 
+ipcMain.on('set-launch-startup', (_, value: boolean) => {
+  app.setLoginItemSettings({
+    openAtLogin: value,
+    openAsHidden: true
+  })
+})
+
 ipcMain.handle('read-note', async (_, id) => {
   return fs.readFileSync(path.join(NOTES_DIR, id), 'utf-8')
 })
