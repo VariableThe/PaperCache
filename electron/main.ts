@@ -106,6 +106,7 @@ function createWindow() {
   win.on('close', saveWindowState)
 
   win.on('ready-to-show', () => {
+    win?.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
     win?.show()
   })
 
@@ -226,14 +227,9 @@ function bringToActiveSpace(win: BrowserWindow) {
     });
   }
 
-  // Crucial: hide the window first to detach it from the current macOS Space 
-  // so that showing it again won't pull the OS back to the old Space!
-  win.hide();
-  
-  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  app.show();
   win.show();
-  win.focus();
-  win.setVisibleOnAllWorkspaces(false);
+  app.focus({ steal: true });
 }
 
 function toggleWindow() {
