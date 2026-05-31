@@ -1127,7 +1127,7 @@ function App() {
               n.content.toLowerCase().includes(noteSearchQuery.toLowerCase()) ||
               n.id.toLowerCase().includes(noteSearchQuery.toLowerCase()),
           )
-          
+
           const allTags = new Set<string>()
           notes.forEach((n) => {
             const matches = n.content.match(/![a-zA-Z0-9_-]+/g)
@@ -1136,7 +1136,7 @@ function App() {
             }
           })
           const tagArray = Array.from(allTags).sort()
-          
+
           return (
             <div
               className="note-search-overlay"
@@ -1234,8 +1234,16 @@ function App() {
                   }}
                 />
                 {tagArray.length > 0 && (
-                  <div style={{ padding: '8px 16px', display: 'flex', gap: '6px', flexWrap: 'wrap', borderBottom: '1px solid rgba(128,128,128,0.1)' }}>
-                    {tagArray.map(tag => (
+                  <div
+                    style={{
+                      padding: '8px 16px',
+                      display: 'flex',
+                      gap: '6px',
+                      flexWrap: 'wrap',
+                      borderBottom: '1px solid rgba(128,128,128,0.1)',
+                    }}
+                  >
+                    {tagArray.map((tag) => (
                       <span
                         key={tag}
                         className="cm-tag-pill"

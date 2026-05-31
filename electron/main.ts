@@ -34,8 +34,8 @@ if (!fs.existsSync(COMMANDS_DIR)) {
 }
 
 fs.writeFileSync(
-    path.join(COMMANDS_DIR, 'basics.md'),
-    `# Basics
+  path.join(COMMANDS_DIR, 'basics.md'),
+  `# Basics
 
 - **Zoom**: \`Cmd + +\` to zoom in, \`Cmd + -\` to zoom out, \`Cmd + 0\` to reset.
 - **New Note**: \`Cmd + N\` from anywhere when app is running.
@@ -47,11 +47,11 @@ fs.writeFileSync(
 
 Next: [Folders](/file commands/folders.md)
 `,
-  )
+)
 
-  fs.writeFileSync(
-    path.join(COMMANDS_DIR, 'folders.md'),
-    `# Folders
+fs.writeFileSync(
+  path.join(COMMANDS_DIR, 'folders.md'),
+  `# Folders
 
 Organize your notes by using a \`/\` in the note title.
 Folders automatically receive a unique color identifier in the Graph View and Search list.
@@ -61,11 +61,11 @@ If you rename this note (click the title at the top left) to \`projects/PaperCac
 
 Next: [Variables](/file commands/variables.md)
 `,
-  )
+)
 
-  fs.writeFileSync(
-    path.join(COMMANDS_DIR, 'variables.md'),
-    `# Variables & Math
+fs.writeFileSync(
+  path.join(COMMANDS_DIR, 'variables.md'),
+  `# Variables & Math
 
 PaperCache is a smart scratchpad. You can define variables and write math equations that auto-calculate.
 
@@ -83,11 +83,11 @@ API_KEY
 
 Next: [Markdown & Code](/file commands/markdown.md)
 `,
-  )
+)
 
-  fs.writeFileSync(
-    path.join(COMMANDS_DIR, 'markdown.md'),
-    `# Markdown & Code
+fs.writeFileSync(
+  path.join(COMMANDS_DIR, 'markdown.md'),
+  `# Markdown & Code
 
 PaperCache supports full markdown with seamless inline editing.
 
@@ -112,11 +112,11 @@ Type \`/ai <prompt>\` and press enter to summon an AI assistant directly into yo
 
 Next: [Formats & Colors](/file commands/formats.md)
 `,
-  )
+)
 
-  fs.writeFileSync(
-    path.join(COMMANDS_DIR, 'formats.md'),
-    `# Formats & Colors
+fs.writeFileSync(
+  path.join(COMMANDS_DIR, 'formats.md'),
+  `# Formats & Colors
 
 PaperCache automatically recognizes and highlights common formats so you can easily spot them in your notes.
 
@@ -131,11 +131,11 @@ Meeting on 2024-05-31 at 14:30.
 
 Next: [Tags](/file commands/tags.md)
 `,
-  )
+)
 
-  fs.writeFileSync(
-    path.join(COMMANDS_DIR, 'tags.md'),
-    `# Tags
+fs.writeFileSync(
+  path.join(COMMANDS_DIR, 'tags.md'),
+  `# Tags
 
 You can tag your notes anywhere by typing an exclamation mark followed by a word (e.g., !important or !work).
 
@@ -148,31 +148,31 @@ Next: [Ready](/file commands/ready.md)
 
 [Back to Welcome](/file Welcome.md)
 `,
-  )
+)
 
-  fs.writeFileSync(
-    path.join(COMMANDS_DIR, 'ready.md'),
-    `# Ready to get started?
+fs.writeFileSync(
+  path.join(COMMANDS_DIR, 'ready.md'),
+  `# Ready to get started?
 
 You're all set to use PaperCache! Start jotting down your thoughts, creating folders, and exploring the capabilities.
 
 [Back to Welcome](/file Welcome.md)
 `,
-  )
+)
 
-  const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
-  let shouldWriteWelcome = true
-  if (fs.existsSync(welcomePath)) {
-    const content = fs.readFileSync(welcomePath, 'utf-8')
-    if (content.includes('[6. Tags]')) {
-      shouldWriteWelcome = false
-    }
+const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
+let shouldWriteWelcome = true
+if (fs.existsSync(welcomePath)) {
+  const content = fs.readFileSync(welcomePath, 'utf-8')
+  if (content.includes('[6. Tags]')) {
+    shouldWriteWelcome = false
   }
+}
 
-  if (shouldWriteWelcome) {
-    fs.writeFileSync(
-      welcomePath,
-      `# Welcome to PaperCache!
+if (shouldWriteWelcome) {
+  fs.writeFileSync(
+    welcomePath,
+    `# Welcome to PaperCache!
 
 PaperCache is your intelligent, minimalist markdown scratchpad. 
 
