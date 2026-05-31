@@ -37,6 +37,7 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 ## Install
 
 **Homebrew (macOS):**
+
 ```bash
 brew tap variablethe/tap
 brew install --cask papercache
@@ -63,15 +64,15 @@ Built with Electron, React, TypeScript, and Vite.
 
 ## Shortcuts
 
-| Shortcut | Action |
-|---|---|
+| Shortcut      | Action                                   |
+| ------------- | ---------------------------------------- |
 | `Cmd+Shift+C` | Toggle visibility (global, configurable) |
-| `Cmd+Shift+N` | New note (global, configurable) |
-| `Cmd+K` | Main action menu |
-| `Cmd+P` | Search notes |
-| `Cmd+G` | Graph view |
-| `Cmd+H` | Highlight selected text |
-| `Cmd+Click` | Follow internal link |
+| `Cmd+Shift+N` | New note (global, configurable)          |
+| `Cmd+K`       | Main action menu                         |
+| `Cmd+P`       | Search notes                             |
+| `Cmd+G`       | Graph view                               |
+| `Cmd+H`       | Highlight selected text                  |
+| `Cmd+Click`   | Follow internal link                     |
 
 ---
 
