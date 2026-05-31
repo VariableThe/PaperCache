@@ -207,13 +207,32 @@ app.whenReady().then(() => {
 })
 
 function bringToActiveSpace(win: BrowserWindow) {
-  win.setAlwaysOnTop(true, "floating");
+  const currentDisplay = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  const winBounds = win.getBounds();
+  const winDisplay = screen.getDisplayMatching(winBounds);
+
+  if (currentDisplay.id !== winDisplay.id) {
+    const xRatio = (winBounds.x - winDisplay.workArea.x) / Math.max(1, winDisplay.workArea.width);
+    const yRatio = (winBounds.y - winDisplay.workArea.y) / Math.max(1, winDisplay.workArea.height);
+
+    const newX = currentDisplay.workArea.x + (currentDisplay.workArea.width * xRatio);
+    const newY = currentDisplay.workArea.y + (currentDisplay.workArea.height * yRatio);
+
+    win.setBounds({
+      x: Math.round(newX),
+      y: Math.round(newY),
+      width: winBounds.width,
+      height: winBounds.height
+    });
+  }
+
+  // Crucial: hide the window first to detach it from the current macOS Space 
+  // so that showing it again won't pull the OS back to the old Space!
+  win.hide();
+  
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  app.show();
-  app.focus({ steal: true });
   win.show();
   win.focus();
-  win.setAlwaysOnTop(false);
   win.setVisibleOnAllWorkspaces(false);
 }
 
