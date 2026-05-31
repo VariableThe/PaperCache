@@ -19,10 +19,72 @@ if (!fs.existsSync(NOTES_DIR)) {
 const COMMANDS_DIR = path.join(NOTES_DIR, 'commands')
 if (!fs.existsSync(COMMANDS_DIR)) {
   fs.mkdirSync(COMMANDS_DIR)
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'basics.md'), `# Basics\n\n- Zoom: \`Cmd + +\` to zoom in, \`Cmd + -\` to zoom out, \`Cmd + 0\` to reset.\n- New Note: \`Cmd + N\` from anywhere when app is running.\n- Global Hotkey: Configure a global hotkey for New Note in Settings.\n- Note Search: \`Cmd + P\` to search across all your notes.\n- Main Menu: \`Cmd + K\` to open the action menu.\n- Cancel/Close: Press \`Esc\` to exit modals.\n\nNext: [Folders](/file commands/folders.md)\n`)
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'folders.md'), `# Folders\n\n- Organize your notes by using a \`/\` in the note title.\n- For example, renaming a note to \`projects/app.md\` will place it inside the \`projects\` folder.\n- Folders automatically receive a unique color identifier in the Graph View and Search list.\n\nNext: [Variables](/file commands/variables.md)\n`)
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'variables.md'), `# Variables\n\n- Define local variables using: \`/var x = 10\`\n- Define global variables (accessible everywhere) using: \`/globvar API_KEY = "sk-123"\`\n- When you type a variable name in your text, it will seamlessly resolve to its value when your cursor leaves the word.\n- Variables work with the math auto-solver. If you define \`/var y = 5\` and write \`y * 3 =\`, it will auto-calculate to 15! Updating a variable automatically updates all downstream calculations.\n\nNext: [Markdown & Code](/file commands/markdown.md)\n`)
-  fs.writeFileSync(path.join(COMMANDS_DIR, 'markdown.md'), `# Markdown & Code\n\n- Supports full markdown with seamless inline editing.\n- Type code blocks with backticks. Syntax highlighting is automatically applied.\n- Click the copy button on any code block to copy its contents.\n- Select text and press \`Cmd+H\` to highlight it.\n- Use AI by using the \`/ai\` command followed by your prompt and pressing Enter.\n\n[Back to Welcome](/file Welcome.md)\n`)
+  fs.writeFileSync(path.join(COMMANDS_DIR, 'basics.md'), `# Basics
+
+- **Zoom**: \`Cmd + +\` to zoom in, \`Cmd + -\` to zoom out, \`Cmd + 0\` to reset.
+- **New Note**: \`Cmd + N\` from anywhere when app is running.
+- **Note Search**: \`Cmd + P\` to search across all your notes.
+- **Main Menu**: \`Cmd + K\` to open the action menu.
+- **Cancel/Close**: Press \`Esc\` to exit modals.
+
+*Example use:* Press \`Cmd+K\` right now, select "Settings", and set your global hotkey!
+
+Next: [Folders](/file commands/folders.md)
+`)
+
+  fs.writeFileSync(path.join(COMMANDS_DIR, 'folders.md'), `# Folders
+
+Organize your notes by using a \`/\` in the note title.
+Folders automatically receive a unique color identifier in the Graph View and Search list.
+
+*Example use:*
+If you rename this note (click the title at the top left) to \`projects/PaperCache.md\`, it will automatically be placed inside a \`projects\` folder!
+
+Next: [Variables](/file commands/variables.md)
+`)
+
+  fs.writeFileSync(path.join(COMMANDS_DIR, 'variables.md'), `# Variables & Math
+
+PaperCache is a smart scratchpad. You can define variables and write math equations that auto-calculate.
+
+**Local Variables:** (Only works in this note)
+\`/var x = 10\`
+
+*Example use:* Type \`x * 3 =\` below and watch it calculate!
+
+**Global Variables:** (Works across ALL your notes)
+\`/globvar API_KEY = "sk-123"\`
+
+*Example use:* Just type \`API_KEY\` anywhere and see it highlight when your cursor leaves the word!
+
+Next: [Markdown & Code](/file commands/markdown.md)
+`)
+
+  fs.writeFileSync(path.join(COMMANDS_DIR, 'markdown.md'), `# Markdown & Code
+
+PaperCache supports full markdown with seamless inline editing.
+
+## Highlighting
+Select text and press \`Cmd+H\` to highlight it.
+*Example use:* ==This text is highlighted!==
+
+## Code Snippets
+You can write code snippets inside triple backticks \`\`\` and specify the language name right after the backticks for syntax highlighting.
+*Example use:*
+\`\`\`javascript
+function greet(name) {
+  return "Hello, " + name + "!";
+}
+\`\`\`
+*(Tip: Click the copy button in the top left of the code block to copy its contents!)*
+
+## Inline AI Assistance
+Type \`/ai <prompt>\` and press enter to summon an AI assistant directly into your document.
+*Example use:*
+\`/ai Write a python function to reverse a string\`
+
+[Back to Welcome](/file Welcome.md)
+`)
 
   const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
   fs.writeFileSync(welcomePath, `# Welcome to PaperCache!
