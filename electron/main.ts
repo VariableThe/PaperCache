@@ -8,6 +8,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const NOTES_DIR = path.join(os.homedir(), '.papercache')
 const STATE_FILE = path.join(NOTES_DIR, 'window-state.json')
 
+let win: BrowserWindow | null = null
+let tray: Tray | null = null
+let isExporting = false
+
 if (!fs.existsSync(NOTES_DIR)) {
   fs.mkdirSync(NOTES_DIR)
 }
@@ -39,9 +43,6 @@ Try Cmd+Clicking these to learn the ropes:
   const now = new Date()
   fs.utimesSync(welcomePath, now, new Date(now.getTime() + 10000))
 }
-
-let win: BrowserWindow | null = null
-let tray: Tray | null = null
 
 // Hide dock icon for stealth mode
 if (app.dock) {
@@ -108,6 +109,13 @@ function createWindow() {
   win.on('ready-to-show', () => {
     win?.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true })
     win?.show()
+  })
+
+  win.on('blur', () => {
+    // Only hide if we aren't in the middle of opening a native dialog like export
+    if (!isExporting && win) {
+      win.hide()
+    }
   })
 
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -373,18 +381,23 @@ ipcMain.handle('read-note', async (_, id) => {
 })
 
 ipcMain.handle('export-note', async (_, filename: string, content: string) => {
-  const { filePath } = await dialog.showSaveDialog({
-    defaultPath: filename,
-    filters: [
-      { name: 'Markdown', extensions: ['md'] },
-      { name: 'All Files', extensions: ['*'] }
-    ]
-  });
-  if (filePath) {
-    fs.writeFileSync(filePath, content, 'utf-8');
-    return true;
+  isExporting = true;
+  try {
+    const { filePath } = await dialog.showSaveDialog({
+      defaultPath: filename,
+      filters: [
+        { name: 'Markdown', extensions: ['md'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    });
+    if (filePath) {
+      fs.writeFileSync(filePath, content, 'utf-8');
+      return true;
+    }
+    return false;
+  } finally {
+    isExporting = false;
   }
-  return false;
 });
 
 ipcMain.on('open-external', (_, url) => {
