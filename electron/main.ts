@@ -43,6 +43,10 @@ fs.writeFileSync(
 - **Main Menu**: \`Cmd + K\` to open the action menu.
 - **Cancel/Close**: Press \`Esc\` to exit modals.
 
+## Global Shortcuts
+- **Toggle Visibility**: \`Cmd+Shift+C\` from anywhere on your OS to hide or show PaperCache.
+- **Global New Note**: \`Cmd+Shift+S\` (default \`Cmd+Shift+N\`) to spawn a new floating note anywhere.
+
 *Example use:* Press \`Cmd+K\` right now, select "Settings", and set your global hotkey!
 
 Next: [Folders](/file commands/folders.md)

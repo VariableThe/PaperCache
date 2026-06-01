@@ -513,6 +513,27 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
               }
             }
           }
+
+          if (node.type.name === 'HorizontalRule') {
+            const start = node.from
+            const end = node.to
+            if (!isCursorInMatch(start, end)) {
+              decos.push({
+                from: start,
+                to: end,
+                deco: Decoration.replace({
+                  widget: new (class extends WidgetType {
+                    toDOM() {
+                      const hr = document.createElement('hr')
+                      hr.className = 'cm-hr'
+                      return hr
+                    }
+                  })(),
+                  block: true,
+                }),
+              })
+            }
+          }
         },
       })
 
@@ -604,6 +625,11 @@ function App() {
   useEffect(() => {
     notesRef.current = notes
   }, [notes])
+
+  const currentNoteIndexRef = useRef(currentNoteIndex)
+  useEffect(() => {
+    currentNoteIndexRef.current = currentNoteIndex
+  }, [currentNoteIndex])
 
   useEffect(() => {
     if (showNoteSearch && searchInputRef.current) {
@@ -952,6 +978,55 @@ function App() {
                 return true
               }
               return false
+            },
+          },
+          {
+            key: 'Mod-e',
+            run: () => {
+              const note = notesRef.current[currentNoteIndexRef.current]
+              if (note) {
+                const filename = note.id.split('/').pop() || 'note.md'
+                window.electronAPI.exportNote(filename, note.content)
+              }
+              return true
+            },
+          },
+          {
+            key: 'Mod-Backspace',
+            run: () => {
+              const note = notesRef.current[currentNoteIndexRef.current]
+              if (note) {
+                if (note.id.startsWith('commands/')) {
+                  alert('Files in the commands folder cannot be deleted.')
+                  return true
+                }
+                if (confirm('Delete this note?')) {
+                  window.electronAPI.deleteNote(note.id)
+                  setNotes((prev) => prev.filter((n) => n.id !== note.id))
+                  if (currentNoteIndexRef.current >= notesRef.current.length - 1)
+                    setCurrentNoteIndex(Math.max(0, notesRef.current.length - 2))
+                }
+              }
+              return true
+            },
+          },
+          {
+            key: 'Mod-Delete',
+            run: () => {
+              const note = notesRef.current[currentNoteIndexRef.current]
+              if (note) {
+                if (note.id.startsWith('commands/')) {
+                  alert('Files in the commands folder cannot be deleted.')
+                  return true
+                }
+                if (confirm('Delete this note?')) {
+                  window.electronAPI.deleteNote(note.id)
+                  setNotes((prev) => prev.filter((n) => n.id !== note.id))
+                  if (currentNoteIndexRef.current >= notesRef.current.length - 1)
+                    setCurrentNoteIndex(Math.max(0, notesRef.current.length - 2))
+                }
+              }
+              return true
             },
           },
           {
