@@ -523,13 +523,15 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
                 to: end,
                 deco: Decoration.replace({
                   widget: new (class extends WidgetType {
-                    eq() { return true }
+                    eq() {
+                      return true
+                    }
                     toDOM() {
                       const hr = document.createElement('hr')
                       hr.className = 'cm-hr'
                       return hr
                     }
-                  })()
+                  })(),
                 }),
               })
             }
@@ -968,6 +970,7 @@ function App() {
     () => [
       EditorView.lineWrapping,
       Prec.highest(
+        // eslint-disable-next-line react-hooks/refs
         keymap.of([
           { key: 'Tab', preventDefault: true, run: insertTab },
           { key: 'Shift-Tab', preventDefault: true, run: indentLess },
