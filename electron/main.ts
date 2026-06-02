@@ -111,7 +111,12 @@ function greet(name) {
   return "Hello, " + name + "!";
 }
 \`\`\`
-*(Tip: Click the copy button in the top left of the code block to copy its contents!)*
+*(Tip: Click the copy button in the top right of the code block to copy its contents!)*
+
+## Horizontal Rules
+Type \`---\` on a new line to create a beautiful horizontal divider.
+*Example use:*
+---
 
 ## Inline AI Assistance
 Type \`/ai <prompt>\` and press enter to summon an AI assistant directly into your document.
