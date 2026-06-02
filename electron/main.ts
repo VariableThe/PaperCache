@@ -116,6 +116,7 @@ function greet(name) {
 ## Horizontal Rules
 Type \`---\` on a new line to create a beautiful horizontal divider.
 *Example use:*
+
 ---
 
 ## Inline AI Assistance
