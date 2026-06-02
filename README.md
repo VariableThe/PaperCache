@@ -68,11 +68,17 @@ Built with Electron, React, TypeScript, and Vite.
 | ------------- | ---------------------------------------- |
 | `Cmd+Shift+C` | Toggle visibility (global, configurable) |
 | `Cmd+Shift+N` | New note (global, configurable)          |
+| `Cmd+Shift+S` | Open settings panel                      |
+| `Cmd+N`       | New note (in-app)                        |
 | `Cmd+K`       | Main action menu                         |
 | `Cmd+P`       | Search notes                             |
 | `Cmd+G`       | Graph view                               |
 | `Cmd+H`       | Highlight selected text                  |
+| `Cmd+E`       | Export note                              |
 | `Cmd+Click`   | Follow internal link                     |
+| `Cmd + / -`   | Zoom in / out                            |
+| `Cmd + 0`     | Reset zoom                               |
+| `Esc`         | Close menus or modals                    |
 
 ---
 

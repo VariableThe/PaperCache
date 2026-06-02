@@ -41,11 +41,15 @@ fs.writeFileSync(
 - **New Note**: \`Cmd + N\` from anywhere when app is running.
 - **Note Search**: \`Cmd + P\` to search across all your notes.
 - **Main Menu**: \`Cmd + K\` to open the action menu.
+- **Export Note**: \`Cmd + E\` to export the current note as markdown.
+- **Graph View**: \`Cmd + G\` to see how your notes connect.
+- **Highlight**: \`Cmd + H\` to highlight selected text.
 - **Cancel/Close**: Press \`Esc\` to exit modals.
 
 ## Global Shortcuts
 - **Toggle Visibility**: \`Cmd+Shift+C\` from anywhere on your OS to hide or show PaperCache.
-- **Global New Note**: \`Cmd+Shift+S\` (default \`Cmd+Shift+N\`) to spawn a new floating note anywhere.
+- **Global New Note**: \`Cmd+Shift+N\` to spawn a new floating note anywhere.
+- **Settings**: \`Cmd+Shift+S\` to open the settings panel.
 
 *Example use:* Press \`Cmd+K\` right now, select "Settings", and set your global hotkey!
 

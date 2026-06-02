@@ -523,13 +523,13 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
                 to: end,
                 deco: Decoration.replace({
                   widget: new (class extends WidgetType {
+                    eq() { return true }
                     toDOM() {
                       const hr = document.createElement('hr')
                       hr.className = 'cm-hr'
                       return hr
                     }
-                  })(),
-                  block: true,
+                  })()
                 }),
               })
             }
@@ -874,6 +874,16 @@ function App() {
         setNotes((prev) => [newNote, ...prev])
         setCurrentNoteIndex(0)
         window.electronAPI.saveNote(id, '')
+      }
+
+      if (e.key === 'e' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        e.stopPropagation()
+        const note = notesRef.current[currentNoteIndexRef.current]
+        if (note) {
+          const filename = note.id.replace(/\.md$/, '')
+          window.electronAPI.exportNote(filename, note.content)
+        }
       }
 
       if (e.key === 'p' && (e.metaKey || e.ctrlKey)) {
