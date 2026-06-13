@@ -15,6 +15,7 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 - **Reactive math & variables** — define `/var x = 10`, write `x * 3 =`, get `30`. Change the variable, everything updates. Works across notes with `/globvar`.
 - **Inline AI** — type `/ai <prompt>`, press enter, get the answer inserted directly into your note. No sidebar, no context switch.
 - **Auto-highlights hex colors, dates, and times** — `#D97757` renders as a color pill. `2024-05-31` gets highlighted. Useful at a glance.
+- **Interactive Checkboxes** — Type `/check` to create an interactive checkbox that strikes through text when clicked.
 - **Tags & folders** — `!tagname` for tags, `/` in note titles for folders. Simple conventions, no UI overhead.
 - **Graph view** — see how your notes connect (`Cmd+G`).
 

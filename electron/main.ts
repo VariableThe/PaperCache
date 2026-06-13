@@ -192,6 +192,9 @@ PaperCache is your intelligent, minimalist markdown scratchpad.
 
 To navigate, use **Cmd + Click** (or **Ctrl + Click**) on any internal link. You can look at all the files in the order you want!
 
+Here's an interactive checkbox to try out right now:
+/check I am learning PaperCache!
+
 Try Cmd+Clicking these to learn the ropes:
 - [1. Basics](/file commands/basics.md)
 - [2. Folders](/file commands/folders.md)
