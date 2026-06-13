@@ -9,6 +9,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Code Snippets**: Supports triple backtick fenced code blocks with language-specific syntax highlighting, along with a built-in one-click "Copy Code" button that displays a checkmark upon success.
 - **Color Format Recognition**: Automatically detects hex colors (e.g., `#D97757` or `#fff`) and renders a small inline preview color pill.
 - **Date & Time Formats**: Highlights standard date (`YYYY-MM-DD`) and time (`HH:MM` or `HH:MM:SS`) formats into clean, distinct pills.
+- **Interactive Checkboxes**: Type `/check` to create an interactive checkbox widget. Clicking it changes it to `/checked` and visually strikes through the text on that line!
 - **Customizable Theming & Fonts**: Customize fonts, text colors, background colors, background images, and individual highlight colors for variables, AI, and math. Supports full dark mode (`grid-dark`, `blueprint`) and custom zoom scaling.
 
 ## Math, Variables, and Calculations

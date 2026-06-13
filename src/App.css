@@ -597,3 +597,44 @@ body {
   margin: 16px 0;
   width: 100%;
 }
+
+.cm-checkbox-widget {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #ff6b81; /* light pinkish red */
+  border-radius: 4px;
+  margin-right: 6px;
+  cursor: pointer;
+  vertical-align: middle;
+  color: transparent;
+  background-color: transparent;
+  transition: all 0.2s ease;
+  user-select: none;
+  margin-top: -2px;
+}
+
+.cm-checkbox-widget.cm-checkbox-checked {
+  background-color: #ff6b81; /* fill color */
+  color: white; /* tick color */
+}
+
+.cm-checkbox-widget svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 3px;
+}
+
+.cm-check-highlight {
+  color: #ff6b81;
+  background-color: rgba(255, 107, 129, 0.1);
+  border-radius: 2px;
+}
+
+.cm-checked-line-text {
+  text-decoration: line-through;
+  text-decoration-color: #ff6b81;
+  color: #ff6b81;
+}

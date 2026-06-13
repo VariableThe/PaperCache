@@ -1,9 +1,13 @@
 {
   "name": "papercache",
   "private": true,
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "main": "dist-electron/main.js",
+  "author": {
+    "name": "Aditya Sharma",
+    "email": "adityasharma.variable@gmail.com"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

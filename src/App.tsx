@@ -153,6 +153,47 @@ class CopyWidget extends WidgetType {
   }
 }
 
+class CheckboxWidget extends WidgetType {
+  checked: boolean
+  pos: number
+  view: EditorView
+
+  constructor(checked: boolean, pos: number, view: EditorView) {
+    super()
+    this.checked = checked
+    this.pos = pos
+    this.view = view
+  }
+
+  eq(other: CheckboxWidget) {
+    return other.checked === this.checked && other.pos === this.pos
+  }
+
+  toDOM() {
+    const wrap = document.createElement('span')
+    wrap.className = 'cm-checkbox-widget' + (this.checked ? ' cm-checkbox-checked' : '')
+
+    if (this.checked) {
+      wrap.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
+    } else {
+      wrap.innerHTML = `` // empty for unchecked, border provides the box
+    }
+
+    wrap.onclick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const from = this.pos
+      const to = this.pos + (this.checked ? 8 : 6) // length of "/checked" or "/check"
+      const insert = this.checked ? '/check' : '/checked'
+      this.view.dispatch({
+        changes: { from, to, insert },
+      })
+    }
+
+    return wrap
+  }
+}
+
 class VariableWidget extends WidgetType {
   value: string
   constructor(value: string) {
@@ -426,6 +467,39 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
               to: end,
               deco: Decoration.mark({ class: 'cm-tag-highlight' }),
             })
+          }
+        }
+
+        // Checkboxes (/check, /checked)
+        const reCheck = /\/(check(?:ed)?)\b/g
+        while ((match = reCheck.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          const isChecked = match[1] === 'checked'
+
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.replace({ widget: new CheckboxWidget(isChecked, start, view) }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-check-highlight' }),
+            })
+          }
+
+          if (isChecked) {
+            const line = view.state.doc.lineAt(start)
+            if (line.to > end) {
+              decos.push({
+                from: end,
+                to: line.to,
+                deco: Decoration.mark({ class: 'cm-checked-line-text' }),
+              })
+            }
           }
         }
       } // end of visibleRanges iteration
