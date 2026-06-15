@@ -572,6 +572,25 @@ body {
   border-radius: 2px;
 }
 
+.cm-currency-pill {
+  display: inline-block;
+  background-color: rgba(13, 148, 136, 0.15); /* Teal */
+  color: #0d9488;
+  padding: 0px 6px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.95em;
+  margin: 0 2px;
+  border: 1px solid rgba(13, 148, 136, 0.3);
+}
+
+.cm-currency-highlight {
+  color: #0d9488;
+  background-color: rgba(13, 148, 136, 0.1);
+  border-radius: 2px;
+}
+
 .cm-tag-pill {
   display: inline-block;
   background-color: rgba(59, 130, 246, 0.15); /* Blue */
