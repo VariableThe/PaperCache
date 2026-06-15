@@ -450,6 +450,26 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
           }
         }
 
+        // Currency Formats
+        const reCurrency = /[$€£¥₹]\s*\d+(?:,\d{3})*(?:\.\d{1,2})?/g
+        while ((match = reCurrency.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-currency-pill' }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-currency-highlight' }),
+            })
+          }
+        }
+
         // Tags (!tag)
         const reTag = /![a-zA-Z0-9_-]+/g
         while ((match = reTag.exec(text)) !== null) {
@@ -708,6 +728,12 @@ function App() {
   }, [currentNoteIndex])
 
   useEffect(() => {
+    if (notes.length > 0 && currentNoteIndex >= 0 && currentNoteIndex < notes.length) {
+      localStorage.setItem('papercache-last-open-note', notes[currentNoteIndex].id)
+    }
+  }, [currentNoteIndex, notes])
+
+  useEffect(() => {
     if (showNoteSearch && searchInputRef.current) {
       setTimeout(() => {
         searchInputRef.current?.focus()
@@ -723,6 +749,13 @@ function App() {
       const loaded = await window.electronAPI.getNotes()
       if (loaded.length > 0) {
         setNotes(loaded)
+        const lastOpenNoteId = localStorage.getItem('papercache-last-open-note')
+        if (lastOpenNoteId) {
+          const idx = loaded.findIndex((n: Note) => n.id === lastOpenNoteId)
+          if (idx !== -1) {
+            setCurrentNoteIndex(idx)
+          }
+        }
       }
     }
     loadNotes()
