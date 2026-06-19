@@ -664,7 +664,7 @@ body {
   justify-content: center;
   width: 14px;
   height: 14px;
-  border: 2px solid #7EB8D4; /* pale steel blue */
+  border: 2px solid #7eb8d4; /* pale steel blue */
   border-radius: 50%;
   margin-right: 6px;
   cursor: pointer;
@@ -677,7 +677,7 @@ body {
 }
 
 .cm-rem-widget.cm-rem-checked {
-  background-color: #7EB8D4; /* fill color */
+  background-color: #7eb8d4; /* fill color */
   color: white; /* tick color */
 }
 
@@ -688,8 +688,8 @@ body {
 
 .cm-rem-checked-line-text {
   text-decoration: line-through;
-  text-decoration-color: #7EB8D4;
-  color: #7EB8D4;
+  text-decoration-color: #7eb8d4;
+  color: #7eb8d4;
   opacity: 0.6;
 }
 
@@ -698,9 +698,9 @@ body {
 }
 
 .cm-rem-widget.cm-rem-overdue {
-  border-color: #FF3B30; /* Red */
+  border-color: #ff3b30; /* Red */
 }
 
 .cm-overdue-line-text {
-  color: #FF3B30 !important;
+  color: #ff3b30 !important;
 }

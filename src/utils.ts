@@ -3,7 +3,7 @@ export const getFolderColor = (str: string): string => {
   let colors: Record<string, string> = {}
   try {
     colors = JSON.parse(localStorage.getItem('papercache-folder-colors') || '{}')
-  } catch (e) {}
+  } catch {}
 
   if (colors[str]) return colors[str]
 

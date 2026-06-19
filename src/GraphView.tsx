@@ -65,7 +65,7 @@ export default function GraphView({
     (node: any) => {
       onNodeClick(node.id)
     },
-    [onNodeClick],
+    [onNodeClick]
   )
 
   return (

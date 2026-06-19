@@ -1,906 +1,107 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef, useEffect } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import {
-  ViewPlugin,
-  Decoration,
-  MatchDecorator,
-  EditorView,
-  keymap,
-  WidgetType,
-  ViewUpdate,
-} from '@codemirror/view'
+import { EditorView, keymap } from '@codemirror/view'
 import { Prec } from '@codemirror/state'
-import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { syntaxHighlighting } from '@codemirror/language'
 import { search } from '@codemirror/search'
 import { insertTab, indentLess } from '@codemirror/commands'
 import * as mathjs from 'mathjs'
 import OpenAI from 'openai'
+
+import './App.css'
+import { getFolderColor } from './utils'
 import GraphView from './GraphView'
 import { RemindersPage } from './components/RemindersPage'
-import './App.css'
 
-import { getFolderColor } from './utils'
-
-const mdHighlighting = HighlightStyle.define([
-  { tag: t.heading1, fontSize: '1.4em', fontWeight: 'bold' },
-  { tag: t.heading2, fontSize: '1.2em', fontWeight: 'bold' },
-  { tag: t.heading3, fontSize: '1.1em', fontWeight: 'bold' },
-  { tag: t.heading4, fontSize: '1em', fontWeight: 'bold' },
-  { tag: t.heading5, fontSize: '1em', fontWeight: 'bold' },
-  { tag: t.heading6, fontSize: '1em', fontWeight: 'bold' },
-  { tag: t.strong, fontWeight: 'bold' },
-  { tag: t.emphasis, fontStyle: 'italic' },
-  { tag: t.strikethrough, textDecoration: 'line-through' },
-  { tag: t.link, color: '#3b82f6', textDecoration: 'underline' },
-  { tag: t.url, color: '#3b82f6' },
-  { tag: t.processingInstruction, color: 'rgba(128,128,128,0.5)' },
-  { tag: t.meta, color: 'rgba(128,128,128,0.5)' },
-  { tag: t.punctuation, color: 'rgba(128,128,128,0.5)' },
-])
-
-// Custom Decorators for syntax highlighting
-const numberMatcher = new MatchDecorator({
-  regexp: /\b\d+(\.\d+)?\b/g,
-  decoration: Decoration.mark({ class: 'cm-custom-number' }),
-})
-const symbolMatcher = new MatchDecorator({
-  regexp: /[+\-*/=^()]/g,
-  decoration: Decoration.mark({ class: 'cm-custom-symbol' }),
-})
-const aiMatcher = new MatchDecorator({
-  regexp: /\u200B[\s\S]*?\u200C/g,
-  decoration: Decoration.mark({ class: 'cm-custom-ai' }),
-})
-const mathMatcher = new MatchDecorator({
-  regexp: /\u200B.*/g, // matches zero-width space and everything after it
-  decoration: Decoration.mark({ class: 'cm-custom-math' }),
-})
-
-const numberPlugin = ViewPlugin.fromClass(
-  class {
-    decorations
-    constructor(view: any) {
-      this.decorations = numberMatcher.createDeco(view)
-    }
-    update(update: any) {
-      this.decorations = numberMatcher.updateDeco(update, this.decorations)
-    }
-  },
-  { decorations: (v) => v.decorations },
-)
-
-const symbolPlugin = ViewPlugin.fromClass(
-  class {
-    decorations
-    constructor(view: any) {
-      this.decorations = symbolMatcher.createDeco(view)
-    }
-    update(update: any) {
-      this.decorations = symbolMatcher.updateDeco(update, this.decorations)
-    }
-  },
-  { decorations: (v) => v.decorations },
-)
-
-const aiPlugin = ViewPlugin.fromClass(
-  class {
-    decorations
-    constructor(view: any) {
-      this.decorations = aiMatcher.createDeco(view)
-    }
-    update(update: any) {
-      this.decorations = aiMatcher.updateDeco(update, this.decorations)
-    }
-  },
-  { decorations: (v) => v.decorations },
-)
-
-const mathPlugin = ViewPlugin.fromClass(
-  class {
-    decorations
-    constructor(view: any) {
-      this.decorations = mathMatcher.createDeco(view)
-    }
-    update(update: any) {
-      this.decorations = mathMatcher.updateDeco(update, this.decorations)
-    }
-  },
-  { decorations: (v) => v.decorations },
-)
-class CopyWidget extends WidgetType {
-  code: string
-  language: string
-  constructor(code: string, language: string) {
-    super()
-    this.code = code
-    this.language = language
-  }
-
-  eq(other: CopyWidget) {
-    return other.code === this.code && other.language === this.language
-  }
-
-  toDOM() {
-    const wrap = document.createElement('span')
-    wrap.setAttribute('aria-hidden', 'true')
-    wrap.className = 'cm-copy-button'
-    wrap.title = 'Copy code'
-
-    if (this.language) {
-      const langSpan = document.createElement('sup')
-      langSpan.textContent = this.language
-      langSpan.className = 'cm-code-lang'
-      wrap.appendChild(langSpan)
-    }
-
-    const iconSpan = document.createElement('span')
-    // Standard copy icon (two offset rounded rectangles)
-    iconSpan.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`
-    wrap.appendChild(iconSpan)
-
-    wrap.onclick = (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      navigator.clipboard.writeText(this.code)
-      const originalHtml = iconSpan.innerHTML
-      // Checkmark icon
-      iconSpan.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-      setTimeout(() => {
-        iconSpan.innerHTML = originalHtml
-      }, 2000)
-    }
-    return wrap
-  }
-}
-
-class CheckboxWidget extends WidgetType {
-  checked: boolean
-  pos: number
-  view: EditorView
-
-  constructor(checked: boolean, pos: number, view: EditorView) {
-    super()
-    this.checked = checked
-    this.pos = pos
-    this.view = view
-  }
-
-  eq(other: CheckboxWidget) {
-    return other.checked === this.checked && other.pos === this.pos
-  }
-
-  toDOM() {
-    const wrap = document.createElement('span')
-    wrap.className = 'cm-checkbox-widget' + (this.checked ? ' cm-checkbox-checked' : '')
-
-    if (this.checked) {
-      wrap.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
-    } else {
-      wrap.innerHTML = `` // empty for unchecked, border provides the box
-    }
-
-    wrap.onclick = (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      const from = this.pos
-      const to = this.pos + (this.checked ? 8 : 6) // length of "/checked" or "/check"
-      const insert = this.checked ? '/check' : '/checked'
-      this.view.dispatch({
-        changes: { from, to, insert },
-      })
-    }
-
-    return wrap
-  }
-}
-
-class VariableWidget extends WidgetType {
-  value: string
-  constructor(value: string) {
-    super()
-    this.value = value
-  }
-  eq(other: VariableWidget) {
-    return other.value === this.value
-  }
-  toDOM() {
-    const span = document.createElement('span')
-    span.textContent = String(this.value)
-    span.className = 'cm-variable-pill'
-    return span
-  }
-}
-
-class ReminderWidget extends WidgetType {
-  checked: boolean
-  overdue: boolean
-  pos: number
-  view: EditorView
-
-  constructor(checked: boolean, overdue: boolean, pos: number, view: EditorView) {
-    super()
-    this.checked = checked
-    this.overdue = overdue
-    this.pos = pos
-    this.view = view
-  }
-
-  eq(other: ReminderWidget) {
-    return other.checked === this.checked && other.pos === this.pos && other.overdue === this.overdue
-  }
-
-  toDOM() {
-    const wrap = document.createElement('span')
-    wrap.className = 'cm-rem-widget' + (this.checked ? ' cm-rem-checked' : '') + (this.overdue && !this.checked ? ' cm-rem-overdue' : '')
-
-    if (this.checked) {
-      wrap.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg>`
-    } else {
-      wrap.innerHTML = `` // empty for unchecked, border provides the box
-    }
-
-    // Use onmousedown to prevent CodeMirror from interfering with selection
-    wrap.onmousedown = (e) => {
-      e.preventDefault()
-      e.stopPropagation()
-      
-      const from = this.pos
-      const to = this.pos + (this.checked ? 10 : 5) // length of "/task-done" or "/task"
-      const insert = this.checked ? '/task' : '/task-done'
-      
-      this.view.dispatch({
-        changes: { from, to, insert },
-      })
-    }
-
-    return wrap
-  }
-
-  ignoreEvent() {
-    return true
-  }
-}
-
-const hideMarkdownPlugin = ViewPlugin.fromClass(
-  class {
-    decorations
-    constructor(view: EditorView) {
-      this.decorations = this.buildDeco(view)
-    }
-    update(update: any) {
-      if (update.docChanged || update.viewportChanged || update.selectionSet) {
-        this.decorations = this.buildDeco(update.view)
-      }
-    }
-
-    buildDeco(view: EditorView) {
-      const decos: { from: number; to: number; deco: Decoration }[] = []
-
-      const selectionRanges = view.state.selection.ranges
-      const isCursorInMatch = (start: number, end: number) => {
-        return selectionRanges.some((r: any) => r.from <= end && r.to >= start)
-      }
-
-      const linkRanges: { from: number; to: number }[] = []
-      const fullDoc = view.state.doc.toString()
-
-      // Build variable scope (incorporate global variables)
-      const scope: any = Object.assign({}, (window as any).__globalVariables || {})
-      const reVar = /^\/var\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
-      let varMatch
-      while ((varMatch = reVar.exec(fullDoc)) !== null) {
-        const name = varMatch[1]
-        try {
-          scope[name] = mathjs.evaluate(varMatch[2], scope)
-        } catch (e) {
-          scope[name] = varMatch[2].trim()
-        }
-      }
-      const scopeKeys = Object.keys(scope).sort((a, b) => b.length - a.length)
-
-      for (const { from, to } of view.visibleRanges) {
-        const text = view.state.doc.sliceString(from, to)
-
-        const reHighlight = /==(.*?)==/g
-        let match
-        while ((match = reHighlight.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          if (start + 2 <= end - 2) {
-            if (!isCursorInMatch(start, end)) {
-              decos.push({ from: start, to: start + 2, deco: Decoration.replace({}) })
-              decos.push({ from: end - 2, to: end, deco: Decoration.replace({}) })
-            }
-            decos.push({
-              from: start + 2,
-              to: end - 2,
-              deco: Decoration.mark({ class: 'cm-custom-highlight' }),
-            })
-          }
-        }
-
-        const reList = /^(\s*)\*\s+/gm
-        while ((match = reList.exec(text)) !== null) {
-          const start = from + match.index + match[1].length
-          const end = start + 1 // only the asterisk
-          if (!isCursorInMatch(start, end + 1)) {
-            decos.push({ from: start, to: end, deco: Decoration.replace({}) })
-          }
-        }
-
-        // Handled by syntaxTree below
-
-        const reHeading = /^#{1,6}\s+/gm
-        while ((match = reHeading.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
-            decos.push({ from: start, to: end, deco: Decoration.replace({}) })
-          }
-        }
-
-        const reLink = /\[(.*?)\]\((.*?)\)/g
-        while ((match = reLink.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          linkRanges.push({ from: start, to: end })
-
-          const textStart = start + 1
-          const textEnd = start + 1 + match[1].length
-          const urlStart = textEnd
-          const urlEnd = end
-
-          let isFile = false
-          let linkPath = match[2].trim()
-
-          if (linkPath.startsWith('/file')) {
-            isFile = true
-            linkPath = linkPath.substring(5).trim()
-          } else if (linkPath.startsWith('/url')) {
-            linkPath = linkPath.substring(4).trim()
-          }
-
-          if (!isCursorInMatch(start, end)) {
-            decos.push({ from: start, to: textStart, deco: Decoration.replace({}) })
-            decos.push({ from: urlStart, to: urlEnd, deco: Decoration.replace({}) })
-          }
-
-          if (isFile) {
-            decos.push({
-              from: textStart,
-              to: textEnd,
-              deco: Decoration.mark({
-                class: 'cm-custom-file-link',
-                attributes: { 'data-path': linkPath, title: 'Open file: ' + linkPath },
-              }),
-            })
-          } else {
-            decos.push({
-              from: textStart,
-              to: textEnd,
-              deco: Decoration.mark({
-                class: 'cm-custom-clickable-link',
-                attributes: { 'data-url': linkPath, title: linkPath },
-              }),
-            })
-          }
-        }
-
-        const reFile = /\/file\s+([^\s)\]]+)/g
-        while ((match = reFile.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-
-          if (linkRanges.some((r) => r.from <= start && r.to >= end)) continue
-
-          const pathStart = start + match[0].indexOf(match[1])
-
-          if (!isCursorInMatch(start, end)) {
-            decos.push({ from: start, to: pathStart, deco: Decoration.replace({}) })
-          }
-
-          decos.push({
-            from: pathStart,
-            to: end,
-            deco: Decoration.mark({
-              class: 'cm-custom-file-link',
-              attributes: { 'data-path': match[1], title: 'Open file: ' + match[1] },
-            }),
-          })
-        }
-
-        // Variable rendering
-        if (scopeKeys.length > 0) {
-          const reKeys = new RegExp(`\\b(${scopeKeys.join('|')})\\b`, 'g')
-          while ((match = reKeys.exec(text)) !== null) {
-            const start = from + match.index
-            const end = start + match[0].length
-            const line = view.state.doc.lineAt(start)
-            if (line.text.trim().startsWith('/var')) continue // don't replace inside variable definitions!
-
-            if (!isCursorInMatch(start, end)) {
-              decos.push({
-                from: start,
-                to: end,
-                deco: Decoration.replace({ widget: new VariableWidget(scope[match[1]]) }),
-              })
-            } else {
-              decos.push({
-                from: start,
-                to: end,
-                deco: Decoration.mark({ class: 'cm-variable-highlight' }),
-              })
-            }
-          }
-        }
-
-        // Color Formats
-        const reColor = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g
-        while ((match = reColor.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({
-                class: 'cm-color-pill',
-                attributes: { style: `--pill-color: ${match[0]}` },
-              }),
-            })
-          } else {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({
-                class: 'cm-color-highlight',
-                attributes: { style: `--pill-color: ${match[0]}` },
-              }),
-            })
-          }
-        }
-
-        // Date Formats (YYYY-MM-DD)
-        const reDate = /\b\d{4}-\d{2}-\d{2}\b/g
-        while ((match = reDate.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-date-pill' }),
-            })
-          } else {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-date-highlight' }),
-            })
-          }
-        }
-
-        // Time Formats (HH:MM or HH:MM:SS)
-        const reTime = /\b\d{2}:\d{2}(?::\d{2})?\b/g
-        while ((match = reTime.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-time-pill' }),
-            })
-          } else {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-time-highlight' }),
-            })
-          }
-        }
-
-        // Currency Formats
-        const reCurrency = /[$€£¥₹]\s*\d+(?:,\d{3})*(?:\.\d{1,2})?/g
-        while ((match = reCurrency.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-currency-pill' }),
-            })
-          } else {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-currency-highlight' }),
-            })
-          }
-        }
-
-        // Tags (!tag)
-        const reTag = /![a-zA-Z0-9_-]+/g
-        while ((match = reTag.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-tag-pill' }),
-            })
-          } else {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-tag-highlight' }),
-            })
-          }
-        }
-
-        // Checkboxes (/check, /checked)
-        const reCheck = /\/(check(?:ed)?)\b/g
-        while ((match = reCheck.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          const isChecked = match[1] === 'checked'
-
-          if (!isCursorInMatch(start, end)) {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.replace({ widget: new CheckboxWidget(isChecked, start, view) }),
-            })
-          } else {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-check-highlight' }),
-            })
-          }
-
-          if (isChecked) {
-            const line = view.state.doc.lineAt(start)
-            if (line.to > end) {
-              decos.push({
-                from: end,
-                to: line.to,
-                deco: Decoration.mark({ class: 'cm-checked-line-text' }),
-              })
-            }
-          }
-        }
-
-        // Tasks (/task, /task-done)
-        const reRem = /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+/g
-        while ((match = reRem.exec(text)) !== null) {
-          const start = from + match.index
-          const end = start + match[0].length
-          const isChecked = match[1] === 'task-done'
-
-          const line = view.state.doc.lineAt(start)
-          let isOverdue = false
-          const fullRe = /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/
-          const fullMatch = fullRe.exec(line.text)
-          if (fullMatch && fullMatch[4]) {
-            if (new Date(fullMatch[4]).getTime() < Date.now()) isOverdue = true
-          }
-
-          if (!isCursorInMatch(start, end)) {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.replace({ widget: new ReminderWidget(isChecked, isOverdue, start, view) }),
-            })
-          } else {
-            decos.push({
-              from: start,
-              to: end,
-              deco: Decoration.mark({ class: 'cm-rem-highlight' }),
-            })
-          }
-
-          if (line.to > end) {
-            let classStr = 'cm-rem-line-text'
-            if (isChecked) classStr += ' cm-checked-line-text'
-            else if (isOverdue) classStr += ' cm-overdue-line-text'
-
-            decos.push({
-              from: end,
-              to: line.to,
-              deco: Decoration.mark({ class: classStr }),
-            })
-          }
-        }
-      } // end of visibleRanges iteration
-
-      // Traverse AST for Code Blocks
-      syntaxTree(view.state).iterate({
-        enter: (node) => {
-          if (node.type.name === 'FencedCode') {
-            let lang = ''
-            let code = ''
-            let startCodeMark = null
-            let endCodeMark = null
-            let codeInfo = null
-
-            let child = node.node.firstChild
-            while (child) {
-              if (child.type.name === 'CodeInfo') {
-                lang = view.state.doc.sliceString(child.from, child.to)
-                codeInfo = child
-              }
-              if (child.type.name === 'CodeText')
-                code = view.state.doc.sliceString(child.from, child.to)
-              if (child.type.name === 'CodeMark') {
-                if (!startCodeMark) startCodeMark = child
-                else endCodeMark = child
-              }
-              child = child.nextSibling
-            }
-
-            const start = node.from
-            const end = node.to
-
-            if (!isCursorInMatch(start, end)) {
-              if (startCodeMark) {
-                const replaceTo = codeInfo ? codeInfo.to : startCodeMark.to
-                decos.push({
-                  from: startCodeMark.from,
-                  to: replaceTo,
-                  deco: Decoration.replace({}),
-                })
-              }
-              if (endCodeMark) {
-                decos.push({
-                  from: endCodeMark.from,
-                  to: endCodeMark.to,
-                  deco: Decoration.replace({}),
-                })
-              }
-            } else {
-              if (codeInfo && !isCursorInMatch(codeInfo.from, codeInfo.to)) {
-                decos.push({ from: codeInfo.from, to: codeInfo.to, deco: Decoration.replace({}) })
-              }
-            }
-
-            if (startCodeMark) {
-              decos.push({
-                from: startCodeMark.from,
-                to: startCodeMark.from,
-                deco: Decoration.widget({ widget: new CopyWidget(code, lang), side: 1 }),
-              })
-            }
-
-            const startLine = view.state.doc.lineAt(start).number
-            const endLine = view.state.doc.lineAt(end).number
-            for (let i = startLine; i <= endLine; i++) {
-              const line = view.state.doc.line(i)
-              let className = 'cm-code-block-line'
-              if (i === startLine) className += ' cm-code-block-first'
-              if (i === endLine) className += ' cm-code-block-last'
-              decos.push({
-                from: line.from,
-                to: line.from,
-                deco: Decoration.line({ class: className }),
-              })
-            }
-          }
-
-          if (node.type.name === 'EmphasisMark' || node.type.name === 'StrongMark') {
-            const parent = node.node.parent
-            if (parent) {
-              const start = parent.from
-              const end = parent.to
-              if (!isCursorInMatch(start, end)) {
-                decos.push({ from: node.from, to: node.to, deco: Decoration.replace({}) })
-              }
-            }
-          }
-
-          if (node.type.name === 'HorizontalRule') {
-            const start = node.from
-            const end = node.to
-            if (!isCursorInMatch(start, end)) {
-              decos.push({
-                from: start,
-                to: end,
-                deco: Decoration.replace({
-                  widget: new (class extends WidgetType {
-                    eq() {
-                      return true
-                    }
-                    toDOM() {
-                      const hr = document.createElement('hr')
-                      hr.className = 'cm-hr'
-                      return hr
-                    }
-                  })(),
-                }),
-              })
-            }
-          }
-        },
-      })
-
-      try {
-        const ranges = decos.map((d) => d.deco.range(d.from, d.to))
-        return Decoration.set(ranges, true)
-      } catch (e) {
-        console.error('Decoration builder error:', e)
-        return Decoration.none
-      }
-    }
-  },
-  { decorations: (v) => v.decorations },
-)
-
-const remConverterPlugin = ViewPlugin.fromClass(
-  class {
-    update(update: ViewUpdate) {
-      if (!update.docChanged) return
-      
-      const docStr = update.state.doc.toString()
-      const changes: {from: number, to: number, insert: string}[] = []
-      
-      // Match /task or /task-done followed by a space, but ONLY if not already followed by a date bracket (
-      const re = /^\/(task|task-done) (?!\()/gm
-      let match
-      while ((match = re.exec(docStr)) !== null) {
-        const now = new Date()
-        const yyyy = now.getFullYear()
-        const mm = String(now.getMonth() + 1).padStart(2, '0')
-        const dd = String(now.getDate()).padStart(2, '0')
-        const hh = String(now.getHours()).padStart(2, '0')
-        const mins = String(now.getMinutes()).padStart(2, '0')
-        
-        const timestamp = `(${yyyy}-${mm}-${dd} ${hh}:${mins})`
-        
-        changes.push({
-          from: match.index,
-          to: match.index + match[0].length,
-          insert: `/${match[1]} ${timestamp} `
-        })
-      }
-
-      // Match shorthand timers at the end of a task, ONLY after a space or Enter is typed
-      const reShort = /^(\/(?:task|task-done)[^\n]*?@\s*)((?:[0-9]+[smhd])+|tmrw)([ \t]+|\n|(?:\r\n))/gm
-      while ((match = reShort.exec(docStr)) !== null) {
-        const now = new Date()
-        const short = match[2]
-        if (short === 'tmrw') {
-          now.setDate(now.getDate() + 1)
-          now.setHours(9, 0, 0, 0)
-        } else {
-          const partRe = /([0-9]+)([smhd])/g
-          let partMatch
-          while ((partMatch = partRe.exec(short)) !== null) {
-            const val = parseInt(partMatch[1])
-            const unit = partMatch[2]
-            if (unit === 's') now.setSeconds(now.getSeconds() + val)
-            else if (unit === 'm') now.setMinutes(now.getMinutes() + val)
-            else if (unit === 'h') now.setHours(now.getHours() + val)
-            else if (unit === 'd') now.setDate(now.getDate() + val)
-          }
-        }
-        
-        const yyyy = now.getFullYear()
-        const mm = String(now.getMonth() + 1).padStart(2, '0')
-        const dd = String(now.getDate()).padStart(2, '0')
-        const hh = String(now.getHours()).padStart(2, '0')
-        const mins = String(now.getMinutes()).padStart(2, '0')
-        
-        const absoluteDate = `${yyyy}-${mm}-${dd} ${hh}:${mins}`
-        
-        // Push the change to replace ONLY the shorthand part
-        changes.push({
-          from: match.index + match[1].length,
-          to: match.index + match[1].length + match[2].length,
-          insert: absoluteDate
-        })
-      }
-      
-      if (changes.length > 0) {
-        setTimeout(() => {
-          update.view.dispatch({ changes })
-        }, 10)
-      }
-    }
-  }
-)
-
-interface Note {
-  id: string
-  content: string
-  mtime: number
-}
-
-// Ensure electronAPI is typed
-declare global {
-  interface Window {
-    electronAPI: any
-  }
-}
+import { useAppStore } from './store/useAppStore'
+import { useSettingsStore } from './store/useSettingsStore'
+import { useAIStore } from './store/useAIStore'
+
+import { useNoteStorage } from './hooks/useNoteStorage'
+import { useVariables } from './hooks/useVariables'
+import { useReminders } from './hooks/useReminders'
+import { useGlobalHotkey } from './hooks/useGlobalHotkey'
+
+import { mdHighlighting } from './lib/editor/matchers'
+import {
+  numberPlugin,
+  symbolPlugin,
+  aiPlugin,
+  mathPlugin,
+  hideMarkdownPlugin,
+  remConverterPlugin,
+} from './lib/editor/plugins'
+import { getSecure } from './lib/safeStorage'
 
 function App() {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [currentNoteIndex, setCurrentNoteIndex] = useState<number>(0)
-  const [zoomLevel, setZoomLevel] = useState<number>(
-    Number(localStorage.getItem('papercache-zoom')) || 1,
-  )
-  const [themePreset, setThemePreset] = useState(
-    localStorage.getItem('papercache-theme') || 'paper-light',
-  )
-  const [fontFamily, setFontFamily] = useState(
-    localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace",
-  )
-  const [showRulings, setShowRulings] = useState(
-    localStorage.getItem('papercache-show-rulings') === 'true',
-  )
-  const [bgType, setBgType] = useState(localStorage.getItem('papercache-bg-type') || 'preset')
-  const [bgColor, setBgColor] = useState(localStorage.getItem('papercache-bg-color') || '#ffffff')
-  const [bgImage, setBgImage] = useState(localStorage.getItem('papercache-bg-image') || '')
+  const {
+    notes,
+    setNotes,
+    currentNoteIndex,
+    setCurrentNoteIndex,
+    zoomLevel,
+    showGraphView,
+    setShowGraphView,
+    showRemindersView,
+    setShowRemindersView,
+    isRenaming,
+    setIsRenaming,
+    renameValue,
+    setRenameValue,
+    showNoteSearch,
+    setShowNoteSearch,
+    noteSearchQuery,
+    setNoteSearchQuery,
+    searchSelectedIndex,
+    setSearchSelectedIndex,
+    showNoteActionMenu,
+    setShowNoteActionMenu,
+    showMainActionMenu,
+    setShowMainActionMenu,
+    actionMenuIndex,
+    setActionMenuIndex,
+  } = useAppStore()
 
-  const [textColor, setTextColor] = useState(
-    localStorage.getItem('papercache-color-text') || '#333333',
-  )
-  const [numColor, setNumColor] = useState(
-    localStorage.getItem('papercache-color-num') || '#007acc',
-  )
-  const [symColor, setSymColor] = useState(
-    localStorage.getItem('papercache-color-sym') || '#c586c0',
-  )
-  const [aiColor, setAiColor] = useState(localStorage.getItem('papercache-color-ai') || '#10b981')
-  const [mathColor, setMathColor] = useState(
-    localStorage.getItem('papercache-color-math') || '#f59e0b',
-  )
+  const {
+    themePreset,
+    fontFamily,
+    showRulings,
+    bgType,
+    bgColor,
+    bgImage,
+    textColor,
+    numColor,
+    symColor,
+    aiColor,
+    mathColor,
+  } = useSettingsStore()
 
-  // AI Config State
-  const [apiKey, setApiKey] = useState(localStorage.getItem('papercache-apikey') || '')
-  const [apiBaseUrl, setApiBaseUrl] = useState(
-    localStorage.getItem('papercache-baseurl') || 'https://api.openai.com/v1',
-  )
-  const [apiModel, setApiModel] = useState(localStorage.getItem('papercache-model') || 'gpt-4o')
-  const [aiSystemPrompt, setAiSystemPrompt] = useState(
-    localStorage.getItem('papercache-system-prompt') ||
-      'Please provide a short and concise answer.',
-  )
+  const { apiBaseUrl, apiModel, aiSystemPrompt, setApiKey, apiKey } = useAIStore()
 
-  const [showGraphView, setShowGraphView] = useState(false)
-  const [showRemindersView, setShowRemindersView] = useState(false)
-  const [isRenaming, setIsRenaming] = useState(false)
-  const [renameValue, setRenameValue] = useState('')
-
-  const [showNoteSearch, setShowNoteSearch] = useState(false)
-  const [noteSearchQuery, setNoteSearchQuery] = useState('')
-  const [searchSelectedIndex, setSearchSelectedIndex] = useState(0)
+  // Load Secure API Key asynchronously on mount
+  useEffect(() => {
+    async function fetchApiKey() {
+      const key = await getSecure('papercache-apikey')
+      if (key) {
+        setApiKey(key)
+      }
+    }
+    fetchApiKey()
+  }, [setApiKey])
 
   const editorRef = useRef<any>(null)
-
-  const [showNoteActionMenu, setShowNoteActionMenu] = useState(false)
-  const [showMainActionMenu, setShowMainActionMenu] = useState(false)
-  const [actionMenuIndex, setActionMenuIndex] = useState(0)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  const notesRef = useRef(notes)
-  useEffect(() => {
-    notesRef.current = notes
-  }, [notes])
+  useEffect(() => {}, [notes])
 
-  const currentNoteIndexRef = useRef(currentNoteIndex)
-  useEffect(() => {
-    currentNoteIndexRef.current = currentNoteIndex
-  }, [currentNoteIndex])
+  useEffect(() => {}, [currentNoteIndex])
 
-  useEffect(() => {
-    if (notes.length > 0 && currentNoteIndex >= 0 && currentNoteIndex < notes.length) {
-      localStorage.setItem('papercache-last-open-note', notes[currentNoteIndex].id)
-    }
-  }, [currentNoteIndex, notes])
+  // Custom Hooks
+  useNoteStorage()
+  useVariables()
+  useReminders()
+  useGlobalHotkey()
 
   useEffect(() => {
     if (showNoteSearch && searchInputRef.current) {
@@ -910,73 +111,39 @@ function App() {
     }
   }, [showNoteSearch])
 
-  // We don't save theme state to localStorage here anymore, Settings window does it and we listen via storage event.
-
-  // Load notes initially
+  // Listen to storage events to update settings if changed from Settings window
   useEffect(() => {
-    async function loadNotes() {
-      const loaded = await window.electronAPI.getNotes()
-      if (loaded.length > 0) {
-        setNotes(loaded)
-        const lastOpenNoteId = localStorage.getItem('papercache-last-open-note')
-        if (lastOpenNoteId) {
-          const idx = loaded.findIndex((n: Note) => n.id === lastOpenNoteId)
-          if (idx !== -1) {
-            setCurrentNoteIndex(idx)
-          }
-        }
-      }
-    }
-    loadNotes()
-
-    // Listen to storage events to update config if changed from Settings window
     const handleStorageChange = () => {
-      setApiKey(localStorage.getItem('papercache-apikey') || '')
-      setApiBaseUrl(localStorage.getItem('papercache-baseurl') || 'https://api.openai.com/v1')
-      setApiModel(localStorage.getItem('papercache-model') || 'gpt-4o')
-      setAiSystemPrompt(
-        localStorage.getItem('papercache-system-prompt') ||
-          'Please provide a short and concise answer.',
-      )
-
-      setShowRulings(localStorage.getItem('papercache-show-rulings') === 'true')
-      setThemePreset(localStorage.getItem('papercache-theme') || 'paper-light')
-      setFontFamily(localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace")
-      setBgType(localStorage.getItem('papercache-bg-type') || 'preset')
-      setBgColor(localStorage.getItem('papercache-bg-color') || '#ffffff')
-      setBgImage(localStorage.getItem('papercache-bg-image') || '')
-
-      setTextColor(localStorage.getItem('papercache-color-text') || '#333333')
-      setNumColor(localStorage.getItem('papercache-color-num') || '#007acc')
-      setSymColor(localStorage.getItem('papercache-color-sym') || '#c586c0')
-      setAiColor(localStorage.getItem('papercache-color-ai') || '#10b981')
-      setMathColor(localStorage.getItem('papercache-color-math') || '#f59e0b')
+      // Refresh Settings Store
+      useSettingsStore.setState({
+        themePreset: localStorage.getItem('papercache-theme-preset') || 'grid-light',
+        fontFamily: localStorage.getItem('papercache-font') || 'monospace',
+        showRulings: localStorage.getItem('papercache-rulings') !== 'false',
+        bgType: (localStorage.getItem('papercache-bg-type') as 'color' | 'image') || 'color',
+        bgColor: localStorage.getItem('papercache-bg-color') || '#ffffff',
+        bgImage: localStorage.getItem('papercache-bg-image') || '',
+        textColor: localStorage.getItem('papercache-text-color') || '#000000',
+        numColor: localStorage.getItem('papercache-num-color') || '#0000ff',
+        symColor: localStorage.getItem('papercache-sym-color') || '#ff0000',
+        aiColor: localStorage.getItem('papercache-ai-color') || '#8b5cf6',
+        mathColor: localStorage.getItem('papercache-math-color') || '#10b981',
+      })
+      // Refresh AI Store (API Key handled securely, we don't listen to localStorage for it directly)
+      useAIStore.setState({
+        apiBaseUrl: localStorage.getItem('papercache-api-base-url') || 'https://api.openai.com/v1',
+        apiModel: localStorage.getItem('papercache-api-model') || 'gpt-4o',
+        aiSystemPrompt:
+          localStorage.getItem('papercache-ai-system-prompt') ||
+          'You are a helpful assistant directly inside a markdown note. You can format your responses with markdown.',
+      })
+      // Fetch Secure API Key again
+      getSecure('papercache-apikey').then((key) => {
+        if (key) setApiKey(key)
+      })
     }
     window.addEventListener('storage', handleStorageChange)
     return () => window.removeEventListener('storage', handleStorageChange)
-  }, [])
-
-  useEffect(() => {
-    const handleOpenNote = (e: any) => {
-      let path = e.detail.path
-      if (!path.endsWith('.md')) path += '.md'
-
-      const index = notesRef.current.findIndex((n) => n.id === path)
-      if (index !== -1) {
-        setCurrentNoteIndex(index)
-      } else {
-        const newNote = { id: path, content: '', mtime: Date.now() }
-        window.electronAPI.saveNote(path, '')
-        setNotes((prev) => {
-          const updated = [newNote, ...prev]
-          setCurrentNoteIndex(0)
-          return updated
-        })
-      }
-    }
-    window.addEventListener('open-papercache-note', handleOpenNote)
-    return () => window.removeEventListener('open-papercache-note', handleOpenNote)
-  }, [])
+  }, [setApiKey])
 
   const activeNote = notes[currentNoteIndex] || { id: '', content: '' }
   const isAuto = /^\d+\.md$/.test(activeNote.id)
@@ -1030,7 +197,7 @@ function App() {
           try {
             const val = mathjs.evaluate(match[2], scope)
             scope[name] = val
-          } catch (e) {
+          } catch {
             scope[name] = match[2].trim()
           }
         }
@@ -1047,7 +214,7 @@ function App() {
               docStr = before + newLineText + after
               modified = true
             }
-          } catch (e) {}
+          } catch {}
         }
 
         // Re-evaluate ALL existing calculations in the document
@@ -1071,7 +238,7 @@ function App() {
                 calcModified = true
                 continue
               }
-            } catch (e) {}
+            } catch {}
           }
         }
 
@@ -1088,151 +255,8 @@ function App() {
         }
       }
     },
-    [notes, currentNoteIndex, activeNote.id],
+    [notes, currentNoteIndex, activeNote.id, setNotes]
   )
-
-  // Sync global variables whenever notes change
-  useEffect(() => {
-    const globals: any = {}
-    const reVar = /^\/globvar\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
-    notes.forEach((note) => {
-      let varMatch
-      while ((varMatch = reVar.exec(note.content)) !== null) {
-        const name = varMatch[1]
-        try {
-          globals[name] = mathjs.evaluate(varMatch[2], globals)
-        } catch (e) {
-          globals[name] = varMatch[2].trim()
-        }
-      }
-    })
-    ;(window as any).__globalVariables = globals
-  }, [notes])
-
-  useEffect(() => {
-    const handleGlobalKeyDown = async (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (showMainActionMenu) {
-          e.preventDefault()
-          e.stopPropagation()
-          setShowMainActionMenu(false)
-          return
-        }
-        if (showNoteSearch) {
-          e.preventDefault()
-          e.stopPropagation()
-          setShowNoteSearch(false)
-          return
-        }
-        if (showGraphView) {
-          e.preventDefault()
-          e.stopPropagation()
-          setShowGraphView(false)
-          return
-        }
-      }
-
-      // Settings Shortcut
-      if (e.key.toLowerCase() === 's' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        window.electronAPI.openSettings()
-      }
-
-      // Graph View Shortcut
-      if (e.key.toLowerCase() === 'g' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        e.stopPropagation()
-        setShowGraphView((prev) => !prev)
-      }
-
-      if (e.key === 'n' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        const id = Date.now() + '.md'
-        const newNote = { id, content: '', mtime: Date.now() }
-        setNotes((prev) => [newNote, ...prev])
-        setCurrentNoteIndex(0)
-        window.electronAPI.saveNote(id, '')
-      }
-
-      if (e.key === 'e' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        e.stopPropagation()
-        const note = notesRef.current[currentNoteIndexRef.current]
-        if (note) {
-          const filename = note.id.replace(/\.md$/, '')
-          window.electronAPI.exportNote(filename, note.content)
-        }
-      }
-
-      if (e.key.toLowerCase() === 'p' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        e.stopPropagation()
-        setShowNoteSearch(true)
-        setNoteSearchQuery('')
-        setSearchSelectedIndex(0)
-      }
-
-      if (e.key.toLowerCase() === 't' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        e.stopPropagation()
-        setShowRemindersView(true)
-      }
-
-      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        e.stopPropagation()
-        setShowMainActionMenu((prev) => !prev)
-      }
-
-      // Zoom Shortcuts
-      if ((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+' || e.key === '-')) {
-        e.preventDefault()
-        setZoomLevel((prev) => {
-          const newZoom = e.key === '-' ? Math.max(0.5, prev - 0.1) : Math.min(3, prev + 0.1)
-          localStorage.setItem('papercache-zoom', newZoom.toString())
-          return newZoom
-        })
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key === '0') {
-        e.preventDefault()
-        setZoomLevel(1)
-        localStorage.setItem('papercache-zoom', '1')
-      }
-    }
-
-    // Sync global shortcut on load
-    const shortcut =
-      localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N'
-    if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut('new-note', '', shortcut)
-    }
-    const toggleShortcut =
-      localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C'
-    if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut('toggle', '', toggleShortcut)
-    }
-
-    // Listen for global new note shortcut
-    if (window.electronAPI.onTriggerNewNote) {
-      window.electronAPI.onTriggerNewNote(() => {
-        const id = Date.now() + '.md'
-        const initialNote = { id, content: '', mtime: Date.now() }
-        setNotes((prev) => [initialNote, ...prev])
-        window.electronAPI.saveNote(id, '')
-        setCurrentNoteIndex(0)
-      })
-    }
-
-    if (window.electronAPI.onTriggerTasks) {
-      window.electronAPI.onTriggerTasks(() => {
-        setShowRemindersView((prev) => !prev)
-      })
-    }
-
-    window.addEventListener('keydown', handleGlobalKeyDown, { capture: true })
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true })
-  }, [showMainActionMenu, showNoteSearch, showGraphView])
 
   const containerStyle: any = {
     '--font-family': fontFamily,
@@ -1258,7 +282,6 @@ function App() {
     () => [
       EditorView.lineWrapping,
       Prec.highest(
-        // eslint-disable-next-line react-hooks/refs
         keymap.of([
           { key: 'Tab', preventDefault: true, run: insertTab },
           { key: 'Shift-Tab', preventDefault: true, run: indentLess },
@@ -1284,7 +307,7 @@ function App() {
           {
             key: 'Mod-e',
             run: () => {
-              const note = notesRef.current[currentNoteIndexRef.current]
+              const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
               if (note) {
                 const filename = note.id.split('/').pop() || 'note.md'
                 window.electronAPI.exportNote(filename, note.content)
@@ -1295,7 +318,7 @@ function App() {
           {
             key: 'Mod-Backspace',
             run: () => {
-              const note = notesRef.current[currentNoteIndexRef.current]
+              const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
               if (note) {
                 if (note.id.startsWith('commands/')) {
                   alert('Files in the commands folder cannot be deleted.')
@@ -1304,8 +327,11 @@ function App() {
                 if (confirm('Delete this note?')) {
                   window.electronAPI.deleteNote(note.id)
                   setNotes((prev) => prev.filter((n) => n.id !== note.id))
-                  if (currentNoteIndexRef.current >= notesRef.current.length - 1)
-                    setCurrentNoteIndex(Math.max(0, notesRef.current.length - 2))
+                  if (
+                    useAppStore.getState().currentNoteIndex >=
+                    useAppStore.getState().notes.length - 1
+                  )
+                    setCurrentNoteIndex(Math.max(0, useAppStore.getState().notes.length - 2))
                 }
               }
               return true
@@ -1314,7 +340,7 @@ function App() {
           {
             key: 'Mod-Delete',
             run: () => {
-              const note = notesRef.current[currentNoteIndexRef.current]
+              const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
               if (note) {
                 if (note.id.startsWith('commands/')) {
                   alert('Files in the commands folder cannot be deleted.')
@@ -1323,8 +349,11 @@ function App() {
                 if (confirm('Delete this note?')) {
                   window.electronAPI.deleteNote(note.id)
                   setNotes((prev) => prev.filter((n) => n.id !== note.id))
-                  if (currentNoteIndexRef.current >= notesRef.current.length - 1)
-                    setCurrentNoteIndex(Math.max(0, notesRef.current.length - 2))
+                  if (
+                    useAppStore.getState().currentNoteIndex >=
+                    useAppStore.getState().notes.length - 1
+                  )
+                    setCurrentNoteIndex(Math.max(0, useAppStore.getState().notes.length - 2))
                 }
               }
               return true
@@ -1380,7 +409,7 @@ function App() {
                       const docStr = view.state.doc.toString()
                       const finalVal = docStr.replace(
                         '\n\u200B...\u200C\n',
-                        '\n\u200B' + response + '\u200C\n',
+                        '\n\u200B' + response + '\u200C\n'
                       )
                       handleEditorChange(finalVal, {})
                     })
@@ -1388,7 +417,7 @@ function App() {
                       const docStr = view.state.doc.toString()
                       const errorVal = docStr.replace(
                         '\n\u200B...\u200C\n',
-                        '\n\u200BError - ' + error.message + '\u200C\n',
+                        '\n\u200BError - ' + error.message + '\u200C\n'
                       )
                       handleEditorChange(errorVal, {})
                     })
@@ -1396,7 +425,7 @@ function App() {
                   const docStr = view.state.doc.toString()
                   const errorVal = docStr.replace(
                     '\n\u200B...\u200C\n',
-                    '\n\u200BSetup Error - ' + err.message + '\u200C\n',
+                    '\n\u200BSetup Error - ' + err.message + '\u200C\n'
                   )
                   handleEditorChange(errorVal, {})
                 }
@@ -1406,7 +435,7 @@ function App() {
               return false
             },
           },
-        ]),
+        ])
       ),
       search({ top: true }),
       markdown(),
@@ -1418,7 +447,7 @@ function App() {
       hideMarkdownPlugin,
       remConverterPlugin,
       EditorView.domEventHandlers({
-        mousedown: (event, _view) => {
+        mousedown: (event) => {
           const target = event.target as HTMLElement
           const webLink = target?.closest('.cm-custom-clickable-link')
           const fileLink = target?.closest('.cm-custom-file-link')
@@ -1446,7 +475,15 @@ function App() {
         },
       }),
     ],
-    [apiKey, apiBaseUrl, apiModel, aiSystemPrompt, handleEditorChange],
+    [
+      apiKey,
+      apiBaseUrl,
+      apiModel,
+      aiSystemPrompt,
+      handleEditorChange,
+      setCurrentNoteIndex,
+      setNotes,
+    ]
   )
 
   useEffect(() => {
@@ -1458,48 +495,6 @@ function App() {
     window.addEventListener('focus', handleWindowFocus)
     return () => window.removeEventListener('focus', handleWindowFocus)
   }, [])
-  useEffect(() => {
-    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-      Notification.requestPermission()
-    }
-
-    const interval = setInterval(() => {
-      const notifiedStr = localStorage.getItem('papercache_notified') || '[]'
-      const notified = new Set<string>(JSON.parse(notifiedStr))
-      let hasNewNotifs = false
-
-      notes.forEach((note) => {
-        const reRem = /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/gm
-        let match
-        while ((match = reRem.exec(note.content)) !== null) {
-          const isDone = match[1] === 'task-done'
-          const label = match[3]
-          const targetStr = match[4]
-          if (!isDone && targetStr) {
-            const targetMs = new Date(targetStr).getTime()
-            if (Date.now() >= targetMs) {
-              const notifKey = `${note.id}-${targetMs}-${label}`
-              if (!notified.has(notifKey)) {
-                console.log('Triggering OS notification for:', label)
-                new Notification('PaperCache Reminder', {
-                  body: label,
-                  silent: false
-                })
-                notified.add(notifKey)
-                hasNewNotifs = true
-              }
-            }
-          }
-        }
-      })
-
-      if (hasNewNotifs) {
-        localStorage.setItem('papercache_notified', JSON.stringify(Array.from(notified)))
-      }
-    }, 10000)
-
-    return () => clearInterval(interval)
-  }, [notes])
 
   const handleAppClick = () => {
     setShowMainActionMenu(false)
@@ -1545,26 +540,22 @@ function App() {
           theme={themePreset.includes('dark') ? 'dark' : 'light'}
           onClose={() => setShowRemindersView(false)}
           onNavigateToNote={(noteId) => {
-            const idx = notes.findIndex(n => n.id === noteId)
+            const idx = notes.findIndex((n) => n.id === noteId)
             if (idx !== -1) {
               setCurrentNoteIndex(idx)
               setShowRemindersView(false)
             }
           }}
           onToggleReminder={(noteId, from, to, insert) => {
-            setNotes(prevNotes => {
+            setNotes((prevNotes) => {
               const newNotes = [...prevNotes]
-              const idx = newNotes.findIndex(n => n.id === noteId)
+              const idx = newNotes.findIndex((n) => n.id === noteId)
               if (idx !== -1) {
                 const note = newNotes[idx]
                 const newContent = note.content.slice(0, from) + insert + note.content.slice(to)
                 newNotes[idx] = { ...note, content: newContent }
                 window.electronAPI.saveNote(note.id, newContent)
-                
-                // If the note being modified is the currently open note, we need to update the CodeMirror view
-                // We'll dispatch a custom event that a useEffect in App can listen to, or we can just let
-                // the `notes` state update handle it. However, the Editor is uncontrolled by `notes` once loaded!
-                // To safely update the open editor without re-mounting, we dispatch a DOM event.
+
                 if (idx === currentNoteIndex) {
                   const view = editorRef.current?.view
                   if (view) {
@@ -1583,7 +574,7 @@ function App() {
           const filteredNotes = notes.filter(
             (n) =>
               n.content.toLowerCase().includes(noteSearchQuery.toLowerCase()) ||
-              n.id.toLowerCase().includes(noteSearchQuery.toLowerCase()),
+              n.id.toLowerCase().includes(noteSearchQuery.toLowerCase())
           )
 
           const allTags = new Set<string>()

@@ -10,6 +10,7 @@ import {
   nativeTheme,
   shell,
   dialog,
+  safeStorage,
 } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -636,4 +637,17 @@ ipcMain.on('open-external', (_, url) => {
 ipcMain.on('open-file', (_, filePath) => {
   const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(NOTES_DIR, filePath)
   shell.openPath(absolutePath)
+})
+
+ipcMain.handle('safe-storage-encrypt', (_, val: string) => {
+  return safeStorage.isEncryptionAvailable() ? safeStorage.encryptString(val).toString('base64') : val
+})
+
+ipcMain.handle('safe-storage-decrypt', (_, val: string) => {
+  if (!safeStorage.isEncryptionAvailable()) return val
+  try {
+    return safeStorage.decryptString(Buffer.from(val, 'base64'))
+  } catch (e) {
+    return val
+  }
 })
