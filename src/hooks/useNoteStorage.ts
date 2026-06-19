@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { useAppStore, Note } from '../store/useAppStore'
+import { useAppStore } from '../store/useAppStore'
+import type { Note } from '../store/useAppStore'
 
 export function useNoteStorage() {
   const { notes, setNotes, currentNoteIndex, setCurrentNoteIndex } = useAppStore()

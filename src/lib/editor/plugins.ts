@@ -526,7 +526,7 @@ export const hideMarkdownPlugin = ViewPlugin.fromClass(
       try {
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
-      } catch {
+      } catch (e) {
         console.error('Decoration builder error:', e)
         return Decoration.none
       }
