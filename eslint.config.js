@@ -21,8 +21,10 @@ export default defineConfig([
       globals: globals.browser,
     },
     rules: {
+      'no-console': 'warn',
+      'prefer-const': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-require-imports': 'warn',
       'no-empty': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],

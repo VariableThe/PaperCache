@@ -4,53 +4,52 @@ import './Settings.css'
 export default function Settings() {
   const [apiKey, setApiKey] = useState(localStorage.getItem('papercache-apikey') || '')
   const [apiBaseUrl, setApiBaseUrl] = useState(
-    localStorage.getItem('papercache-baseurl') || 'https://api.openai.com/v1',
+    localStorage.getItem('papercache-baseurl') || 'https://api.openai.com/v1'
   )
   const [apiModel, setApiModel] = useState(localStorage.getItem('papercache-model') || 'gpt-4o')
   const [aiSystemPrompt, setAiSystemPrompt] = useState(
-    localStorage.getItem('papercache-system-prompt') ||
-      'Please provide a short and concise answer.',
+    localStorage.getItem('papercache-system-prompt') || 'Please provide a short and concise answer.'
   )
 
   // Shortcuts
   const [globalShortcutNewNote, setGlobalShortcutNewNote] = useState(
-    localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N',
+    localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N'
   )
   const [globalShortcutToggle, setGlobalShortcutToggle] = useState(
-    localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C',
+    localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C'
   )
 
   // Startup
   const [launchAtStartup, setLaunchAtStartup] = useState(
-    localStorage.getItem('papercache-launch-startup') === 'true',
+    localStorage.getItem('papercache-launch-startup') === 'true'
   )
 
   // Appearance State
   const [fontFamily, setFontFamily] = useState(
-    localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace",
+    localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace"
   )
   const [showRulings, setShowRulings] = useState(
-    localStorage.getItem('papercache-show-rulings') === 'true',
+    localStorage.getItem('papercache-show-rulings') === 'true'
   )
   const [themePreset, setThemePreset] = useState(
-    localStorage.getItem('papercache-theme') || 'paper-light',
+    localStorage.getItem('papercache-theme') || 'paper-light'
   )
   const [bgType, setBgType] = useState(localStorage.getItem('papercache-bg-type') || 'preset') // preset, color, image
   const [bgColor, setBgColor] = useState(localStorage.getItem('papercache-bg-color') || '#ffffff')
   const [bgImage, setBgImage] = useState(localStorage.getItem('papercache-bg-image') || '')
 
   const [textColor, setTextColor] = useState(
-    localStorage.getItem('papercache-color-text') || '#333333',
+    localStorage.getItem('papercache-color-text') || '#333333'
   )
   const [numColor, setNumColor] = useState(
-    localStorage.getItem('papercache-color-num') || '#007acc',
+    localStorage.getItem('papercache-color-num') || '#007acc'
   )
   const [symColor, setSymColor] = useState(
-    localStorage.getItem('papercache-color-sym') || '#c586c0',
+    localStorage.getItem('papercache-color-sym') || '#c586c0'
   )
   const [aiColor, setAiColor] = useState(localStorage.getItem('papercache-color-ai') || '#10b981')
   const [mathColor, setMathColor] = useState(
-    localStorage.getItem('papercache-color-math') || '#f59e0b',
+    localStorage.getItem('papercache-color-math') || '#f59e0b'
   )
 
   const saveSettings = () => {

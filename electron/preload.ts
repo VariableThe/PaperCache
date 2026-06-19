@@ -25,4 +25,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onTriggerTasks: (callback: () => void) => {
     ipcRenderer.on('trigger-tasks', () => callback())
   },
+  safeStorageEncrypt: (val: string) => ipcRenderer.invoke('safe-storage-encrypt', val),
+  safeStorageDecrypt: (val: string) => ipcRenderer.invoke('safe-storage-decrypt', val),
 })

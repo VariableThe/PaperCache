@@ -1,0 +1,26 @@
+export interface ElectronAPI {
+  closeWindow: () => Promise<void>
+  getNotes: () => Promise<import('./store/useAppStore').Note[]>
+  saveNote: (id: string, content: string) => Promise<boolean>
+  deleteNote: (id: string) => Promise<boolean>
+  renameNote: (oldId: string, newId: string) => Promise<boolean>
+  readNote: (id: string) => Promise<string>
+  exportNote: (filename: string, content: string) => Promise<boolean>
+  openSettings: () => void
+  quitApp: () => void
+  openExternal: (url: string) => void
+  openFile: (path: string) => void
+  onSwipeGesture: (callback: (direction: string) => void) => void
+  setLaunchAtStartup: (value: boolean) => void
+  updateGlobalShortcut: (action: string, oldShortcut: string, newShortcut: string) => void
+  onTriggerNewNote: (callback: () => void) => void
+  onTriggerTasks: (callback: () => void) => void
+  safeStorageEncrypt: (val: string) => Promise<string>
+  safeStorageDecrypt: (val: string) => Promise<string>
+}
+
+declare global {
+  interface Window {
+    electronAPI: ElectronAPI
+  }
+}

@@ -23,7 +23,13 @@ interface ReminderItem {
   matchLength: number
 }
 
-export const RemindersPage: React.FC<RemindersPageProps> = ({ notes, onClose, onNavigateToNote, onToggleReminder, theme }) => {
+export const RemindersPage: React.FC<RemindersPageProps> = ({
+  notes,
+  onClose,
+  onNavigateToNote,
+  onToggleReminder,
+  theme,
+}) => {
   const isDark = theme === 'dark'
   const bgColor = isDark ? '#1e1e1e' : '#ffffff'
   const textColor = isDark ? '#d4d4d4' : '#333333'
@@ -32,7 +38,8 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({ notes, onClose, on
 
   // Parse reminders from all notes
   const reminders: ReminderItem[] = []
-  const reRem = /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/gm
+  const reRem =
+    /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/gm
 
   notes.forEach((note) => {
     let match
@@ -58,8 +65,8 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({ notes, onClose, on
     return 0
   })
 
-  const [now, setNow] = React.useState(Date.now())
-  
+  const [now, setNow] = React.useState(() => Date.now())
+
   React.useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 10000) // update every 10s for better responsiveness
     return () => clearInterval(timer)
@@ -103,47 +110,79 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({ notes, onClose, on
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '4px'
+            borderRadius: '4px',
           }}
         >
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            viewBox="0 0 24 24"
+            width="20"
+            height="20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
         </button>
       </div>
-      
+
       <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
         {reminders.length === 0 ? (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            color: isDark ? '#666' : '#999',
-            textAlign: 'center',
-          }}>
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', opacity: 0.5 }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              color: isDark ? '#666' : '#999',
+              textAlign: 'center',
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width="48"
+              height="48"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ marginBottom: '16px', opacity: 0.5 }}
+            >
               <circle cx="12" cy="12" r="10"></circle>
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
             <p style={{ margin: 0, fontSize: '15px' }}>No tasks found.</p>
-            <p style={{ margin: '8px 0 0 0', fontSize: '13px', opacity: 0.8 }}>Type `/task ` in any note to create one.</p>
+            <p style={{ margin: '8px 0 0 0', fontSize: '13px', opacity: 0.8 }}>
+              Type `/task ` in any note to create one.
+            </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '600px', margin: '0 auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              maxWidth: '600px',
+              margin: '0 auto',
+            }}
+          >
             {reminders.map((rem, idx) => {
               const isOverdue = !rem.done && rem.targetMs && rem.targetMs < now
-              const isImminent = !rem.done && rem.targetMs && rem.targetMs > now && (rem.targetMs - now) < 60 * 60 * 1000
-              
+              const isImminent =
+                !rem.done &&
+                rem.targetMs &&
+                rem.targetMs > now &&
+                rem.targetMs - now < 60 * 60 * 1000
+
               let baseColor = '#7EB8D4' // default
               if (!rem.done && rem.targetMs) {
-                if (isOverdue) baseColor = '#FF3B30' // red
+                if (isOverdue)
+                  baseColor = '#FF3B30' // red
                 else if (isImminent) baseColor = '#faad14' // orange
               }
-
-
 
               return (
                 <div
@@ -184,48 +223,63 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({ notes, onClose, on
                       color: rem.done ? 'white' : 'transparent',
                       marginRight: '12px',
                       flexShrink: 0,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
                     }}
                   >
                     <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
                       <circle cx="12" cy="12" r="8"></circle>
                     </svg>
                   </span>
-                  
+
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ 
-                      fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                      fontWeight: 500,
-                      color: rem.done ? (isDark ? '#666' : '#999') : (isOverdue ? '#FF3B30' : textColor),
-                      textDecoration: rem.done ? 'line-through' : 'none'
-                    }}>
+                    <span
+                      style={{
+                        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                        fontWeight: 500,
+                        color: rem.done
+                          ? isDark
+                            ? '#666'
+                            : '#999'
+                          : isOverdue
+                            ? '#FF3B30'
+                            : textColor,
+                        textDecoration: rem.done ? 'line-through' : 'none',
+                      }}
+                    >
                       {rem.label}
                     </span>
-                    
+
                     {rem.creationDate && (
-                      <span style={{
-                        fontSize: '11px',
-                        color: isDark ? '#777' : '#999',
-                        marginTop: '2px',
-                        fontFamily: "'JetBrains Mono', 'Courier New', monospace"
-                      }}>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          color: isDark ? '#777' : '#999',
+                          marginTop: '2px',
+                          fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                        }}
+                      >
                         Created {rem.creationDate}
                       </span>
                     )}
                   </div>
-                  
+
                   {rem.targetMs && (
-                    <div style={{
-                      fontSize: '12px',
-                      color: isOverdue ? '#FF3B30' : (isDark ? '#999' : '#666'),
-                      background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontFamily: "'JetBrains Mono', 'Courier New', monospace"
-                    }}>
-                      {isOverdue ? 'Overdue: ' : 'Due: '} 
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: isOverdue ? '#FF3B30' : isDark ? '#999' : '#666',
+                        background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                      }}
+                    >
+                      {isOverdue ? 'Overdue: ' : 'Due: '}
                       {new Date(rem.targetMs).toLocaleString([], {
-                        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
                       })}
                     </div>
                   )}
