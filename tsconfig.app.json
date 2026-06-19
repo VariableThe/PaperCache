@@ -9,7 +9,6 @@
     "strict": false,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
-    "exactOptionalPropertyTypes": true,
 
     /* Bundler mode */
     "moduleResolution": "bundler",
