@@ -158,6 +158,27 @@ This is a note about a !project.
 
 When you open the search menu (\`Cmd+P\`), you'll see all your unique tags at the top. Click any tag to instantly filter your notes!
 
+Next: [Tasks](/file commands/tasks.md)
+
+[Back to Welcome](/file Welcome.md)
+`,
+)
+
+fs.writeFileSync(
+  path.join(COMMANDS_DIR, 'tasks.md'),
+  `# Tasks & Reminders
+
+Stay on top of your work by using tasks!
+
+Type \`/task\` to create a new task.
+If you want to set a deadline, just type \` @ \` followed by a time shorthand after the task.
+*Example use:*
+/task Buy groceries @ 2h
+
+PaperCache understands shorthands like \`2d\`, \`3h45m\`, \`tmrw\`, or even exact dates like \`2024-12-31 15:00\`.
+Once you set a task, press \`Cmd+T\` (or \`Ctrl+T\`) to open the Tasks Page and see everything that's due!
+Overdue tasks will automatically highlight in red.
+
 Next: [Ready](/file commands/ready.md)
 
 [Back to Welcome](/file Welcome.md)
@@ -178,7 +199,7 @@ const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
 let shouldWriteWelcome = true
 if (fs.existsSync(welcomePath)) {
   const content = fs.readFileSync(welcomePath, 'utf-8')
-  if (content.includes('[6. Tags]')) {
+  if (content.includes('[7. Tasks]')) {
     shouldWriteWelcome = false
   }
 }
@@ -202,6 +223,7 @@ Try Cmd+Clicking these to learn the ropes:
 - [4. Markdown & Code](/file commands/markdown.md)
 - [5. Formats & Colors](/file commands/formats.md)
 - [6. Tags](/file commands/tags.md)
+- [7. Tasks](/file commands/tasks.md)
 
 *(Press \`Cmd+K\` at any time to open the main menu!)*
 `,
@@ -310,6 +332,15 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
+})
+
+app.on('web-contents-created', (event, contents) => {
+  contents.on('before-input-event', (e, input) => {
+    if ((input.control || input.meta) && input.key.toLowerCase() === 't') {
+      contents.send('trigger-tasks')
+      e.preventDefault()
+    }
+  })
 })
 
 app.whenReady().then(() => {

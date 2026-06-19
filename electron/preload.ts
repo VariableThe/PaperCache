@@ -22,4 +22,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onTriggerNewNote: (callback: () => void) => {
     ipcRenderer.on('trigger-new-note', () => callback())
   },
+  onTriggerTasks: (callback: () => void) => {
+    ipcRenderer.on('trigger-tasks', () => callback())
+  },
 })

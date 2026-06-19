@@ -16,6 +16,7 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 - **Inline AI** — type `/ai <prompt>`, press enter, get the answer inserted directly into your note. No sidebar, no context switch.
 - **Auto-highlights hex colors, dates, and times** — `#D97757` renders as a color pill. `2024-05-31` gets highlighted. Useful at a glance.
 - **Interactive Checkboxes** — Type `/check` to create an interactive checkbox that strikes through text when clicked.
+- **Tasks & Reminders** — Type `/task` followed by `@ 1d2h` to set a due date. Press `Cmd+T` to open a unified Tasks view that tracks all your pending items and due times.
 - **Tags & folders** — `!tagname` for tags, `/` in note titles for folders. Simple conventions, no UI overhead.
 - **Graph view** — see how your notes connect (`Cmd+G`).
 
@@ -71,6 +72,7 @@ Built with Electron, React, TypeScript, and Vite.
 | `Cmd+Shift+N` | New note (global, configurable)          |
 | `Cmd+Shift+S` | Open settings panel                      |
 | `Cmd+N`       | New note (in-app)                        |
+| `Cmd+T`       | Open Tasks page                          |
 | `Cmd+K`       | Main action menu                         |
 | `Cmd+P`       | Search notes                             |
 | `Cmd+G`       | Graph view                               |
