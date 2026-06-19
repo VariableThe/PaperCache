@@ -8,6 +8,7 @@ import {
   EditorView,
   keymap,
   WidgetType,
+  ViewUpdate,
 } from '@codemirror/view'
 import { Prec } from '@codemirror/state'
 import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language'
@@ -17,6 +18,7 @@ import { insertTab, indentLess } from '@codemirror/commands'
 import * as mathjs from 'mathjs'
 import OpenAI from 'openai'
 import GraphView from './GraphView'
+import { RemindersPage } from './components/RemindersPage'
 import './App.css'
 
 import { getFolderColor } from './utils'
@@ -208,6 +210,56 @@ class VariableWidget extends WidgetType {
     span.textContent = String(this.value)
     span.className = 'cm-variable-pill'
     return span
+  }
+}
+
+class ReminderWidget extends WidgetType {
+  checked: boolean
+  overdue: boolean
+  pos: number
+  view: EditorView
+
+  constructor(checked: boolean, overdue: boolean, pos: number, view: EditorView) {
+    super()
+    this.checked = checked
+    this.overdue = overdue
+    this.pos = pos
+    this.view = view
+  }
+
+  eq(other: ReminderWidget) {
+    return other.checked === this.checked && other.pos === this.pos && other.overdue === this.overdue
+  }
+
+  toDOM() {
+    const wrap = document.createElement('span')
+    wrap.className = 'cm-rem-widget' + (this.checked ? ' cm-rem-checked' : '') + (this.overdue && !this.checked ? ' cm-rem-overdue' : '')
+
+    if (this.checked) {
+      wrap.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="12" r="8"></circle></svg>`
+    } else {
+      wrap.innerHTML = `` // empty for unchecked, border provides the box
+    }
+
+    // Use onmousedown to prevent CodeMirror from interfering with selection
+    wrap.onmousedown = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      
+      const from = this.pos
+      const to = this.pos + (this.checked ? 10 : 5) // length of "/task-done" or "/task"
+      const insert = this.checked ? '/task' : '/task-done'
+      
+      this.view.dispatch({
+        changes: { from, to, insert },
+      })
+    }
+
+    return wrap
+  }
+
+  ignoreEvent() {
+    return true
   }
 }
 
@@ -522,6 +574,48 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
             }
           }
         }
+
+        // Tasks (/task, /task-done)
+        const reRem = /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+/g
+        while ((match = reRem.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          const isChecked = match[1] === 'task-done'
+
+          const line = view.state.doc.lineAt(start)
+          let isOverdue = false
+          const fullRe = /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/
+          const fullMatch = fullRe.exec(line.text)
+          if (fullMatch && fullMatch[4]) {
+            if (new Date(fullMatch[4]).getTime() < Date.now()) isOverdue = true
+          }
+
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.replace({ widget: new ReminderWidget(isChecked, isOverdue, start, view) }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-rem-highlight' }),
+            })
+          }
+
+          if (line.to > end) {
+            let classStr = 'cm-rem-line-text'
+            if (isChecked) classStr += ' cm-checked-line-text'
+            else if (isOverdue) classStr += ' cm-overdue-line-text'
+
+            decos.push({
+              from: end,
+              to: line.to,
+              deco: Decoration.mark({ class: classStr }),
+            })
+          }
+        }
       } // end of visibleRanges iteration
 
       // Traverse AST for Code Blocks
@@ -645,6 +739,80 @@ const hideMarkdownPlugin = ViewPlugin.fromClass(
   { decorations: (v) => v.decorations },
 )
 
+const remConverterPlugin = ViewPlugin.fromClass(
+  class {
+    update(update: ViewUpdate) {
+      if (!update.docChanged) return
+      
+      const docStr = update.state.doc.toString()
+      const changes: {from: number, to: number, insert: string}[] = []
+      
+      // Match /task or /task-done followed by a space, but ONLY if not already followed by a date bracket (
+      const re = /^\/(task|task-done) (?!\()/gm
+      let match
+      while ((match = re.exec(docStr)) !== null) {
+        const now = new Date()
+        const yyyy = now.getFullYear()
+        const mm = String(now.getMonth() + 1).padStart(2, '0')
+        const dd = String(now.getDate()).padStart(2, '0')
+        const hh = String(now.getHours()).padStart(2, '0')
+        const mins = String(now.getMinutes()).padStart(2, '0')
+        
+        const timestamp = `(${yyyy}-${mm}-${dd} ${hh}:${mins})`
+        
+        changes.push({
+          from: match.index,
+          to: match.index + match[0].length,
+          insert: `/${match[1]} ${timestamp} `
+        })
+      }
+
+      // Match shorthand timers at the end of a task, ONLY after a space or Enter is typed
+      const reShort = /^(\/(?:task|task-done)[^\n]*?@\s*)((?:[0-9]+[smhd])+|tmrw)([ \t]+|\n|(?:\r\n))/gm
+      while ((match = reShort.exec(docStr)) !== null) {
+        const now = new Date()
+        const short = match[2]
+        if (short === 'tmrw') {
+          now.setDate(now.getDate() + 1)
+          now.setHours(9, 0, 0, 0)
+        } else {
+          const partRe = /([0-9]+)([smhd])/g
+          let partMatch
+          while ((partMatch = partRe.exec(short)) !== null) {
+            const val = parseInt(partMatch[1])
+            const unit = partMatch[2]
+            if (unit === 's') now.setSeconds(now.getSeconds() + val)
+            else if (unit === 'm') now.setMinutes(now.getMinutes() + val)
+            else if (unit === 'h') now.setHours(now.getHours() + val)
+            else if (unit === 'd') now.setDate(now.getDate() + val)
+          }
+        }
+        
+        const yyyy = now.getFullYear()
+        const mm = String(now.getMonth() + 1).padStart(2, '0')
+        const dd = String(now.getDate()).padStart(2, '0')
+        const hh = String(now.getHours()).padStart(2, '0')
+        const mins = String(now.getMinutes()).padStart(2, '0')
+        
+        const absoluteDate = `${yyyy}-${mm}-${dd} ${hh}:${mins}`
+        
+        // Push the change to replace ONLY the shorthand part
+        changes.push({
+          from: match.index + match[1].length,
+          to: match.index + match[1].length + match[2].length,
+          insert: absoluteDate
+        })
+      }
+      
+      if (changes.length > 0) {
+        setTimeout(() => {
+          update.view.dispatch({ changes })
+        }, 10)
+      }
+    }
+  }
+)
+
 interface Note {
   id: string
   content: string
@@ -703,6 +871,7 @@ function App() {
   )
 
   const [showGraphView, setShowGraphView] = useState(false)
+  const [showRemindersView, setShowRemindersView] = useState(false)
   const [isRenaming, setIsRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
 
@@ -995,7 +1164,7 @@ function App() {
         }
       }
 
-      if (e.key === 'p' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 'p' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         e.stopPropagation()
         setShowNoteSearch(true)
@@ -1003,7 +1172,13 @@ function App() {
         setSearchSelectedIndex(0)
       }
 
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 't' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault()
+        e.stopPropagation()
+        setShowRemindersView(true)
+      }
+
+      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
         e.stopPropagation()
         setShowMainActionMenu((prev) => !prev)
@@ -1046,6 +1221,12 @@ function App() {
         setNotes((prev) => [initialNote, ...prev])
         window.electronAPI.saveNote(id, '')
         setCurrentNoteIndex(0)
+      })
+    }
+
+    if (window.electronAPI.onTriggerTasks) {
+      window.electronAPI.onTriggerTasks(() => {
+        setShowRemindersView((prev) => !prev)
       })
     }
 
@@ -1235,6 +1416,7 @@ function App() {
       aiPlugin,
       mathPlugin,
       hideMarkdownPlugin,
+      remConverterPlugin,
       EditorView.domEventHandlers({
         mousedown: (event, _view) => {
           const target = event.target as HTMLElement
@@ -1276,6 +1458,48 @@ function App() {
     window.addEventListener('focus', handleWindowFocus)
     return () => window.removeEventListener('focus', handleWindowFocus)
   }, [])
+  useEffect(() => {
+    if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+      Notification.requestPermission()
+    }
+
+    const interval = setInterval(() => {
+      const notifiedStr = localStorage.getItem('papercache_notified') || '[]'
+      const notified = new Set<string>(JSON.parse(notifiedStr))
+      let hasNewNotifs = false
+
+      notes.forEach((note) => {
+        const reRem = /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/gm
+        let match
+        while ((match = reRem.exec(note.content)) !== null) {
+          const isDone = match[1] === 'task-done'
+          const label = match[3]
+          const targetStr = match[4]
+          if (!isDone && targetStr) {
+            const targetMs = new Date(targetStr).getTime()
+            if (Date.now() >= targetMs) {
+              const notifKey = `${note.id}-${targetMs}-${label}`
+              if (!notified.has(notifKey)) {
+                console.log('Triggering OS notification for:', label)
+                new Notification('PaperCache Reminder', {
+                  body: label,
+                  silent: false
+                })
+                notified.add(notifKey)
+                hasNewNotifs = true
+              }
+            }
+          }
+        }
+      })
+
+      if (hasNewNotifs) {
+        localStorage.setItem('papercache_notified', JSON.stringify(Array.from(notified)))
+      }
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [notes])
 
   const handleAppClick = () => {
     setShowMainActionMenu(false)
@@ -1314,6 +1538,45 @@ function App() {
           </span>
         )}
       </div>
+
+      {showRemindersView && (
+        <RemindersPage
+          notes={notes}
+          theme={themePreset.includes('dark') ? 'dark' : 'light'}
+          onClose={() => setShowRemindersView(false)}
+          onNavigateToNote={(noteId) => {
+            const idx = notes.findIndex(n => n.id === noteId)
+            if (idx !== -1) {
+              setCurrentNoteIndex(idx)
+              setShowRemindersView(false)
+            }
+          }}
+          onToggleReminder={(noteId, from, to, insert) => {
+            setNotes(prevNotes => {
+              const newNotes = [...prevNotes]
+              const idx = newNotes.findIndex(n => n.id === noteId)
+              if (idx !== -1) {
+                const note = newNotes[idx]
+                const newContent = note.content.slice(0, from) + insert + note.content.slice(to)
+                newNotes[idx] = { ...note, content: newContent }
+                window.electronAPI.saveNote(note.id, newContent)
+                
+                // If the note being modified is the currently open note, we need to update the CodeMirror view
+                // We'll dispatch a custom event that a useEffect in App can listen to, or we can just let
+                // the `notes` state update handle it. However, the Editor is uncontrolled by `notes` once loaded!
+                // To safely update the open editor without re-mounting, we dispatch a DOM event.
+                if (idx === currentNoteIndex) {
+                  const view = editorRef.current?.view
+                  if (view) {
+                    view.dispatch({ changes: { from, to, insert } })
+                  }
+                }
+              }
+              return newNotes
+            })
+          }}
+        />
+      )}
 
       {showNoteSearch &&
         (() => {
@@ -1599,6 +1862,18 @@ function App() {
             }}
           >
             Graph View
+          </button>
+          <button
+            onClick={() => setShowRemindersView(true)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: textColor,
+              cursor: 'pointer',
+              fontSize: 14,
+            }}
+          >
+            Reminders
           </button>
           <button
             onClick={() => {

@@ -657,3 +657,50 @@ body {
   text-decoration-color: #ff6b81;
   color: #ff6b81;
 }
+
+.cm-rem-widget {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border: 2px solid #7EB8D4; /* pale steel blue */
+  border-radius: 50%;
+  margin-right: 6px;
+  cursor: pointer;
+  vertical-align: middle;
+  color: transparent;
+  background-color: transparent;
+  transition: all 0.2s ease;
+  user-select: none;
+  margin-top: -2px;
+}
+
+.cm-rem-widget.cm-rem-checked {
+  background-color: #7EB8D4; /* fill color */
+  color: white; /* tick color */
+}
+
+.cm-rem-widget svg {
+  width: 12px;
+  height: 12px;
+}
+
+.cm-rem-checked-line-text {
+  text-decoration: line-through;
+  text-decoration-color: #7EB8D4;
+  color: #7EB8D4;
+  opacity: 0.6;
+}
+
+.cm-rem-line-text {
+  font-family: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+.cm-rem-widget.cm-rem-overdue {
+  border-color: #FF3B30; /* Red */
+}
+
+.cm-overdue-line-text {
+  color: #FF3B30 !important;
+}
