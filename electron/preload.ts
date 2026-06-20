@@ -15,16 +15,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openExternal: (url: string) => ipcRenderer.send('open-external', url),
   openFile: (path: string) => ipcRenderer.send('open-file', path),
   onSwipeGesture: (callback: (direction: string) => void) => {
-    ipcRenderer.on('swipe-gesture', (_event, direction) => callback(direction))
+    const handler = (_event: any, direction: string) => callback(direction)
+    ipcRenderer.on('swipe-gesture', handler)
+    return () => ipcRenderer.removeListener('swipe-gesture', handler)
   },
   setLaunchAtStartup: (value: boolean) => ipcRenderer.send('set-launch-startup', value),
   updateGlobalShortcut: (action: string, oldShortcut: string, newShortcut: string) =>
     ipcRenderer.send('update-global-shortcut', { action, oldShortcut, newShortcut }),
   onTriggerNewNote: (callback: () => void) => {
-    ipcRenderer.on('trigger-new-note', () => callback())
+    const handler = () => callback()
+    ipcRenderer.on('trigger-new-note', handler)
+    return () => ipcRenderer.removeListener('trigger-new-note', handler)
   },
   onTriggerTasks: (callback: () => void) => {
-    ipcRenderer.on('trigger-tasks', () => callback())
+    const handler = () => callback()
+    ipcRenderer.on('trigger-tasks', handler)
+    return () => ipcRenderer.removeListener('trigger-tasks', handler)
   },
   safeStorageEncrypt: (val: string) => ipcRenderer.invoke('safe-storage-encrypt', val),
   safeStorageDecrypt: (val: string) => ipcRenderer.invoke('safe-storage-decrypt', val),

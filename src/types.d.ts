@@ -16,11 +16,11 @@ export interface ElectronAPI {
   quitApp: () => void
   openExternal: (url: string) => void
   openFile: (path: string) => void
-  onSwipeGesture: (callback: (direction: string) => void) => void
+  onSwipeGesture: (callback: (direction: string) => void) => () => void
   setLaunchAtStartup: (value: boolean) => void
   updateGlobalShortcut: (action: string, oldShortcut: string, newShortcut: string) => void
-  onTriggerNewNote: (callback: () => void) => void
-  onTriggerTasks: (callback: () => void) => void
+  onTriggerNewNote: (callback: () => void) => () => void
+  onTriggerTasks: (callback: () => void) => () => void
   safeStorageEncrypt: (val: string) => Promise<string>
   safeStorageDecrypt: (val: string) => Promise<string>
   onPowerSuspend: (callback: () => void) => () => void

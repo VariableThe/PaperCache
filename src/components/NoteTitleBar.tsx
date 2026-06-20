@@ -1,15 +1,13 @@
 import { useAppStore } from '../store/useAppStore'
 
 export function NoteTitleBar() {
-  const {
-    notes,
-    setNotes,
-    currentNoteIndex,
-    isRenaming,
-    setIsRenaming,
-    renameValue,
-    setRenameValue,
-  } = useAppStore()
+  const notes = useAppStore((state) => state.notes)
+  const setNotes = useAppStore((state) => state.setNotes)
+  const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
+  const isRenaming = useAppStore((state) => state.isRenaming)
+  const setIsRenaming = useAppStore((state) => state.setIsRenaming)
+  const renameValue = useAppStore((state) => state.renameValue)
+  const setRenameValue = useAppStore((state) => state.setRenameValue)
 
   const activeNote = notes[currentNoteIndex] || { id: 'note.md', content: '', mtime: 0 }
 

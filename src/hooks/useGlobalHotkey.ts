@@ -2,20 +2,18 @@ import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
 
 export function useGlobalHotkey() {
-  const {
-    showMainActionMenu,
-    showNoteSearch,
-    showGraphView,
-    setShowMainActionMenu,
-    setShowNoteSearch,
-    setShowGraphView,
-    setShowRemindersView,
-    setZoomLevel,
-    setNotes,
-    setCurrentNoteIndex,
-    setNoteSearchQuery,
-    setSearchSelectedIndex,
-  } = useAppStore()
+  const showMainActionMenu = useAppStore((state) => state.showMainActionMenu)
+  const showNoteSearch = useAppStore((state) => state.showNoteSearch)
+  const showGraphView = useAppStore((state) => state.showGraphView)
+  const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
+  const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
+  const setShowGraphView = useAppStore((state) => state.setShowGraphView)
+  const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
+  const setZoomLevel = useAppStore((state) => state.setZoomLevel)
+  const setNotes = useAppStore((state) => state.setNotes)
+  const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
+  const setNoteSearchQuery = useAppStore((state) => state.setNoteSearchQuery)
+  const setSearchSelectedIndex = useAppStore((state) => state.setSearchSelectedIndex)
 
   useEffect(() => {
     const handleGlobalKeyDown = async (e: KeyboardEvent) => {

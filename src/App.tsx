@@ -36,19 +36,17 @@ import { getSecure } from './lib/safeStorage'
 import { MathEvaluator } from './lib/editor/MathEvaluator'
 
 function App() {
-  const {
-    notes,
-    setNotes,
-    currentNoteIndex,
-    setCurrentNoteIndex,
-    zoomLevel,
-    showGraphView,
-    setShowGraphView,
-    showRemindersView,
-    setShowRemindersView,
-    showNoteSearch,
-    setShowMainActionMenu,
-  } = useAppStore()
+  const notes = useAppStore((state) => state.notes)
+  const setNotes = useAppStore((state) => state.setNotes)
+  const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
+  const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
+  const zoomLevel = useAppStore((state) => state.zoomLevel)
+  const showGraphView = useAppStore((state) => state.showGraphView)
+  const setShowGraphView = useAppStore((state) => state.setShowGraphView)
+  const showRemindersView = useAppStore((state) => state.showRemindersView)
+  const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
+  const showNoteSearch = useAppStore((state) => state.showNoteSearch)
+  const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
 
   const {
     themePreset,

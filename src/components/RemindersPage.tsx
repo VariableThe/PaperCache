@@ -68,8 +68,15 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
   const [now, setNow] = React.useState(() => Date.now())
 
   React.useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 10000) // update every 10s for better responsiveness
-    return () => clearInterval(timer)
+    let timeoutId: ReturnType<typeof setTimeout>
+    const scheduleNext = () => {
+      timeoutId = setTimeout(() => {
+        setNow(Date.now())
+        scheduleNext()
+      }, 10000) // update every 10s for better responsiveness
+    }
+    scheduleNext()
+    return () => clearTimeout(timeoutId)
   }, [])
 
   return (
