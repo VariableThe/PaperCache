@@ -31,5 +31,7 @@ if (!window.electronAPI) {
     exportNote: async () => true,
     openExternal: () => {},
     openFile: () => {},
+    safeStorageEncrypt: async (val: string) => val,
+    safeStorageDecrypt: async (val: string) => val,
   } as any
 }
