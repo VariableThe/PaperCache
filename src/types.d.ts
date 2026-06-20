@@ -17,6 +17,8 @@ export interface ElectronAPI {
   onTriggerTasks: (callback: () => void) => void
   safeStorageEncrypt: (val: string) => Promise<string>
   safeStorageDecrypt: (val: string) => Promise<string>
+  onPowerSuspend: (callback: () => void) => void
+  onPowerResume: (callback: () => void) => void
 }
 
 declare global {

@@ -7,7 +7,6 @@ import { syntaxHighlighting } from '@codemirror/language'
 import { search } from '@codemirror/search'
 import { insertTab, indentLess } from '@codemirror/commands'
 import * as mathjs from 'mathjs'
-import OpenAI from 'openai'
 
 import './App.css'
 import { getFolderColor } from './utils'
@@ -388,85 +387,89 @@ function App() {
 
                 const thinkingText = '\n\u200B...\u200C\n'
                 view.dispatch({ changes: { from: line.to, insert: thinkingText } })
-
-                try {
-                  let finalBaseUrl = apiBaseUrl.trim()
-                  if (finalBaseUrl.endsWith('/chat/completions')) {
-                    finalBaseUrl = finalBaseUrl.replace('/chat/completions', '')
-                  }
-                  if (finalBaseUrl.endsWith('/')) {
-                    finalBaseUrl = finalBaseUrl.slice(0, -1)
-                  }
-
-                  const openai = new OpenAI({
-                    apiKey: apiKey.trim() || 'dummy',
-                    baseURL: finalBaseUrl || undefined,
-                    dangerouslyAllowBrowser: true,
-                    defaultHeaders: {
-                      'HTTP-Referer': 'https://github.com/papercache/papercache',
-                      'X-Title': 'PaperCache',
-                    },
-                  })
-
-                  const systemContent = aiSystemPrompt.trim()
-                  const messages: any[] = []
-                  if (systemContent) {
-                    messages.push({ role: 'system', content: systemContent })
-                  }
-
-                  let finalPrompt = prompt
-                  if (isCtx) {
-                    const fullNoteText = view.state.doc.toString()
-                    const MAX_CONTEXT_LENGTH = 50000
-                    let contextText = fullNoteText
-                    if (contextText.length > MAX_CONTEXT_LENGTH) {
-                      contextText =
-                        contextText.substring(0, MAX_CONTEXT_LENGTH) +
-                        '\n...[Context truncated due to length]'
+                ;(async () => {
+                  try {
+                    let finalBaseUrl = apiBaseUrl.trim()
+                    if (finalBaseUrl.endsWith('/chat/completions')) {
+                      finalBaseUrl = finalBaseUrl.replace('/chat/completions', '')
                     }
-                    finalPrompt = `Context:\n${contextText}\n\nPrompt:\n${prompt}`
-                  }
+                    if (finalBaseUrl.endsWith('/')) {
+                      finalBaseUrl = finalBaseUrl.slice(0, -1)
+                    }
 
-                  messages.push({ role: 'user', content: finalPrompt })
-
-                  openai.chat.completions
-                    .create({
-                      model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
-                      messages: messages,
+                    const OpenAI = (await import('openai')).default
+                    const openai = new OpenAI({
+                      apiKey: apiKey.trim() || 'dummy',
+                      baseURL: finalBaseUrl || undefined,
+                      dangerouslyAllowBrowser: true,
+                      defaultHeaders: {
+                        'HTTP-Referer': 'https://github.com/papercache/papercache',
+                        'X-Title': 'PaperCache',
+                      },
                     })
-                    .then((completion: any) => {
-                      let response: string
-                      if (completion.choices && completion.choices.length > 0) {
-                        response = completion.choices[0].message?.content || ''
-                      } else if (completion.error) {
-                        throw new Error(completion.error.message || 'Unknown API Error')
-                      } else {
-                        throw new Error('Unexpected response format: ' + JSON.stringify(completion))
+
+                    const systemContent = aiSystemPrompt.trim()
+                    const messages: any[] = []
+                    if (systemContent) {
+                      messages.push({ role: 'system', content: systemContent })
+                    }
+
+                    let finalPrompt = prompt
+                    if (isCtx) {
+                      const fullNoteText = view.state.doc.toString()
+                      const MAX_CONTEXT_LENGTH = 50000
+                      let contextText = fullNoteText
+                      if (contextText.length > MAX_CONTEXT_LENGTH) {
+                        contextText =
+                          contextText.substring(0, MAX_CONTEXT_LENGTH) +
+                          '\n...[Context truncated due to length]'
                       }
+                      finalPrompt = `Context:\n${contextText}\n\nPrompt:\n${prompt}`
+                    }
 
-                      const docStr = view.state.doc.toString()
-                      const finalVal = docStr.replace(
-                        '\n\u200B...\u200C\n',
-                        '\n\u200B' + response + '\u200C\n'
-                      )
-                      handleEditorChange(finalVal, {})
-                    })
-                    .catch((error) => {
-                      const docStr = view.state.doc.toString()
-                      const errorVal = docStr.replace(
-                        '\n\u200B...\u200C\n',
-                        '\n\u200BError - ' + error.message + '\u200C\n'
-                      )
-                      handleEditorChange(errorVal, {})
-                    })
-                } catch (err: any) {
-                  const docStr = view.state.doc.toString()
-                  const errorVal = docStr.replace(
-                    '\n\u200B...\u200C\n',
-                    '\n\u200BSetup Error - ' + err.message + '\u200C\n'
-                  )
-                  handleEditorChange(errorVal, {})
-                }
+                    messages.push({ role: 'user', content: finalPrompt })
+
+                    openai.chat.completions
+                      .create({
+                        model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
+                        messages: messages,
+                      })
+                      .then((completion: any) => {
+                        let response: string
+                        if (completion.choices && completion.choices.length > 0) {
+                          response = completion.choices[0].message?.content || ''
+                        } else if (completion.error) {
+                          throw new Error(completion.error.message || 'Unknown API Error')
+                        } else {
+                          throw new Error(
+                            'Unexpected response format: ' + JSON.stringify(completion)
+                          )
+                        }
+
+                        const docStr = view.state.doc.toString()
+                        const finalVal = docStr.replace(
+                          '\n\u200B...\u200C\n',
+                          '\n\u200B' + response + '\u200C\n'
+                        )
+                        handleEditorChange(finalVal, {})
+                      })
+                      .catch((error) => {
+                        const docStr = view.state.doc.toString()
+                        const errorVal = docStr.replace(
+                          '\n\u200B...\u200C\n',
+                          '\n\u200BError - ' + error.message + '\u200C\n'
+                        )
+                        handleEditorChange(errorVal, {})
+                      })
+                  } catch (err: any) {
+                    const docStr = view.state.doc.toString()
+                    const errorVal = docStr.replace(
+                      '\n\u200B...\u200C\n',
+                      '\n\u200BSetup Error - ' + err.message + '\u200C\n'
+                    )
+                    handleEditorChange(errorVal, {})
+                  }
+                })()
 
                 return true
               }

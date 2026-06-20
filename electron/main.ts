@@ -11,6 +11,7 @@ import {
   shell,
   dialog,
   safeStorage,
+  powerMonitor,
 } from 'electron'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -346,6 +347,14 @@ app.on('web-contents-created', (event, contents) => {
 
 app.whenReady().then(() => {
   createWindow()
+
+  powerMonitor.on('suspend', () => {
+    if (win) win.webContents.send('power:suspend')
+  })
+  
+  powerMonitor.on('resume', () => {
+    if (win) win.webContents.send('power:resume')
+  })
 
   // Setup Tray
   tray = new Tray(nativeImage.createEmpty()) // empty initially

@@ -27,4 +27,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   safeStorageEncrypt: (val: string) => ipcRenderer.invoke('safe-storage-encrypt', val),
   safeStorageDecrypt: (val: string) => ipcRenderer.invoke('safe-storage-decrypt', val),
+  onPowerSuspend: (callback: () => void) => {
+    ipcRenderer.on('power:suspend', () => callback())
+  },
+  onPowerResume: (callback: () => void) => {
+    ipcRenderer.on('power:resume', () => callback())
+  },
 })
