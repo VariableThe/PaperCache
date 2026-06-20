@@ -25,6 +25,8 @@ if (!window.electronAPI) {
     openSettings: () => {},
     closeWindow: () => {},
     quitApp: () => {},
+    onPowerSuspend: () => () => {},
+    onPowerResume: () => () => {},
     setLaunchAtStartup: () => {},
     updateGlobalShortcut: () => {},
     readNote: async () => '',
@@ -33,5 +35,5 @@ if (!window.electronAPI) {
     openFile: () => {},
     safeStorageEncrypt: async (val: string) => val,
     safeStorageDecrypt: async (val: string) => val,
-  } as any
+  } as unknown as typeof window.electronAPI
 }

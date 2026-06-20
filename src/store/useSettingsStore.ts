@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-
+import { SETTINGS_KEYS } from '../lib/settingsKeys'
 export interface SettingsState {
   themePreset: string
   fontFamily: string
@@ -27,60 +27,60 @@ export interface SettingsState {
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
-  themePreset: localStorage.getItem('papercache-theme-preset') || 'grid-light',
-  fontFamily: localStorage.getItem('papercache-font') || 'monospace',
-  showRulings: localStorage.getItem('papercache-rulings') !== 'false',
-  bgType: (localStorage.getItem('papercache-bg-type') as 'color' | 'image') || 'color',
-  bgColor: localStorage.getItem('papercache-bg-color') || '#ffffff',
-  bgImage: localStorage.getItem('papercache-bg-image') || '',
-  textColor: localStorage.getItem('papercache-text-color') || '#000000',
-  numColor: localStorage.getItem('papercache-color-num') || '#8ab4f8',
-  symColor: localStorage.getItem('papercache-sym-color') || '#ff0000',
-  aiColor: localStorage.getItem('papercache-ai-color') || '#8b5cf6',
-  mathColor: localStorage.getItem('papercache-math-color') || '#10b981',
+  themePreset: localStorage.getItem(SETTINGS_KEYS.THEME_PRESET) || 'grid-light',
+  fontFamily: localStorage.getItem(SETTINGS_KEYS.FONT_FAMILY) || 'monospace',
+  showRulings: localStorage.getItem(SETTINGS_KEYS.SHOW_RULINGS) !== 'false',
+  bgType: (localStorage.getItem(SETTINGS_KEYS.BG_TYPE) as 'color' | 'image') || 'color',
+  bgColor: localStorage.getItem(SETTINGS_KEYS.BG_COLOR) || '#ffffff',
+  bgImage: localStorage.getItem(SETTINGS_KEYS.BG_IMAGE) || '',
+  textColor: localStorage.getItem(SETTINGS_KEYS.TEXT_COLOR) || '#000000',
+  numColor: localStorage.getItem(SETTINGS_KEYS.NUM_COLOR) || '#8ab4f8',
+  symColor: localStorage.getItem(SETTINGS_KEYS.SYM_COLOR) || '#ff0000',
+  aiColor: localStorage.getItem(SETTINGS_KEYS.AI_COLOR) || '#8b5cf6',
+  mathColor: localStorage.getItem(SETTINGS_KEYS.MATH_COLOR) || '#10b981',
 
   setThemePreset: (themePreset) => {
-    localStorage.setItem('papercache-theme-preset', themePreset)
+    localStorage.setItem(SETTINGS_KEYS.THEME_PRESET, themePreset)
     set({ themePreset })
   },
   setFontFamily: (fontFamily) => {
-    localStorage.setItem('papercache-font', fontFamily)
+    localStorage.setItem(SETTINGS_KEYS.FONT_FAMILY, fontFamily)
     set({ fontFamily })
   },
   setShowRulings: (showRulings) => {
-    localStorage.setItem('papercache-rulings', String(showRulings))
+    localStorage.setItem(SETTINGS_KEYS.SHOW_RULINGS, String(showRulings))
     set({ showRulings })
   },
   setBgType: (bgType) => {
-    localStorage.setItem('papercache-bg-type', bgType)
+    localStorage.setItem(SETTINGS_KEYS.BG_TYPE, bgType)
     set({ bgType })
   },
   setBgColor: (bgColor) => {
-    localStorage.setItem('papercache-bg-color', bgColor)
+    localStorage.setItem(SETTINGS_KEYS.BG_COLOR, bgColor)
     set({ bgColor })
   },
   setBgImage: (bgImage) => {
-    localStorage.setItem('papercache-bg-image', bgImage)
+    localStorage.setItem(SETTINGS_KEYS.BG_IMAGE, bgImage)
     set({ bgImage })
   },
   setTextColor: (textColor) => {
-    localStorage.setItem('papercache-text-color', textColor)
+    localStorage.setItem(SETTINGS_KEYS.TEXT_COLOR, textColor)
     set({ textColor })
   },
   setNumColor: (numColor) => {
-    localStorage.setItem('papercache-color-num', numColor)
+    localStorage.setItem(SETTINGS_KEYS.NUM_COLOR, numColor)
     set({ numColor })
   },
   setSymColor: (symColor) => {
-    localStorage.setItem('papercache-sym-color', symColor)
+    localStorage.setItem(SETTINGS_KEYS.SYM_COLOR, symColor)
     set({ symColor })
   },
   setAiColor: (aiColor) => {
-    localStorage.setItem('papercache-ai-color', aiColor)
+    localStorage.setItem(SETTINGS_KEYS.AI_COLOR, aiColor)
     set({ aiColor })
   },
   setMathColor: (mathColor) => {
-    localStorage.setItem('papercache-math-color', mathColor)
+    localStorage.setItem(SETTINGS_KEYS.MATH_COLOR, mathColor)
     set({ mathColor })
   },
 }))

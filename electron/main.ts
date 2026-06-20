@@ -596,6 +596,9 @@ ipcMain.on('open-settings', () => {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
+      // webSecurity is disabled for the settings window to allow the renderer to
+      // make OpenAI/OpenRouter API calls directly with dangerouslyAllowBrowser: true,
+      // without needing complex IPC proxying for a desktop app running locally.
       webSecurity: false,
     },
   })
