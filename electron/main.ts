@@ -137,13 +137,13 @@ fs.writeFileSync(
 PaperCache automatically recognizes and highlights common formats so you can easily spot them in your notes.
 
 ## Colors
-Type any hex color, and it will be highlighted with a matching pill!
+Type any hex color, and it will be highlighted with a matching pill! You can click the small colored circle inside the pill to quickly copy the hex code to your clipboard.
 *Example use:* #D97757 or #3B82F6 or #10B981
 
 ## Dates & Times
 Dates and times are also highlighted to help you keep track of your schedule.
 *Example use:* 
-Meeting on 2024-05-31 at 14:30.
+Meeting on 31-05-2024 at 14:30.
 
 Next: [Tags](/file commands/tags.md)
 `,
@@ -177,7 +177,7 @@ If you want to set a deadline, just type \` @ \` followed by a time shorthand af
 *Example use:*
 /task Buy groceries @ 2h
 
-PaperCache understands shorthands like \`2d\`, \`3h45m\`, \`tmrw\`, or even exact dates like \`2024-12-31 15:00\`.
+PaperCache understands shorthands like \`2d\`, \`3h45m\`, \`tmrw\`, or even exact dates like \`31-12-2024 15:00\`.
 Once you set a task, press \`Cmd+T\` (or \`Ctrl+T\`) to open the Tasks Page and see everything that's due!
 Overdue tasks will automatically highlight in red.
 

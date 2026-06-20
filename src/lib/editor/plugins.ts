@@ -8,6 +8,7 @@ import {
   VariableWidget,
   ReminderWidget,
   ContextWidget,
+  ColorWidget,
 } from './widgets'
 
 export const numberPlugin = ViewPlugin.fromClass(
@@ -244,10 +245,7 @@ export const hideMarkdownPlugin = ViewPlugin.fromClass(
             decos.push({
               from: start,
               to: end,
-              deco: Decoration.mark({
-                class: 'cm-color-pill',
-                attributes: { style: `--pill-color: ${match[0]}` },
-              }),
+              deco: Decoration.replace({ widget: new ColorWidget(match[0]) }),
             })
           } else {
             decos.push({
@@ -261,8 +259,8 @@ export const hideMarkdownPlugin = ViewPlugin.fromClass(
           }
         }
 
-        // Date Formats (YYYY-MM-DD)
-        const reDate = /\b\d{4}-\d{2}-\d{2}\b/g
+        // Date Formats (YYYY-MM-DD or DD-MM-YYYY)
+        const reDate = /\b(?:\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4})\b/g
         while ((match = reDate.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length

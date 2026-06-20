@@ -104,6 +104,54 @@ export class VariableWidget extends WidgetType {
   }
 }
 
+export class ColorWidget extends WidgetType {
+  color: string
+  constructor(color: string) {
+    super()
+    this.color = color
+  }
+  eq(other: ColorWidget) {
+    return other.color === this.color
+  }
+  toDOM() {
+    const span = document.createElement('span')
+    span.className = 'cm-color-pill'
+    span.style.setProperty('--pill-color', this.color)
+
+    const circle = document.createElement('span')
+    circle.className = 'cm-color-circle'
+    circle.style.backgroundColor = this.color
+    circle.style.width = '10px'
+    circle.style.height = '10px'
+    circle.style.borderRadius = '50%'
+    circle.style.display = 'inline-block'
+    circle.style.marginRight = '4px'
+    circle.style.cursor = 'pointer'
+    circle.title = 'Copy hex code'
+
+    circle.onclick = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      navigator.clipboard.writeText(this.color)
+
+      span.classList.remove('flash')
+      void span.offsetWidth // Trigger reflow to restart animation if clicked quickly
+      span.classList.add('flash')
+
+      setTimeout(() => {
+        span.classList.remove('flash')
+      }, 500)
+    }
+
+    const text = document.createTextNode(this.color)
+
+    span.appendChild(circle)
+    span.appendChild(text)
+
+    return span
+  }
+}
+
 export class ReminderWidget extends WidgetType {
   checked: boolean
   overdue: boolean

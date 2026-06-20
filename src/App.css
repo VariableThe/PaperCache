@@ -516,7 +516,8 @@ body {
 
 /* Format Pills */
 .cm-color-pill {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   background-color: color-mix(in srgb, var(--pill-color) 15%, transparent);
   color: color-mix(in srgb, var(--pill-color) 80%, black);
   padding: 0px 6px;
@@ -526,6 +527,23 @@ body {
   font-size: 0.95em;
   margin: 0 2px;
   border: 1px solid color-mix(in srgb, var(--pill-color) 30%, transparent);
+}
+
+@keyframes color-pill-flash {
+  0% {
+    background-color: var(--pill-color);
+    color: #fff;
+    border-color: var(--pill-color);
+  }
+  100% {
+    background-color: color-mix(in srgb, var(--pill-color) 15%, transparent);
+    color: color-mix(in srgb, var(--pill-color) 80%, black);
+    border-color: color-mix(in srgb, var(--pill-color) 30%, transparent);
+  }
+}
+
+.cm-color-pill.flash {
+  animation: color-pill-flash 0.5s ease-out;
 }
 
 .cm-color-highlight {
