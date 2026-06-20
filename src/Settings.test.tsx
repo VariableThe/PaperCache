@@ -12,7 +12,7 @@ describe('Settings Component', () => {
       updateGlobalShortcut: vi.fn(),
       closeWindow: vi.fn(),
       quitApp: vi.fn(),
-    } as any
+    } as any // eslint-disable-line @typescript-eslint/no-explicit-any
   })
 
   it('renders settings headers correctly', () => {

@@ -1,6 +1,6 @@
 import { ViewPlugin, Decoration, EditorView, ViewUpdate, WidgetType } from '@codemirror/view'
+import type { SyntaxNode } from '@lezer/common'
 import { syntaxTree } from '@codemirror/language'
-import * as mathjs from 'mathjs'
 import { numberMatcher, symbolMatcher, aiMatcher, mathMatcher } from './matchers'
 import {
   CopyWidget,
@@ -10,6 +10,10 @@ import {
   ContextWidget,
   ColorWidget,
 } from './widgets'
+
+let globalScopeCache: Record<string, unknown> = {}
+let scopeEvalTimeout: number | null = null
+let lastDocString = ''
 
 export const numberPlugin = ViewPlugin.fromClass(
   class {
@@ -80,25 +84,66 @@ export const hideMarkdownPlugin = ViewPlugin.fromClass(
 
       const selectionRanges = view.state.selection.ranges
       const isCursorInMatch = (start: number, end: number) => {
-        return selectionRanges.some((r: any) => r.from <= end && r.to >= start)
+        return selectionRanges.some(
+          (r: { from: number; to: number }) => r.from <= end && r.to >= start
+        )
       }
 
       const linkRanges: { from: number; to: number }[] = []
       const fullDoc = view.state.doc.toString()
 
-      // Build variable scope (incorporate global variables)
-      const scope: any = Object.assign({}, (window as any).__globalVariables || {})
-      const reVar = /^\/var\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
-      let varMatch
-      while ((varMatch = reVar.exec(fullDoc)) !== null) {
-        const name = varMatch[1]
-        try {
-          scope[name] = mathjs.evaluate(varMatch[2], scope)
-        } catch {
-          scope[name] = varMatch[2].trim()
-        }
-      }
+      // Build variable scope (incorporate global variables) synchronously from cache
+      const scope: Record<string, unknown> = Object.assign(
+        {},
+        (window as unknown as { __globalVariables: Record<string, unknown> }).__globalVariables ||
+          {},
+        globalScopeCache
+      )
       const scopeKeys = Object.keys(scope).sort((a, b) => b.length - a.length)
+
+      // Trigger debounced evaluation if document changed
+      if (fullDoc !== lastDocString) {
+        lastDocString = fullDoc
+        if (scopeEvalTimeout) clearTimeout(scopeEvalTimeout)
+        scopeEvalTimeout = window.setTimeout(async () => {
+          let mathjs: any
+          try {
+            mathjs = await import('mathjs')
+          } catch {
+            return
+          }
+
+          const newScope: Record<string, unknown> = {}
+          const reVar = /^\/var\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
+          let varMatch
+          let changed = false
+          while ((varMatch = reVar.exec(fullDoc)) !== null) {
+            const name = varMatch[1]
+            try {
+              const val = mathjs.evaluate(
+                varMatch[2],
+                Object.assign(
+                  {},
+                  (window as unknown as { __globalVariables: Record<string, unknown> })
+                    .__globalVariables || {},
+                  newScope
+                )
+              )
+              newScope[name] = val
+            } catch {
+              newScope[name] = varMatch[2].trim()
+            }
+            if (globalScopeCache[name] !== newScope[name]) {
+              changed = true
+            }
+          }
+          if (changed || Object.keys(globalScopeCache).length !== Object.keys(newScope).length) {
+            globalScopeCache = newScope
+            // dispatch an empty transaction to force re-render with new cache
+            view.dispatch({ effects: [] })
+          }
+        }, 300)
+      }
 
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to)
@@ -224,7 +269,7 @@ export const hideMarkdownPlugin = ViewPlugin.fromClass(
               decos.push({
                 from: start,
                 to: end,
-                deco: Decoration.replace({ widget: new VariableWidget(scope[match[1]]) }),
+                deco: Decoration.replace({ widget: new VariableWidget(String(scope[match[1]])) }),
               })
             } else {
               decos.push({
@@ -444,9 +489,9 @@ export const hideMarkdownPlugin = ViewPlugin.fromClass(
           if (node.type.name === 'FencedCode') {
             let lang = ''
             let code = ''
-            let startCodeMark: any = null
-            let endCodeMark: any = null
-            let codeInfo: any = null
+            let startCodeMark: SyntaxNode | null = null
+            let endCodeMark: SyntaxNode | null = null
+            let codeInfo: SyntaxNode | null = null
 
             let child = node.node.firstChild
             while (child) {
