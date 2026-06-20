@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useAppStore, type Note } from '../store/useAppStore'
+import { SETTINGS_KEYS } from '../lib/settingsKeys'
 
 function parseReminders(content: string, noteId: string) {
   const reminders: { dueAt: Date; label: string; key: string }[] = []
@@ -27,7 +28,7 @@ function parseReminders(content: string, noteId: string) {
 
 function handleDueReminders(notes: Note[]) {
   const now = Date.now()
-  const notifiedStr = localStorage.getItem('papercache_notified') || '[]'
+  const notifiedStr = localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS) || '[]'
   const notified = new Set<string>(JSON.parse(notifiedStr))
   let hasNewNotifs = false
 
@@ -48,7 +49,7 @@ function handleDueReminders(notes: Note[]) {
   }
 
   if (hasNewNotifs) {
-    localStorage.setItem('papercache_notified', JSON.stringify(Array.from(notified)))
+    localStorage.setItem(SETTINGS_KEYS.NOTIFIED_REMINDERS, JSON.stringify(Array.from(notified)))
   }
 }
 

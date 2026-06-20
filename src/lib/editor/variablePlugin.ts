@@ -1,6 +1,6 @@
 import { ViewPlugin, Decoration, EditorView, ViewUpdate } from '@codemirror/view'
 import { VariableWidget } from './widgets'
-import { VariableScope } from './VariableScope'
+import { VariableScope, scopeChangedEffect } from './VariableScope'
 
 export const variablePlugin = ViewPlugin.fromClass(
   class {
@@ -11,7 +11,10 @@ export const variablePlugin = ViewPlugin.fromClass(
     }
 
     update(update: ViewUpdate) {
-      if (update.docChanged || update.viewportChanged || update.selectionSet) {
+      const scopeChanged = update.transactions.some((tr) =>
+        tr.effects.some((e) => e.is(scopeChangedEffect))
+      )
+      if (update.docChanged || update.viewportChanged || update.selectionSet || scopeChanged) {
         this.decorations = this.buildDeco(update.view)
       }
     }
@@ -30,7 +33,9 @@ export const variablePlugin = ViewPlugin.fromClass(
 
       if (scopeKeys.length === 0) return Decoration.none
 
-      const reKeys = new RegExp(`\\b(${scopeKeys.join('|')})\\b`, 'g')
+      const escapeRegex = (string: string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const escapedKeys = scopeKeys.map(escapeRegex)
+      const reKeys = new RegExp(`\\b(${escapedKeys.join('|')})\\b`, 'g')
 
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to)
@@ -41,7 +46,8 @@ export const variablePlugin = ViewPlugin.fromClass(
           const end = start + match[0].length
           const line = view.state.doc.lineAt(start)
 
-          if (line.text.trim().startsWith('/var')) continue
+          if (line.text.trim().startsWith('/var') || line.text.trim().startsWith('/globvar'))
+            continue
 
           if (!isCursorInMatch(start, end)) {
             decos.push({

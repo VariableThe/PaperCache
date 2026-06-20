@@ -1,3 +1,4 @@
+import type { EditorView } from '@codemirror/view'
 import { describe, it, expect, vi } from 'vitest'
 import { CopyWidget, CheckboxWidget, VariableWidget, ColorWidget } from './widgets'
 
@@ -25,7 +26,7 @@ describe('Editor Widgets', () => {
 
   describe('CheckboxWidget', () => {
     it('should create unchecked DOM correctly', () => {
-      const mockView = { dispatch: vi.fn() } as any
+      const mockView = { dispatch: vi.fn() } as unknown as Partial<EditorView> as EditorView
       const widget = new CheckboxWidget(false, 10, mockView)
       const dom = widget.toDOM()
 
@@ -34,7 +35,7 @@ describe('Editor Widgets', () => {
     })
 
     it('should create checked DOM correctly', () => {
-      const mockView = { dispatch: vi.fn() } as any
+      const mockView = { dispatch: vi.fn() } as unknown as Partial<EditorView> as EditorView
       const widget = new CheckboxWidget(true, 10, mockView)
       const dom = widget.toDOM()
 
@@ -43,23 +44,29 @@ describe('Editor Widgets', () => {
     })
 
     it('should dispatch correct transaction on click', () => {
-      const mockView = { dispatch: vi.fn() } as any
+      const mockView = { dispatch: vi.fn() } as unknown as Partial<EditorView> as EditorView
 
       // Unchecked -> Checked
       const widgetUnchecked = new CheckboxWidget(false, 10, mockView)
       const domUnchecked = widgetUnchecked.toDOM()
-      domUnchecked.onclick?.({ preventDefault: vi.fn(), stopPropagation: vi.fn() } as any)
+      domUnchecked.onclick?.({
+        preventDefault: vi.fn(),
+        stopPropagation: vi.fn(),
+      } as unknown as PointerEvent)
 
       expect(mockView.dispatch).toHaveBeenCalledWith({
         changes: { from: 10, to: 16, insert: '/checked' },
       })
 
-      mockView.dispatch.mockClear()
+      vi.clearAllMocks()
 
       // Checked -> Unchecked
       const widgetChecked = new CheckboxWidget(true, 10, mockView)
       const domChecked = widgetChecked.toDOM()
-      domChecked.onclick?.({ preventDefault: vi.fn(), stopPropagation: vi.fn() } as any)
+      domChecked.onclick?.({
+        preventDefault: vi.fn(),
+        stopPropagation: vi.fn(),
+      } as unknown as PointerEvent)
 
       expect(mockView.dispatch).toHaveBeenCalledWith({
         changes: { from: 10, to: 18, insert: '/check' },

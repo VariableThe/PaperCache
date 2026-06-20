@@ -67,12 +67,19 @@ export function NoteSearch() {
                   return
                 }
                 if (confirm('Delete this note?')) {
-                  window.electronAPI.deleteNote(selNote.id)
-                  setNotes((prev) => prev.filter((note) => note.id !== selNote.id))
-                  if (currentNoteIndex >= notes.length - 1)
-                    setCurrentNoteIndex(Math.max(0, notes.length - 2))
-                  setShowNoteSearch(false)
-                  setShowNoteActionMenu(false)
+                  window.electronAPI.deleteNote(selNote.id).then((success) => {
+                    if (success) {
+                      setNotes((prev) => prev.filter((note) => note.id !== selNote.id))
+                      const selIdx = notes.findIndex((n) => n.id === selNote.id)
+                      const newIdx =
+                        currentNoteIndex >= selIdx && currentNoteIndex > 0
+                          ? currentNoteIndex - 1
+                          : currentNoteIndex
+                      setCurrentNoteIndex(newIdx)
+                      setShowNoteSearch(false)
+                      setShowNoteActionMenu(false)
+                    }
+                  })
                 }
               } else if (actionMenuIndex === 1) {
                 const blob = new Blob([selNote.content], { type: 'text/markdown' })
@@ -151,6 +158,7 @@ export function NoteSearch() {
                   e.stopPropagation()
                   const newQ = noteSearchQuery ? noteSearchQuery + ' ' + tag : tag
                   setNoteSearchQuery(newQ)
+                  setSearchSelectedIndex(0)
                 }}
               >
                 {tag}
@@ -212,12 +220,19 @@ export function NoteSearch() {
                           return
                         }
                         if (confirm('Delete this note?')) {
-                          window.electronAPI.deleteNote(n.id)
-                          setNotes((prev) => prev.filter((note) => note.id !== n.id))
-                          if (currentNoteIndex >= notes.length - 1)
-                            setCurrentNoteIndex(Math.max(0, notes.length - 2))
-                          setShowNoteSearch(false)
-                          setShowNoteActionMenu(false)
+                          window.electronAPI.deleteNote(n.id).then((success) => {
+                            if (success) {
+                              setNotes((prev) => prev.filter((note) => note.id !== n.id))
+                              const selIdx = notes.findIndex((note) => note.id === n.id)
+                              const newIdx =
+                                currentNoteIndex >= selIdx && currentNoteIndex > 0
+                                  ? currentNoteIndex - 1
+                                  : currentNoteIndex
+                              setCurrentNoteIndex(newIdx)
+                              setShowNoteSearch(false)
+                              setShowNoteActionMenu(false)
+                            }
+                          })
                         }
                       }}
                     >

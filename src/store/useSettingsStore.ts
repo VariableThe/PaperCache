@@ -28,7 +28,7 @@ export interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   themePreset: localStorage.getItem(SETTINGS_KEYS.THEME_PRESET) || 'grid-light',
-  fontFamily: localStorage.getItem(SETTINGS_KEYS.FONT_FAMILY) || 'monospace',
+  fontFamily: localStorage.getItem(SETTINGS_KEYS.FONT_FAMILY) || "'JetBrains Mono', monospace",
   showRulings: localStorage.getItem(SETTINGS_KEYS.SHOW_RULINGS) !== 'false',
   bgType: (localStorage.getItem(SETTINGS_KEYS.BG_TYPE) as 'color' | 'image') || 'color',
   bgColor: localStorage.getItem(SETTINGS_KEYS.BG_COLOR) || '#ffffff',

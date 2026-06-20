@@ -3,6 +3,7 @@ import { ReminderWidget } from './widgets'
 
 export const taskPlugin = ViewPlugin.fromClass(
   class {
+    timeout: number | undefined
     decorations
 
     constructor(view: EditorView) {
@@ -151,7 +152,10 @@ export const remConverterPlugin = ViewPlugin.fromClass(
       }
 
       if (changes.length > 0) {
-        setTimeout(() => {
+        // @ts-expect-error adding property to anonymous class
+        if (this.timeout) clearTimeout(this.timeout)
+        // @ts-expect-error adding property to anonymous class
+        this.timeout = setTimeout(() => {
           update.view.dispatch({ changes })
         }, 10)
       }

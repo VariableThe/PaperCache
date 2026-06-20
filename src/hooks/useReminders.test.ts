@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { useReminders } from './useReminders'
+import { SETTINGS_KEYS } from '../lib/settingsKeys'
 import { useAppStore } from '../store/useAppStore'
 
 describe('useReminders', () => {
@@ -18,7 +19,7 @@ describe('useReminders', () => {
       window.electronAPI = {
         onPowerSuspend: vi.fn().mockReturnValue(vi.fn()),
         onPowerResume: vi.fn().mockReturnValue(vi.fn()),
-      } as any
+      } as Partial<Window['electronAPI']> as any
     }
 
     // Clear localStorage
@@ -67,7 +68,7 @@ describe('useReminders', () => {
     })
 
     // Check that it's saved in localStorage
-    const notified = JSON.parse(localStorage.getItem('papercache_notified') || '[]')
+    const notified = JSON.parse(localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS) || '[]')
     expect(notified.length).toBe(1)
   })
 

@@ -3,10 +3,16 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useVariables } from './useVariables'
 import { useAppStore } from '../store/useAppStore'
 
+declare global {
+  interface Window {
+    __globalVariables?: Record<string, unknown>
+  }
+}
+
 describe('useVariables', () => {
   beforeEach(() => {
     // Reset global state
-    ;(window as any).__globalVariables = undefined
+    window.__globalVariables = undefined
 
     // Reset store
     useAppStore.setState({ notes: [] })
@@ -23,9 +29,9 @@ describe('useVariables', () => {
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect((window as any).__globalVariables).toBeDefined()
-      expect((window as any).__globalVariables.x).toBe(10)
-      expect((window as any).__globalVariables.y).toBe(20)
+      expect(window.__globalVariables).toBeDefined()
+      expect(window.__globalVariables?.x).toBe(10)
+      expect(window.__globalVariables?.y).toBe(20)
     })
   })
 
@@ -37,9 +43,9 @@ describe('useVariables', () => {
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect((window as any).__globalVariables).toBeDefined()
-      expect((window as any).__globalVariables.a).toBe(5)
-      expect((window as any).__globalVariables.b).toBe(10)
+      expect(window.__globalVariables).toBeDefined()
+      expect(window.__globalVariables?.a).toBe(5)
+      expect(window.__globalVariables?.b).toBe(10)
     })
   })
 
@@ -51,8 +57,8 @@ describe('useVariables', () => {
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect((window as any).__globalVariables).toBeDefined()
-      expect((window as any).__globalVariables.name).toBe('John Doe')
+      expect(window.__globalVariables).toBeDefined()
+      expect(window.__globalVariables?.name).toBe('John Doe')
     })
   })
 
@@ -67,9 +73,9 @@ describe('useVariables', () => {
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect((window as any).__globalVariables).toBeDefined()
-      expect((window as any).__globalVariables.val1).toBe(100)
-      expect((window as any).__globalVariables.val2).toBe(150)
+      expect(window.__globalVariables).toBeDefined()
+      expect(window.__globalVariables?.val1).toBe(100)
+      expect(window.__globalVariables?.val2).toBe(150)
     })
   })
 })

@@ -1,14 +1,20 @@
 import type { EditorView } from '@codemirror/view'
+import { StateEffect } from '@codemirror/state'
+
+export const scopeChangedEffect = StateEffect.define<void>()
 
 export class VariableScope {
   static globalScopeCache: Record<string, unknown> = {}
   static lastDocString = ''
   static scopeEvalTimeout: number | null = null
+  static scopeVersion = 0
 
   static triggerScopeUpdate(docStr: string, view: EditorView | null) {
     if (docStr === this.lastDocString) return
     this.lastDocString = docStr
     if (this.scopeEvalTimeout) window.clearTimeout(this.scopeEvalTimeout)
+    this.scopeVersion++
+    const currentVersion = this.scopeVersion
     this.scopeEvalTimeout = window.setTimeout(async () => {
       let mathjs
       try {
@@ -39,13 +45,11 @@ export class VariableScope {
         }
       }
 
+      if (currentVersion !== this.scopeVersion) return
       if (changed || Object.keys(this.globalScopeCache).length !== Object.keys(newScope).length) {
         this.globalScopeCache = newScope
-        if (view && !view.state.doc.length) {
-          // just safety check, actually dispatch effects to trigger deco update
-        }
         if (view) {
-          view.dispatch({ effects: [] })
+          view.dispatch({ effects: [scopeChangedEffect.of()] })
           import('./MathEvaluator').then((m) => m.MathEvaluator.triggerMathEvaluation(view))
         }
       }

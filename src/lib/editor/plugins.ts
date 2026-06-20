@@ -62,6 +62,9 @@ export const mathPlugin = ViewPlugin.fromClass(
 
 export const scopeUpdaterPlugin = ViewPlugin.fromClass(
   class {
+    constructor(view: EditorView) {
+      VariableScope.triggerScopeUpdate(view.state.doc.toString(), view)
+    }
     update(update: ViewUpdate) {
       if (update.docChanged) {
         VariableScope.triggerScopeUpdate(update.state.doc.toString(), update.view)

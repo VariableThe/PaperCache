@@ -23,7 +23,7 @@ export function NoteTitleBar() {
     setIsRenaming(true)
   }
 
-  const handleRenameSubmit = () => {
+  const handleRenameSubmit = async () => {
     setIsRenaming(false)
     const newName = renameValue.trim()
     if (!newName) return
@@ -31,10 +31,14 @@ export function NoteTitleBar() {
 
     if (isAutoNamed && activeNote.content.trim() === '') {
       const newContent = newName + '\n\n'
-      const newNotes = [...notes]
-      newNotes[currentNoteIndex] = { ...activeNote, content: newContent }
-      setNotes(newNotes)
-      window.electronAPI.saveNote(activeNote.id, newContent)
+      try {
+        await window.electronAPI.saveNote(activeNote.id, newContent)
+        setNotes((prev) =>
+          prev.map((n) => (n.id === activeNote.id ? { ...n, content: newContent } : n))
+        )
+      } catch (e) {
+        console.error('Failed to save note', e)
+      }
     } else {
       const parts = activeNote.id.split('/')
       parts.pop()
@@ -42,13 +46,14 @@ export function NoteTitleBar() {
       parts.push(finalName)
       const newId = parts.join('/')
 
-      window.electronAPI.renameNote(activeNote.id, newId).then((success) => {
+      try {
+        const success = await window.electronAPI.renameNote(activeNote.id, newId)
         if (success) {
-          const newNotes = [...notes]
-          newNotes[currentNoteIndex] = { ...activeNote, id: newId }
-          setNotes(newNotes)
+          setNotes((prev) => prev.map((n) => (n.id === activeNote.id ? { ...n, id: newId } : n)))
         }
-      })
+      } catch (e) {
+        console.error('Failed to rename note', e)
+      }
     }
   }
 

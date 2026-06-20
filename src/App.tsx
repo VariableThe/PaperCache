@@ -32,12 +32,8 @@ import { NoteSearch } from './components/NoteSearch'
 import { MainActionMenu } from './components/MainActionMenu'
 import { NoteTitleBar } from './components/NoteTitleBar'
 import { getSecure } from './lib/safeStorage'
-import type OpenAI from 'openai'
-import { MathEvaluator } from './lib/editor/MathEvaluator'
 
-let openaiInstance: OpenAI | null = null
-let currentApiKey = ''
-let currentApiBaseUrl = ''
+import { MathEvaluator } from './lib/editor/MathEvaluator'
 
 function App() {
   const {
@@ -296,25 +292,6 @@ function App() {
                       finalBaseUrl = finalBaseUrl.slice(0, -1)
                     }
 
-                    if (
-                      !openaiInstance ||
-                      currentApiKey !== apiKey ||
-                      currentApiBaseUrl !== finalBaseUrl
-                    ) {
-                      const OpenAI = (await import('openai')).default
-                      openaiInstance = new OpenAI({
-                        apiKey: apiKey.trim() || 'dummy',
-                        baseURL: finalBaseUrl || undefined,
-                        dangerouslyAllowBrowser: true,
-                        defaultHeaders: {
-                          'HTTP-Referer': 'https://github.com/papercache/papercache',
-                          'X-Title': 'PaperCache',
-                        },
-                      })
-                      currentApiKey = apiKey
-                      currentApiBaseUrl = finalBaseUrl
-                    }
-
                     const systemContent = aiSystemPrompt.trim()
                     const messages: { role: 'user' | 'system'; content: string }[] = []
                     if (systemContent) {
@@ -336,10 +313,12 @@ function App() {
 
                     messages.push({ role: 'user', content: finalPrompt })
 
-                    openaiInstance.chat.completions
-                      .create({
+                    window.electronAPI
+                      .openAIChat({
                         model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
                         messages: messages,
+                        apiKey: apiKey.trim() || '',
+                        baseURL: finalBaseUrl || '',
                       })
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       .then((completion: any) => {
