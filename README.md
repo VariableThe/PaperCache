@@ -87,7 +87,11 @@ Built with Electron, React, TypeScript, and Vite.
 
 ## AI setup
 
-PaperCache uses your own OpenAI API key — no subscription, no middleman. Configure your key, model, and optionally a custom endpoint (works with local LLMs like Ollama) in Settings (`Cmd+K` → Settings).
+PaperCache brings AI right into your note — no subscription, no middleman. You can configure your API key, model, and endpoint in Settings (`Cmd+Shift+S`).
+
+- **OpenAI:** Works out-of-the-box with your OpenAI API key and models like `gpt-4o`.
+- **Free Models (OpenRouter):** Don't have an AI subscription? Get a free key at [OpenRouter](https://openrouter.ai/keys), set your Base URL to `https://openrouter.ai/api/v1`, and try a powerful free model like `nvidia/nemotron-3-super-120b-a12b:free`.
+- **Local LLMs:** Works seamlessly with local models like Ollama by pointing the Base URL to your local instance.
 
 ---
 

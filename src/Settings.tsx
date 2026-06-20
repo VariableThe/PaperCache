@@ -1,14 +1,32 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getSecure, setSecure } from './lib/safeStorage'
 import './Settings.css'
 
 export default function Settings() {
-  const [apiKey, setApiKey] = useState(localStorage.getItem('papercache-apikey') || '')
+  const [apiKey, setApiKey] = useState('')
+
+  useEffect(() => {
+    getSecure('papercache-apikey').then((key) => {
+      if (key) setApiKey(key)
+    })
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        window.electronAPI.closeWindow()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
   const [apiBaseUrl, setApiBaseUrl] = useState(
-    localStorage.getItem('papercache-baseurl') || 'https://api.openai.com/v1'
+    localStorage.getItem('papercache-api-base-url') || 'https://openrouter.ai/api/v1'
   )
-  const [apiModel, setApiModel] = useState(localStorage.getItem('papercache-model') || 'gpt-4o')
+  const [apiModel, setApiModel] = useState(
+    localStorage.getItem('papercache-api-model') || 'nvidia/nemotron-3-super-120b-a12b:free'
+  )
   const [aiSystemPrompt, setAiSystemPrompt] = useState(
-    localStorage.getItem('papercache-system-prompt') || 'Please provide a short and concise answer.'
+    localStorage.getItem('papercache-ai-system-prompt') ||
+      'Please provide a short and concise answer.'
   )
 
   // Shortcuts
@@ -52,11 +70,12 @@ export default function Settings() {
     localStorage.getItem('papercache-color-math') || '#f59e0b'
   )
 
-  const saveSettings = () => {
-    localStorage.setItem('papercache-apikey', apiKey)
-    localStorage.setItem('papercache-baseurl', apiBaseUrl)
-    localStorage.setItem('papercache-model', apiModel)
-    localStorage.setItem('papercache-system-prompt', aiSystemPrompt)
+  const saveSettings = async () => {
+    await setSecure('papercache-apikey', apiKey)
+    localStorage.removeItem('papercache-apikey')
+    localStorage.setItem('papercache-api-base-url', apiBaseUrl)
+    localStorage.setItem('papercache-api-model', apiModel)
+    localStorage.setItem('papercache-ai-system-prompt', aiSystemPrompt)
 
     localStorage.setItem('papercache-font', fontFamily)
     localStorage.setItem('papercache-show-rulings', showRulings.toString())
@@ -98,6 +117,10 @@ export default function Settings() {
     window.electronAPI.closeWindow() // actually closes settings window
   }
 
+  const closeSettings = () => {
+    window.electronAPI.closeWindow()
+  }
+
   const quitApp = () => {
     window.electronAPI.quitApp()
   }
@@ -127,7 +150,7 @@ export default function Settings() {
               type="text"
               value={apiBaseUrl}
               onChange={(e) => setApiBaseUrl(e.target.value)}
-              placeholder="https://api.openai.com/v1"
+              placeholder="https://openrouter.ai/api/v1"
             />
           </div>
 
@@ -137,7 +160,7 @@ export default function Settings() {
               type="text"
               value={apiModel}
               onChange={(e) => setApiModel(e.target.value)}
-              placeholder="gpt-4o"
+              placeholder="nvidia/nemotron-3-super-120b-a12b:free"
             />
           </div>
 
@@ -291,15 +314,17 @@ export default function Settings() {
             <input type="color" value={aiColor} onChange={(e) => setAiColor(e.target.value)} />
           </div>
         </section>
-
-        <button className="save-btn" onClick={saveSettings}>
-          Save Settings
-        </button>
       </div>
 
       <div className="settings-footer">
         <button className="quit-btn" onClick={quitApp}>
-          Quit PaperCache
+          Quit
+        </button>
+        <button className="close-btn" onClick={closeSettings}>
+          Close Settings
+        </button>
+        <button className="save-btn" onClick={saveSettings}>
+          Save Settings
         </button>
       </div>
     </div>
