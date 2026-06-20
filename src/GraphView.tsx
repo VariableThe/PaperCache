@@ -4,7 +4,7 @@ import ForceGraph2D from 'react-force-graph-2d'
 import { getFolderColor } from './utils'
 
 interface GraphViewProps {
-  notes: any[]
+  notes: { id: string; content: string; mtime: number }[]
   onClose: () => void
   onNodeClick: (nodeId: string) => void
   textColor: string
@@ -37,7 +37,7 @@ export default function GraphView({
       return { id: n.id, name: title, val: 1, folder }
     })
 
-    const links: any[] = []
+    const links: { source: string; target: string }[] = []
     const nodeIds = new Set(nodes.map((n) => n.id))
 
     notes.forEach((note) => {
@@ -62,7 +62,7 @@ export default function GraphView({
   }, [notes])
 
   const handleNodeClick = useCallback(
-    (node: any) => {
+    (node: { id: string; name: string; val: number; folder: string }) => {
       onNodeClick(node.id)
     },
     [onNodeClick]
@@ -119,7 +119,11 @@ export default function GraphView({
           onNodeClick={handleNodeClick}
           nodeRelSize={6}
           linkWidth={2}
-          nodeCanvasObject={(node: any, ctx, globalScale) => {
+          nodeCanvasObject={(
+            node: { id: string; name: string; val: number; folder: string; x?: number; y?: number },
+            ctx,
+            globalScale
+          ) => {
             const label = node.name
             const fontSize = 12 / globalScale
             ctx.font = `${fontSize}px Sans-Serif`

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import * as mathjs from 'mathjs'
+
 import { useAppStore } from '../store/useAppStore'
 
 export function useVariables() {
@@ -7,19 +7,34 @@ export function useVariables() {
 
   // Sync global variables whenever notes change
   useEffect(() => {
-    const globals: any = {}
-    const reVar = /^\/globvar\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
-    notes.forEach((note) => {
-      let varMatch
-      while ((varMatch = reVar.exec(note.content)) !== null) {
-        const name = varMatch[1]
-        try {
-          globals[name] = mathjs.evaluate(varMatch[2], globals)
-        } catch {
-          globals[name] = varMatch[2].trim()
+    let abort = false
+    async function syncVars() {
+      const globals: Record<string, unknown> = {}
+      const reVar = /^\/globvar\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
+
+      let mathjs: { evaluate: (e: string, s: unknown) => unknown } | null = null
+
+      for (const note of notes) {
+        let varMatch
+        while ((varMatch = reVar.exec(note.content)) !== null) {
+          const name = varMatch[1]
+          try {
+            if (!mathjs) {
+              mathjs = await import('mathjs')
+            }
+            globals[name] = mathjs.evaluate(varMatch[2], globals)
+          } catch {
+            globals[name] = varMatch[2].trim()
+          }
         }
       }
-    })
-    ;(window as any).__globalVariables = globals
+      if (abort) return
+      ;(window as unknown as { __globalVariables: Record<string, unknown> }).__globalVariables =
+        globals
+    }
+    syncVars()
+    return () => {
+      abort = true
+    }
   }, [notes])
 }

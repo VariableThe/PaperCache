@@ -1,12 +1,11 @@
 import { useCallback, useMemo, useRef, useEffect } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { markdown } from '@codemirror/lang-markdown'
-import { EditorView, keymap } from '@codemirror/view'
+import { EditorView, ViewUpdate, keymap } from '@codemirror/view'
 import { Prec } from '@codemirror/state'
 import { syntaxHighlighting } from '@codemirror/language'
 import { search } from '@codemirror/search'
 import { insertTab, indentLess } from '@codemirror/commands'
-import * as mathjs from 'mathjs'
 
 import './App.css'
 import { getFolderColor } from './utils'
@@ -32,6 +31,10 @@ import {
   remConverterPlugin,
 } from './lib/editor/plugins'
 import { getSecure } from './lib/safeStorage'
+
+let openaiInstance: any = null
+let currentApiKey = ''
+let currentApiBaseUrl = ''
 
 function App() {
   const {
@@ -90,6 +93,7 @@ function App() {
   }, [setApiKey])
 
   const editorRef = useRef<any>(null)
+  const mathCalcTimeoutRef = useRef<number | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {}, [notes])
@@ -174,7 +178,7 @@ function App() {
   }
 
   const handleEditorChange = useCallback(
-    (val: string, viewUpdate: any) => {
+    (val: string, viewUpdate?: ViewUpdate) => {
       const updatedNotes = [...notes]
       if (updatedNotes[currentNoteIndex]) {
         updatedNotes[currentNoteIndex].content = val
@@ -182,84 +186,91 @@ function App() {
         window.electronAPI.saveNote(activeNote.id, val)
       }
 
-      if (viewUpdate.transactions?.some((tr: any) => tr.docChanged)) {
-        let docStr = viewUpdate.state.doc.toString()
-        const head = viewUpdate.state.selection.main.head
-        const line = viewUpdate.state.doc.lineAt(head)
+      if (viewUpdate?.transactions?.some((tr) => tr.docChanged)) {
+        if (mathCalcTimeoutRef.current) {
+          clearTimeout(mathCalcTimeoutRef.current)
+        }
+        mathCalcTimeoutRef.current = window.setTimeout(async () => {
+          if (!editorRef.current?.view) return
+          const view = editorRef.current.view
+          const docStr = view.state.doc.toString()
+          const head = view.state.selection.main.head
+          const line = view.state.doc.lineAt(head)
 
-        let modified = false
-
-        // Build variable scope (incorporate global variables)
-        const scope: any = Object.assign({}, (window as any).__globalVariables || {})
-        const reVar = /^\/var\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
-        let match
-        while ((match = reVar.exec(docStr)) !== null) {
-          const name = match[1]
+          let mathjs: any
           try {
-            const val = mathjs.evaluate(match[2], scope)
-            scope[name] = val
+            mathjs = await import('mathjs')
           } catch {
-            scope[name] = match[2].trim()
+            return
           }
-        }
 
-        // Check the current active line for new calculation trigger
-        if (line.text.endsWith('=')) {
-          try {
-            const expr = line.text.substring(0, line.text.length - 1).trim()
-            if (expr) {
-              const result = mathjs.evaluate(expr, scope)
-              const newLineText = line.text + '\u200B' + result
-              const before = docStr.substring(0, line.from)
-              const after = docStr.substring(line.to)
-              docStr = before + newLineText + after
-              modified = true
-            }
-          } catch {}
-        }
-
-        // Re-evaluate ALL existing calculations in the document
-        // Equation pattern: (expr) = \u200B(result)
-        const reCalc = /^(.*?=\s*)\u200B(.*)$/gm
-        let newDocStr = ''
-        let lastIndex = 0
-        let calcMatch
-        let calcModified = false
-        while ((calcMatch = reCalc.exec(docStr)) !== null) {
-          const exprPart = calcMatch[1]
-          const oldResult = calcMatch[2]
-          const expr = exprPart.replace(/=$/, '').trim()
-          if (expr) {
+          const scope: Record<string, unknown> = Object.assign(
+            {},
+            (window as unknown as { __globalVariables: Record<string, unknown> })
+              .__globalVariables || {}
+          )
+          const reVar = /^\/var\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
+          let match
+          while ((match = reVar.exec(docStr)) !== null) {
+            const name = match[1]
             try {
-              const newResult = String(mathjs.evaluate(expr, scope))
-              if (newResult !== oldResult) {
-                newDocStr +=
-                  docStr.substring(lastIndex, calcMatch.index) + exprPart + '\u200B' + newResult
-                lastIndex = reCalc.lastIndex
-                calcModified = true
-                continue
+              const val = mathjs.evaluate(match[2], scope)
+              scope[name] = val
+            } catch {
+              scope[name] = match[2].trim()
+            }
+          }
+
+          const changes: { from: number; to: number; insert: string }[] = []
+
+          if (line.text.endsWith('=')) {
+            try {
+              const expr = line.text.substring(0, line.text.length - 1).trim()
+              if (expr) {
+                const result = String(mathjs.evaluate(expr, scope))
+                changes.push({
+                  from: line.to,
+                  to: line.to,
+                  insert: '\u200B' + result,
+                })
               }
             } catch {}
           }
-        }
 
-        if (calcModified) {
-          newDocStr += docStr.substring(lastIndex)
-          docStr = newDocStr
-          modified = true
-        }
+          const reCalc = /^(.*?=\s*)\u200B(.*)$/gm
+          let calcMatch
+          while ((calcMatch = reCalc.exec(docStr)) !== null) {
+            const exprPart = calcMatch[1]
+            const oldResult = calcMatch[2]
+            const expr = exprPart.replace(/=$/, '').trim()
+            if (expr) {
+              try {
+                const newResult = String(mathjs.evaluate(expr, scope))
+                if (newResult !== oldResult) {
+                  const startReplace = calcMatch.index + exprPart.length + 1 // +1 for \u200B
+                  const endReplace = calcMatch.index + calcMatch[0].length
+                  if (!changes.some((c) => c.from <= endReplace && c.to >= startReplace)) {
+                    changes.push({
+                      from: startReplace,
+                      to: endReplace,
+                      insert: newResult,
+                    })
+                  }
+                }
+              } catch {}
+            }
+          }
 
-        if (modified) {
-          updatedNotes[currentNoteIndex].content = docStr
-          setNotes([...updatedNotes])
-          window.electronAPI.saveNote(activeNote.id, docStr)
-        }
+          if (changes.length > 0) {
+            view.dispatch({ changes })
+          }
+        }, 300)
       }
     },
     [notes, currentNoteIndex, activeNote.id, setNotes]
   )
 
-  const containerStyle: any = {
+  const containerStyle: React.CSSProperties & Record<string, string | number> = {
     '--font-family': fontFamily,
     '--text-color': textColor,
     '--custom-color-num': numColor,
@@ -283,6 +294,7 @@ function App() {
     () => [
       EditorView.lineWrapping,
       Prec.highest(
+        // eslint-disable-next-line react-hooks/refs
         keymap.of([
           { key: 'Tab', preventDefault: true, run: insertTab },
           { key: 'Shift-Tab', preventDefault: true, run: indentLess },
@@ -397,19 +409,27 @@ function App() {
                       finalBaseUrl = finalBaseUrl.slice(0, -1)
                     }
 
-                    const OpenAI = (await import('openai')).default
-                    const openai = new OpenAI({
-                      apiKey: apiKey.trim() || 'dummy',
-                      baseURL: finalBaseUrl || undefined,
-                      dangerouslyAllowBrowser: true,
-                      defaultHeaders: {
-                        'HTTP-Referer': 'https://github.com/papercache/papercache',
-                        'X-Title': 'PaperCache',
-                      },
-                    })
+                    if (
+                      !openaiInstance ||
+                      currentApiKey !== apiKey ||
+                      currentApiBaseUrl !== finalBaseUrl
+                    ) {
+                      const OpenAI = (await import('openai')).default
+                      openaiInstance = new OpenAI({
+                        apiKey: apiKey.trim() || 'dummy',
+                        baseURL: finalBaseUrl || undefined,
+                        dangerouslyAllowBrowser: true,
+                        defaultHeaders: {
+                          'HTTP-Referer': 'https://github.com/papercache/papercache',
+                          'X-Title': 'PaperCache',
+                        },
+                      })
+                      currentApiKey = apiKey
+                      currentApiBaseUrl = finalBaseUrl
+                    }
 
                     const systemContent = aiSystemPrompt.trim()
-                    const messages: any[] = []
+                    const messages: { role: string; content: string }[] = []
                     if (systemContent) {
                       messages.push({ role: 'system', content: systemContent })
                     }
@@ -429,12 +449,12 @@ function App() {
 
                     messages.push({ role: 'user', content: finalPrompt })
 
-                    openai.chat.completions
+                    openaiInstance.chat.completions
                       .create({
                         model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
                         messages: messages,
                       })
-                      .then((completion: any) => {
+                      .then((completion: Record<string, any>) => {
                         let response: string
                         if (completion.choices && completion.choices.length > 0) {
                           response = completion.choices[0].message?.content || ''
@@ -451,7 +471,7 @@ function App() {
                           '\n\u200B...\u200C\n',
                           '\n\u200B' + response + '\u200C\n'
                         )
-                        handleEditorChange(finalVal, {})
+                        handleEditorChange(finalVal)
                       })
                       .catch((error) => {
                         const docStr = view.state.doc.toString()
@@ -459,15 +479,17 @@ function App() {
                           '\n\u200B...\u200C\n',
                           '\n\u200BError - ' + error.message + '\u200C\n'
                         )
-                        handleEditorChange(errorVal, {})
+                        handleEditorChange(errorVal)
                       })
-                  } catch (err: any) {
+                  } catch (err: unknown) {
                     const docStr = view.state.doc.toString()
                     const errorVal = docStr.replace(
                       '\n\u200B...\u200C\n',
-                      '\n\u200BSetup Error - ' + err.message + '\u200C\n'
+                      '\n\u200BSetup Error - ' +
+                        ((err as Error).message || String(err)) +
+                        '\u200C\n'
                     )
-                    handleEditorChange(errorVal, {})
+                    handleEditorChange(errorVal)
                   }
                 })()
 

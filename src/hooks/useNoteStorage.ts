@@ -32,8 +32,9 @@ export function useNoteStorage() {
 
   // Listen to external open note events
   useEffect(() => {
-    const handleOpenNote = (e: any) => {
-      let path = e.detail.path
+    const handleOpenNote = (e: Event) => {
+      const customEvent = e as CustomEvent
+      let path = customEvent.detail.path
       if (!path.endsWith('.md')) path += '.md'
 
       // We need the latest notes, so use useAppStore.getState()
