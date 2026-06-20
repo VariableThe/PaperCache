@@ -31,8 +31,11 @@ This document outlines every feature available in the PaperCache codebase, organ
 
 ## Artificial Intelligence
 
-- **Inline AI Assistant**: Type `/ai <prompt>` and press enter to summon OpenAI straight into your editor. Prompts are evaluated and automatically replaced with AI responses directly inline.
-- **Configurable Models & Custom Endpoints**: Easily switch out your API Key, System Prompt, API Base URL, and specific AI Model (`gpt-4o`, `gpt-3.5-turbo`, or custom local LLM endpoints) in the settings panel.
+- **Inline AI Assistant**: Type `/ai <prompt>` and press enter to summon AI straight into your editor. Prompts are evaluated and automatically replaced with AI responses directly inline.
+- **Note Context Injection**: Type `/ctx <prompt>` instead to automatically package the entire text of the current note along with your prompt, allowing the AI to read your document before answering.
+- **Configurable Models & Custom Endpoints**: Easily switch out your API Key, System Prompt, API Base URL, and specific AI Model in the settings panel.
+- **Free Top-Tier Defaults**: PaperCache comes fully pre-configured to point to OpenRouter's free tier, using powerful models like `nvidia/nemotron-3-super-120b-a12b:free` out of the box!
+- **Secure API Storage**: API keys are securely encrypted at rest using your operating system's native keychain (via Electron's `safeStorage`).
 
 ## Desktop System Integration
 
@@ -43,6 +46,7 @@ This document outlines every feature available in the PaperCache codebase, organ
   - `Cmd+Shift+N` (configurable): Instantly spawn a new floating note from anywhere on your OS.
   - `Cmd+Shift+C` (configurable): Toggle PaperCache visibility from anywhere on your OS.
 - **State Memory**: Memorizes precise window coordinates, dimensions, and zoom levels across launches to persist workspace state.
+- **Fluid Settings**: Opening the Settings menu dynamically inherits the exact dimensions and on-screen coordinates of your current notepad for a native, seamless transition.
 - **Launch on Startup**: Optional setting to boot silently in the background when your computer starts.
 - **Exporting Options**: Export individual notes straight to a local `.md` file on your filesystem via the main menu or search list.
 - **Safe Tutorials**: Auto-generates fully functional Markdown tutorials in a `commands/` folder upon first launch. Prevents accidental deletion of these core tutorial files.
