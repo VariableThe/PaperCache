@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import Settings from './Settings'
 
 describe('Settings Component', () => {
@@ -24,12 +24,12 @@ describe('Settings Component', () => {
     expect(screen.getByText('Appearance')).toBeInTheDocument()
   })
 
-  it('loads initial state from localStorage', () => {
-    localStorage.setItem('papercache-apikey', 'sk-test-key')
+  it('loads initial state from localStorage', async () => {
+    localStorage.setItem('papercache-apikey-secure', 'sk-test-key')
     render(<Settings />)
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...') as HTMLInputElement
-    expect(apiKeyInput.value).toBe('sk-test-key')
+    await waitFor(() => expect(apiKeyInput.value).toBe('sk-test-key'))
   })
 
   it('updates state when inputs change', () => {
@@ -41,7 +41,7 @@ describe('Settings Component', () => {
     expect((apiKeyInput as HTMLInputElement).value).toBe('sk-new-key')
   })
 
-  it('saves settings to localStorage on Save Settings button click', () => {
+  it('saves settings to localStorage on Save Settings button click', async () => {
     render(<Settings />)
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...')
@@ -50,14 +50,16 @@ describe('Settings Component', () => {
     const saveButton = screen.getByText('Save Settings')
     fireEvent.click(saveButton)
 
-    expect(localStorage.getItem('papercache-apikey')).toBe('sk-new-key')
-    expect(window.electronAPI.closeWindow).toHaveBeenCalled()
+    await waitFor(() => {
+      expect(localStorage.getItem('papercache-apikey-secure')).toBe('sk-new-key')
+      expect(window.electronAPI.closeWindow).toHaveBeenCalled()
+    })
   })
 
   it('calls quitApp when Quit PaperCache is clicked', () => {
     render(<Settings />)
 
-    const quitButton = screen.getByText('Quit PaperCache')
+    const quitButton = screen.getByText('Quit')
     fireEvent.click(quitButton)
 
     expect(window.electronAPI.quitApp).toHaveBeenCalled()
