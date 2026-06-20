@@ -71,5 +71,6 @@ This critical area for a background desktop app has been fully resolved.
 2. **Lazy Load `mathjs`**: Use `import()` to lazily load the `mathjs` engine similarly to how `openai` was handled.
 
 ### Low Priority
-3. **Optimize `electron-builder`**: Add `"compression": "maximum"` to `build` config in `package.json`.
-4. **Resolve ESLint Warnings**: Clear out the explicit `any` types across the codebase to ensure robust type safety during future expansions.
+3. **OpenAI Client Singleton**: The `openai` SDK is lazily imported correctly, but it re-instantiates the client on every `/ai` invocation. Implementing a singleton for the initialized client would prevent unnecessary object creation during rapid successive commands.
+4. **Optimize `electron-builder`**: Add `"compression": "maximum"` to `build` config in `package.json`.
+5. **Resolve ESLint Warnings**: Clear out the explicit `any` types across the codebase to ensure robust type safety during future expansions.

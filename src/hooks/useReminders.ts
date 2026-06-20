@@ -95,16 +95,13 @@ export function useReminders() {
       checkAndSchedule()
     }
 
-    // ElectronAPI event handlers are persistent until removed, but since we re-bind on notes change,
-    // we actually only want to update the `checkAndSchedule` closure.
-    window.electronAPI.onPowerSuspend(onSuspend)
-    window.electronAPI.onPowerResume(onResume)
+    const unsubscribeSuspend = window.electronAPI.onPowerSuspend(onSuspend)
+    const unsubscribeResume = window.electronAPI.onPowerResume(onResume)
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
-      // Note: React's strict mode might double mount. Ideally we'd remove listeners here
-      // but IPC `on` from preload doesn't currently return an un-listener.
-      // It's acceptable for this hook since it's mounted once at App level.
+      unsubscribeSuspend()
+      unsubscribeResume()
     }
   }, [notes])
 }
