@@ -121,8 +121,9 @@ export function useGlobalHotkey() {
     }
 
     // Listen for global new note shortcut
+    let disposeNewNote: (() => void) | undefined
     if (window.electronAPI.onTriggerNewNote) {
-      window.electronAPI.onTriggerNewNote(() => {
+      disposeNewNote = window.electronAPI.onTriggerNewNote(() => {
         const id = Date.now() + '.md'
         const initialNote = { id, content: '', mtime: Date.now() }
         setNotes((prev) => [initialNote, ...prev])
@@ -131,14 +132,19 @@ export function useGlobalHotkey() {
       })
     }
 
+    let disposeTasks: (() => void) | undefined
     if (window.electronAPI.onTriggerTasks) {
-      window.electronAPI.onTriggerTasks(() => {
+      disposeTasks = window.electronAPI.onTriggerTasks(() => {
         setShowRemindersView((prev) => !prev)
       })
     }
 
     window.addEventListener('keydown', handleGlobalKeyDown, { capture: true })
-    return () => window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true })
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true })
+      disposeNewNote?.()
+      disposeTasks?.()
+    }
   }, [
     showMainActionMenu,
     showNoteSearch,
