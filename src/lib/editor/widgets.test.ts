@@ -26,8 +26,8 @@ describe('Editor Widgets', () => {
 
   describe('CheckboxWidget', () => {
     it('should create unchecked DOM correctly', () => {
-      const mockView = { dispatch: vi.fn() } as unknown as Partial<EditorView> as EditorView
-      const widget = new CheckboxWidget(false, 10, mockView)
+      const mockView: Partial<EditorView> = { dispatch: vi.fn() }
+      const widget = new CheckboxWidget(false, 10, mockView as EditorView)
       const dom = widget.toDOM()
 
       expect(dom.className).toBe('cm-checkbox-widget')
@@ -35,8 +35,8 @@ describe('Editor Widgets', () => {
     })
 
     it('should create checked DOM correctly', () => {
-      const mockView = { dispatch: vi.fn() } as unknown as Partial<EditorView> as EditorView
-      const widget = new CheckboxWidget(true, 10, mockView)
+      const mockView: Partial<EditorView> = { dispatch: vi.fn() }
+      const widget = new CheckboxWidget(true, 10, mockView as EditorView)
       const dom = widget.toDOM()
 
       expect(dom.className).toBe('cm-checkbox-widget cm-checkbox-checked')
@@ -44,10 +44,10 @@ describe('Editor Widgets', () => {
     })
 
     it('should dispatch correct transaction on click', () => {
-      const mockView = { dispatch: vi.fn() } as unknown as Partial<EditorView> as EditorView
+      const mockView: Partial<EditorView> = { dispatch: vi.fn() }
 
       // Unchecked -> Checked
-      const widgetUnchecked = new CheckboxWidget(false, 10, mockView)
+      const widgetUnchecked = new CheckboxWidget(false, 10, mockView as EditorView)
       const domUnchecked = widgetUnchecked.toDOM()
       domUnchecked.onclick?.({
         preventDefault: vi.fn(),
@@ -61,7 +61,7 @@ describe('Editor Widgets', () => {
       vi.clearAllMocks()
 
       // Checked -> Unchecked
-      const widgetChecked = new CheckboxWidget(true, 10, mockView)
+      const widgetChecked = new CheckboxWidget(true, 10, mockView as EditorView)
       const domChecked = widgetChecked.toDOM()
       domChecked.onclick?.({
         preventDefault: vi.fn(),
