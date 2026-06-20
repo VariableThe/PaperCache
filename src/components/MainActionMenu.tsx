@@ -76,7 +76,7 @@ export function MainActionMenu() {
           fontSize: 14,
         }}
       >
-        Reminders
+        Tasks
       </button>
       <button
         onClick={() => {
