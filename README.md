@@ -28,10 +28,12 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 ## Screenshots
 
 <div align="center">
-  <img src="Screenshots/variables.png" width="400" alt="Variables and Math">
-  <img src="Screenshots/markdown-code.png" width="400" alt="Markdown and Code Snippets">
+  <img src="Screenshots/editor-formatting.png" width="400" alt="Editor and Formatting">
+  <img src="Screenshots/ai-demo.png" width="400" alt="Inline AI">
   <br><br>
-  <img src="Screenshots/search.png" width="400" alt="Search and Tags">
+  <img src="Screenshots/knowledge-management.png" width="400" alt="Knowledge Management">
+  <img src="Screenshots/search.png" width="400" alt="Search">
+  <br><br>
   <img src="Screenshots/graph-view.png" width="400" alt="Graph View">
 </div>
 
