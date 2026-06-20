@@ -21,6 +21,7 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 - **Graph view** — see how your notes connect (`Cmd+G`).
 
 > **Deep Dive:** For a comprehensive list of every single feature in PaperCache, check out [features.md](features.md).
+> **Performance:** We take speed and battery life seriously. Check out our [Performance Audit](PERFORMANCE_AUDIT.md).
 
 ---
 
