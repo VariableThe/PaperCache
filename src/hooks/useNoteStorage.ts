@@ -3,7 +3,10 @@ import { useAppStore } from '../store/useAppStore'
 import type { Note } from '../store/useAppStore'
 
 export function useNoteStorage() {
-  const { notes, setNotes, currentNoteIndex, setCurrentNoteIndex } = useAppStore()
+  const notes = useAppStore((state) => state.notes)
+  const setNotes = useAppStore((state) => state.setNotes)
+  const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
+  const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
 
   // Load notes initially
   useEffect(() => {

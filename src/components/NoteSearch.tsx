@@ -2,22 +2,20 @@ import { useAppStore } from '../store/useAppStore'
 import { getFolderColor } from '../utils'
 
 export function NoteSearch() {
-  const {
-    notes,
-    setNotes,
-    currentNoteIndex,
-    setCurrentNoteIndex,
-    showNoteSearch,
-    setShowNoteSearch,
-    noteSearchQuery,
-    setNoteSearchQuery,
-    searchSelectedIndex,
-    setSearchSelectedIndex,
-    showNoteActionMenu,
-    setShowNoteActionMenu,
-    actionMenuIndex,
-    setActionMenuIndex,
-  } = useAppStore()
+  const notes = useAppStore((state) => state.notes)
+  const setNotes = useAppStore((state) => state.setNotes)
+  const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
+  const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
+  const showNoteSearch = useAppStore((state) => state.showNoteSearch)
+  const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
+  const noteSearchQuery = useAppStore((state) => state.noteSearchQuery)
+  const setNoteSearchQuery = useAppStore((state) => state.setNoteSearchQuery)
+  const searchSelectedIndex = useAppStore((state) => state.searchSelectedIndex)
+  const setSearchSelectedIndex = useAppStore((state) => state.setSearchSelectedIndex)
+  const showNoteActionMenu = useAppStore((state) => state.showNoteActionMenu)
+  const setShowNoteActionMenu = useAppStore((state) => state.setShowNoteActionMenu)
+  const actionMenuIndex = useAppStore((state) => state.actionMenuIndex)
+  const setActionMenuIndex = useAppStore((state) => state.setActionMenuIndex)
 
   if (!showNoteSearch) return null
 

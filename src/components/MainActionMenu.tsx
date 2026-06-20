@@ -2,14 +2,12 @@ import { useAppStore } from '../store/useAppStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 
 export function MainActionMenu() {
-  const {
-    notes,
-    currentNoteIndex,
-    showMainActionMenu,
-    setShowNoteSearch,
-    setShowGraphView,
-    setShowRemindersView,
-  } = useAppStore()
+  const notes = useAppStore((state) => state.notes)
+  const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
+  const showMainActionMenu = useAppStore((state) => state.showMainActionMenu)
+  const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
+  const setShowGraphView = useAppStore((state) => state.setShowGraphView)
+  const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
 
   const { bgType, bgColor, textColor, fontFamily } = useSettingsStore()
 
