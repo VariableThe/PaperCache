@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSecure, setSecure } from './lib/safeStorage'
+import { SETTINGS_KEYS } from './lib/settingsKeys'
 import './Settings.css'
 
 export default function Settings() {
@@ -19,79 +20,79 @@ export default function Settings() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
   const [apiBaseUrl, setApiBaseUrl] = useState(
-    localStorage.getItem('papercache-api-base-url') || 'https://openrouter.ai/api/v1'
+    localStorage.getItem(SETTINGS_KEYS.API_BASE_URL) || 'https://openrouter.ai/api/v1'
   )
   const [apiModel, setApiModel] = useState(
-    localStorage.getItem('papercache-api-model') || 'nvidia/nemotron-3-super-120b-a12b:free'
+    localStorage.getItem(SETTINGS_KEYS.API_MODEL) || 'nvidia/nemotron-3-super-120b-a12b:free'
   )
   const [aiSystemPrompt, setAiSystemPrompt] = useState(
-    localStorage.getItem('papercache-ai-system-prompt') ||
+    localStorage.getItem(SETTINGS_KEYS.AI_SYSTEM_PROMPT) ||
       'Please provide a short and concise answer.'
   )
 
   // Shortcuts
   const [globalShortcutNewNote, setGlobalShortcutNewNote] = useState(
-    localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N'
+    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE) || 'CommandOrControl+Shift+N'
   )
   const [globalShortcutToggle, setGlobalShortcutToggle] = useState(
-    localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C'
+    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TOGGLE) || 'CommandOrControl+Shift+C'
   )
 
   // Startup
   const [launchAtStartup, setLaunchAtStartup] = useState(
-    localStorage.getItem('papercache-launch-startup') === 'true'
+    localStorage.getItem(SETTINGS_KEYS.LAUNCH_STARTUP) === 'true'
   )
 
   // Appearance State
   const [fontFamily, setFontFamily] = useState(
-    localStorage.getItem('papercache-font') || "'JetBrains Mono', monospace"
+    localStorage.getItem(SETTINGS_KEYS.FONT_FAMILY) || "'JetBrains Mono', monospace"
   )
   const [showRulings, setShowRulings] = useState(
-    localStorage.getItem('papercache-show-rulings') === 'true'
+    localStorage.getItem(SETTINGS_KEYS.SHOW_RULINGS) !== 'false'
   )
   const [themePreset, setThemePreset] = useState(
-    localStorage.getItem('papercache-theme') || 'paper-light'
+    localStorage.getItem(SETTINGS_KEYS.THEME_PRESET) || 'grid-light'
   )
-  const [bgType, setBgType] = useState(localStorage.getItem('papercache-bg-type') || 'preset') // preset, color, image
-  const [bgColor, setBgColor] = useState(localStorage.getItem('papercache-bg-color') || '#ffffff')
-  const [bgImage, setBgImage] = useState(localStorage.getItem('papercache-bg-image') || '')
+  const [bgType, setBgType] = useState(localStorage.getItem(SETTINGS_KEYS.BG_TYPE) || 'color') // preset, color, image
+  const [bgColor, setBgColor] = useState(localStorage.getItem(SETTINGS_KEYS.BG_COLOR) || '#ffffff')
+  const [bgImage, setBgImage] = useState(localStorage.getItem(SETTINGS_KEYS.BG_IMAGE) || '')
 
   const [textColor, setTextColor] = useState(
-    localStorage.getItem('papercache-color-text') || '#333333'
+    localStorage.getItem(SETTINGS_KEYS.TEXT_COLOR) || '#000000'
   )
   const [numColor, setNumColor] = useState(
-    localStorage.getItem('papercache-color-num') || '#8ab4f8'
+    localStorage.getItem(SETTINGS_KEYS.NUM_COLOR) || '#8ab4f8'
   )
   const [symColor, setSymColor] = useState(
-    localStorage.getItem('papercache-color-sym') || '#c586c0'
+    localStorage.getItem(SETTINGS_KEYS.SYM_COLOR) || '#ff0000'
   )
-  const [aiColor, setAiColor] = useState(localStorage.getItem('papercache-color-ai') || '#10b981')
+  const [aiColor, setAiColor] = useState(localStorage.getItem(SETTINGS_KEYS.AI_COLOR) || '#8b5cf6')
   const [mathColor, setMathColor] = useState(
-    localStorage.getItem('papercache-color-math') || '#f59e0b'
+    localStorage.getItem(SETTINGS_KEYS.MATH_COLOR) || '#10b981'
   )
 
   const saveSettings = async () => {
     await setSecure('papercache-apikey', apiKey)
     localStorage.removeItem('papercache-apikey')
-    localStorage.setItem('papercache-api-base-url', apiBaseUrl)
-    localStorage.setItem('papercache-api-model', apiModel)
-    localStorage.setItem('papercache-ai-system-prompt', aiSystemPrompt)
+    localStorage.setItem(SETTINGS_KEYS.API_BASE_URL, apiBaseUrl)
+    localStorage.setItem(SETTINGS_KEYS.API_MODEL, apiModel)
+    localStorage.setItem(SETTINGS_KEYS.AI_SYSTEM_PROMPT, aiSystemPrompt)
 
-    localStorage.setItem('papercache-font', fontFamily)
-    localStorage.setItem('papercache-show-rulings', showRulings.toString())
-    localStorage.setItem('papercache-theme', themePreset)
-    localStorage.setItem('papercache-bg-type', bgType)
-    localStorage.setItem('papercache-bg-color', bgColor)
-    localStorage.setItem('papercache-bg-image', bgImage)
+    localStorage.setItem(SETTINGS_KEYS.FONT_FAMILY, fontFamily)
+    localStorage.setItem(SETTINGS_KEYS.SHOW_RULINGS, showRulings.toString())
+    localStorage.setItem(SETTINGS_KEYS.THEME_PRESET, themePreset)
+    localStorage.setItem(SETTINGS_KEYS.BG_TYPE, bgType)
+    localStorage.setItem(SETTINGS_KEYS.BG_COLOR, bgColor)
+    localStorage.setItem(SETTINGS_KEYS.BG_IMAGE, bgImage)
 
-    localStorage.setItem('papercache-color-text', textColor)
-    localStorage.setItem('papercache-color-num', numColor)
-    localStorage.setItem('papercache-color-sym', symColor)
-    localStorage.setItem('papercache-color-ai', aiColor)
-    localStorage.setItem('papercache-color-math', mathColor)
+    localStorage.setItem(SETTINGS_KEYS.TEXT_COLOR, textColor)
+    localStorage.setItem(SETTINGS_KEYS.NUM_COLOR, numColor)
+    localStorage.setItem(SETTINGS_KEYS.SYM_COLOR, symColor)
+    localStorage.setItem(SETTINGS_KEYS.AI_COLOR, aiColor)
+    localStorage.setItem(SETTINGS_KEYS.MATH_COLOR, mathColor)
 
     // Startup
-    localStorage.setItem('papercache-launch-startup', launchAtStartup.toString())
+    localStorage.setItem(SETTINGS_KEYS.LAUNCH_STARTUP, launchAtStartup.toString())
     if (window.electronAPI.setLaunchAtStartup) {
       window.electronAPI.setLaunchAtStartup(launchAtStartup)
     }

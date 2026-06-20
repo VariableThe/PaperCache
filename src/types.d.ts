@@ -4,6 +4,12 @@ export interface ElectronAPI {
   saveNote: (id: string, content: string) => Promise<boolean>
   deleteNote: (id: string) => Promise<boolean>
   renameNote: (oldId: string, newId: string) => Promise<boolean>
+  openAIChat: (args: {
+    model: string
+    messages: { role: string; content: string }[]
+    apiKey: string
+    baseURL: string
+  }) => Promise<unknown>
   readNote: (id: string) => Promise<string>
   exportNote: (filename: string, content: string) => Promise<boolean>
   openSettings: () => void

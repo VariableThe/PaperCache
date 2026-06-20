@@ -596,7 +596,7 @@ ipcMain.on('open-settings', () => {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
-      webSecurity: false,
+      webSecurity: true,
     },
   })
 
@@ -612,6 +612,24 @@ ipcMain.on('open-settings', () => {
       win.show()
     }
   })
+})
+
+
+ipcMain.handle('openai-chat', async (_, { model, messages, apiKey, baseURL }) => {
+  try {
+    const OpenAI = (await import('openai')).default
+    const openai = new OpenAI({
+      apiKey: apiKey || 'dummy',
+      baseURL: baseURL || undefined,
+    })
+    const completion = await openai.chat.completions.create({
+      model: model,
+      messages: messages,
+    })
+    return completion
+  } catch (error: any) {
+    throw new Error(error.message || 'Unknown API Error')
+  }
 })
 
 ipcMain.on('quit-app', () => {
