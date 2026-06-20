@@ -262,7 +262,7 @@ body {
 
 /* Custom Syntax Highlighting */
 .cm-custom-number {
-  color: var(--custom-color-num, #007acc) !important;
+  color: var(--custom-color-num, #8ab4f8) !important;
   font-weight: bold;
 }
 

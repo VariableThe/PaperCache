@@ -60,7 +60,7 @@ export default function Settings() {
     localStorage.getItem('papercache-color-text') || '#333333'
   )
   const [numColor, setNumColor] = useState(
-    localStorage.getItem('papercache-color-num') || '#007acc'
+    localStorage.getItem('papercache-color-num') || '#8ab4f8'
   )
   const [symColor, setSymColor] = useState(
     localStorage.getItem('papercache-color-sym') || '#c586c0'

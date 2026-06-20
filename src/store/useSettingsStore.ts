@@ -34,7 +34,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   bgColor: localStorage.getItem('papercache-bg-color') || '#ffffff',
   bgImage: localStorage.getItem('papercache-bg-image') || '',
   textColor: localStorage.getItem('papercache-text-color') || '#000000',
-  numColor: localStorage.getItem('papercache-num-color') || '#0000ff',
+  numColor: localStorage.getItem('papercache-color-num') || '#8ab4f8',
   symColor: localStorage.getItem('papercache-sym-color') || '#ff0000',
   aiColor: localStorage.getItem('papercache-ai-color') || '#8b5cf6',
   mathColor: localStorage.getItem('papercache-math-color') || '#10b981',
@@ -68,7 +68,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set({ textColor })
   },
   setNumColor: (numColor) => {
-    localStorage.setItem('papercache-num-color', numColor)
+    localStorage.setItem('papercache-color-num', numColor)
     set({ numColor })
   },
   setSymColor: (symColor) => {
