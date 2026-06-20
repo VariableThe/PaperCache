@@ -5,32 +5,85 @@ on:
 permissions:
   contents: write
 jobs:
-  release:
-    runs-on: macos-latest
+  create-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      new_tag: ${{ steps.tag_version.outputs.new_tag }}
+      new_version: ${{ steps.tag_version.outputs.new_version }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm install
       - name: Bump version and push tag
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-and-release:
+    needs: create-tag
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install
+      
+      - name: Sync package.json version
+        run: npm --no-git-tag-version version ${{ needs.create-tag.outputs.new_version }}
+        
       - run: npm run build
-      - run: npm run package
+      
+      - name: Build Electron app
+        run: npx electron-builder
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create GitHub Release
+          
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.tag_version.outputs.new_tag }}
+          tag_name: ${{ needs.create-tag.outputs.new_tag }}
+          fail_on_unmatched_files: false
           files: |
             release/*.zip
             release/*.dmg
             release/*.exe
             release/*.AppImage
             release/*.deb
+
+  update-homebrew:
+    needs: [create-tag, build-and-release]
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Homebrew Tap
+        uses: actions/checkout@v4
+        with:
+          repository: VariableThe/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+
+      - name: Download macOS ZIP
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ needs.create-tag.outputs.new_version }}
+          gh release download v$VERSION --pattern "*.zip" --repo $GITHUB_REPOSITORY
+          
+          # Calculate SHA256 of the downloaded ZIP
+          ZIP_FILE=$(ls *.zip | head -n 1)
+          SHA256=$(shasum -a 256 "$ZIP_FILE" | awk '{ print $1 }')
+          
+          # Update the rb file
+          cd homebrew-tap
+          sed -i '' "s/version \".*\"/version \"$VERSION\"/" Casks/papercache.rb
+          sed -i '' "s/sha256 arm: * \".*\"/sha256 arm:   \"$SHA256\"/" Casks/papercache.rb
+          sed -i '' "s/PaperCache-[0-9]*\.[0-9]*\.[0-9]*-/PaperCache-#{version}-/g" Casks/papercache.rb
+          
+          # Commit and Push
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Casks/papercache.rb
+          git commit -m "Bump PaperCache to $VERSION" || echo "No changes to commit"
+          git push
