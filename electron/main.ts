@@ -571,9 +571,16 @@ ipcMain.on('open-settings', () => {
     return
   }
 
+  let bounds: any = { width: 900, height: 700 }
+  if (win && !win.isDestroyed()) {
+    bounds = win.getBounds()
+  }
+
   settingsWin = new BrowserWindow({
-    width: 900,
-    height: 700,
+    width: bounds.width,
+    height: bounds.height,
+    x: bounds.x,
+    y: bounds.y,
     titleBarStyle: 'hiddenInset',
     icon: path.join(__dirname, '../public/icon.png'),
     webPreferences: {
@@ -592,6 +599,9 @@ ipcMain.on('open-settings', () => {
 
   settingsWin.on('closed', () => {
     settingsWin = null
+    if (win && !win.isDestroyed()) {
+      win.show()
+    }
   })
 })
 

@@ -2,7 +2,13 @@ import { ViewPlugin, Decoration, EditorView, ViewUpdate, WidgetType } from '@cod
 import { syntaxTree } from '@codemirror/language'
 import * as mathjs from 'mathjs'
 import { numberMatcher, symbolMatcher, aiMatcher, mathMatcher } from './matchers'
-import { CopyWidget, CheckboxWidget, VariableWidget, ReminderWidget } from './widgets'
+import {
+  CopyWidget,
+  CheckboxWidget,
+  VariableWidget,
+  ReminderWidget,
+  ContextWidget,
+} from './widgets'
 
 export const numberPlugin = ViewPlugin.fromClass(
   class {
@@ -365,6 +371,26 @@ export const hideMarkdownPlugin = ViewPlugin.fromClass(
                 deco: Decoration.mark({ class: 'cm-checked-line-text' }),
               })
             }
+          }
+        }
+
+        // Context Command (/ctx, /context)
+        const reCtx = /^\/(ctx|context)\b/gm
+        while ((match = reCtx.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.replace({ widget: new ContextWidget() }),
+            })
+          } else {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.mark({ class: 'cm-ctx-highlight' }),
+            })
           }
         }
 

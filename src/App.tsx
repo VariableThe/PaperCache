@@ -130,8 +130,10 @@ function App() {
       })
       // Refresh AI Store (API Key handled securely, we don't listen to localStorage for it directly)
       useAIStore.setState({
-        apiBaseUrl: localStorage.getItem('papercache-api-base-url') || 'https://api.openai.com/v1',
-        apiModel: localStorage.getItem('papercache-api-model') || 'gpt-4o',
+        apiBaseUrl:
+          localStorage.getItem('papercache-api-base-url') || 'https://openrouter.ai/api/v1',
+        apiModel:
+          localStorage.getItem('papercache-api-model') || 'nvidia/nemotron-3-super-120b-a12b:free',
         aiSystemPrompt:
           localStorage.getItem('papercache-ai-system-prompt') ||
           'You are a helpful assistant directly inside a markdown note. You can format your responses with markdown.',
@@ -366,8 +368,18 @@ function App() {
               const line = view.state.doc.lineAt(pos)
               const lineText = line.text.trim()
               const lowerLine = lineText.toLowerCase()
-              if (lowerLine.startsWith('/ai')) {
-                const prompt = lineText.substring(3).trim()
+              if (
+                lowerLine.startsWith('/ai') ||
+                lowerLine.startsWith('/ctx') ||
+                lowerLine.startsWith('/context')
+              ) {
+                const isCtx = lowerLine.startsWith('/ctx') || lowerLine.startsWith('/context')
+                const prefixLength = lowerLine.startsWith('/context')
+                  ? 8
+                  : lowerLine.startsWith('/ctx')
+                    ? 4
+                    : 3
+                const prompt = lineText.substring(prefixLength).trim()
                 if (!apiKey) {
                   const errorText = '\n\u200BError - Set your OpenAI API key in settings\u200C\n'
                   view.dispatch({ changes: { from: line.to, insert: errorText } })
@@ -390,6 +402,10 @@ function App() {
                     apiKey: apiKey.trim() || 'dummy',
                     baseURL: finalBaseUrl || undefined,
                     dangerouslyAllowBrowser: true,
+                    defaultHeaders: {
+                      'HTTP-Referer': 'https://github.com/papercache/papercache',
+                      'X-Title': 'PaperCache',
+                    },
                   })
 
                   const systemContent = aiSystemPrompt.trim()
@@ -397,15 +413,37 @@ function App() {
                   if (systemContent) {
                     messages.push({ role: 'system', content: systemContent })
                   }
-                  messages.push({ role: 'user', content: prompt })
+
+                  let finalPrompt = prompt
+                  if (isCtx) {
+                    const fullNoteText = view.state.doc.toString()
+                    const MAX_CONTEXT_LENGTH = 50000
+                    let contextText = fullNoteText
+                    if (contextText.length > MAX_CONTEXT_LENGTH) {
+                      contextText =
+                        contextText.substring(0, MAX_CONTEXT_LENGTH) +
+                        '\n...[Context truncated due to length]'
+                    }
+                    finalPrompt = `Context:\n${contextText}\n\nPrompt:\n${prompt}`
+                  }
+
+                  messages.push({ role: 'user', content: finalPrompt })
 
                   openai.chat.completions
                     .create({
-                      model: apiModel.trim() || 'gpt-4o',
+                      model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
                       messages: messages,
                     })
-                    .then((completion) => {
-                      const response = completion.choices[0].message.content
+                    .then((completion: any) => {
+                      let response: string
+                      if (completion.choices && completion.choices.length > 0) {
+                        response = completion.choices[0].message?.content || ''
+                      } else if (completion.error) {
+                        throw new Error(completion.error.message || 'Unknown API Error')
+                      } else {
+                        throw new Error('Unexpected response format: ' + JSON.stringify(completion))
+                      }
+
                       const docStr = view.state.doc.toString()
                       const finalVal = docStr.replace(
                         '\n\u200B...\u200C\n',

@@ -111,7 +111,7 @@ section h3 {
 }
 
 .save-btn {
-  width: 100%;
+  flex: 1;
   padding: 12px;
   background: #fcfcfc;
   color: #000;
@@ -119,8 +119,6 @@ section h3 {
   border-radius: 6px;
   font-weight: bold;
   cursor: pointer;
-  margin-top: 10px;
-  margin-bottom: 24px;
 }
 
 .save-btn:hover {
@@ -130,10 +128,12 @@ section h3 {
 .settings-footer {
   margin-top: auto;
   -webkit-app-region: no-drag;
+  display: flex;
+  gap: 10px;
 }
 
 .quit-btn {
-  width: 100%;
+  flex: 1;
   padding: 12px;
   background: #2a2a2a;
   color: #ff4444;
@@ -145,4 +145,19 @@ section h3 {
 
 .quit-btn:hover {
   background: rgba(255, 68, 68, 0.1);
+}
+
+.close-btn {
+  flex: 1;
+  padding: 12px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #666;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #333;
 }

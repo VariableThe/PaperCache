@@ -158,3 +158,12 @@ export class ReminderWidget extends WidgetType {
     return true
   }
 }
+
+export class ContextWidget extends WidgetType {
+  toDOM() {
+    const span = document.createElement('span')
+    span.textContent = 'Context Attached'
+    span.className = 'cm-ctx-pill'
+    return span
+  }
+}

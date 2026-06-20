@@ -704,3 +704,21 @@ body {
 .cm-overdue-line-text {
   color: #ff3b30 !important;
 }
+
+.cm-ctx-pill {
+  display: inline-block;
+  padding: 0 6px;
+  border-radius: 4px;
+  background-color: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  font-size: 0.9em;
+  font-weight: bold;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.cm-ctx-highlight {
+  color: #8b5cf6;
+  background-color: rgba(139, 92, 246, 0.1);
+}
