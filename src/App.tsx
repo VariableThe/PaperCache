@@ -481,7 +481,7 @@ function App() {
                         )
                         handleEditorChange(errorVal)
                       })
-                  } catch (err: Error | unknown) {
+                  } catch (err: unknown) {
                     const docStr = view.state.doc.toString()
                     const errorVal = docStr.replace(
                       '\n\u200B...\u200C\n',

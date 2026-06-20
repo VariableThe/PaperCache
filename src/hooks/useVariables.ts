@@ -7,6 +7,7 @@ export function useVariables() {
 
   // Sync global variables whenever notes change
   useEffect(() => {
+    let abort = false
     async function syncVars() {
       const globals: Record<string, unknown> = {}
       const reVar = /^\/globvar\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
@@ -27,9 +28,13 @@ export function useVariables() {
           }
         }
       }
+      if (abort) return
       ;(window as unknown as { __globalVariables: Record<string, unknown> }).__globalVariables =
         globals
     }
     syncVars()
+    return () => {
+      abort = true
+    }
   }, [notes])
 }
