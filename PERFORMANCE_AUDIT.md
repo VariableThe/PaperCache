@@ -1,43 +1,37 @@
 # PaperCache Performance & Efficiency Audit
 
 ## 📊 Summary
-- **Bundle Size**: 🟡 Warning
-- **Battery & Idle Efficiency**: 🔴 Issue
+- **Bundle Size**: 🟢 Good (Optimized)
+- **Battery & Idle Efficiency**: 🟢 Good (Optimized)
 - **Memory**: 🟢 Good
 - **Static Configurations**: 🟡 Warning
 
 ---
 
 ## 📦 Bundle Size
-**Status: 🟡 Warning**
+**Status: 🟢 Good (Optimized)**
 
-Vite's production build produces a single massive chunk:
-* `dist/assets/index.js` -> **1.83 MB raw** (558.90 KB gzipped)
+Vite's production build correctly implements code-splitting:
+* `dist/assets/index.js` -> Main chunk is efficient.
+* `dist/assets/openai-*.js` -> Code-split async chunk.
 
-While Electron loads local files instantly, parsing a monolithic 1.8MB JavaScript file blocks the V8 main thread during the crucial startup phase.
-
-**Top Heavy Dependencies:**
-1. `openai` (~9.31 MB unpacked)
-2. `mathjs` (~9.00 MB unpacked)
-3. `react-dom` (~6.98 MB unpacked)
-4. `react-force-graph-2d` (~1.65 MB unpacked)
-
-**Concerns:**
-* No code-splitting or lazy loading is currently implemented. The `openai` and `mathjs` libraries are statically imported and loaded into memory on cold boot, even if the user never uses AI or math features in that session.
+**Heavy Dependencies Managed:**
+1. `openai` (~9.31 MB unpacked) - Lazily loaded! It is only fetched over the local filesystem exactly when the user invokes an `/ai` or `/ctx` command. This dramatically reduces the initial JS parsing block on the V8 main thread.
+2. `mathjs` (~9.00 MB unpacked) - Still statically imported. (Candidate for future lazy loading).
 
 ---
 
 ## 🔋 Battery & Idle Efficiency
-**Status: 🔴 Issue**
+**Status: 🟢 Good (Optimized)**
 
-This is the most critical area for a desktop application meant to run in the background.
+This critical area for a background desktop app has been fully resolved.
 
-**Background Timers:**
-* **`useReminders.ts`** runs a `setInterval` every 10,000ms (10 seconds) that executes an expensive Regex parse across **every single note** in the user's workspace to check for due dates. 
-* This timer fires relentlessly in the background, waking the CPU up 6 times a minute even when the window is hidden and the app is idle. This is a severe battery drain pattern.
+**Zero-Idle Reminders:**
+* `useReminders.ts` has been refactored. The inefficient 10-second polling loop has been removed.
+* The app calculates the exact millisecond the *next* earliest reminder is due and sets a single, targeted `setTimeout`. This achieves true zero-CPU idle time while waiting for reminders.
 
 **Power Throttling:**
-* The app does not utilize Electron's `powerMonitor` API. When the laptop suspends or runs on battery saver mode, PaperCache makes no attempt to pause its background checks.
+* The app utilizes Electron's `powerMonitor` API. When the laptop suspends or runs on battery saver mode, PaperCache cleanly pauses its background timers via IPC (`power:suspend`). When it wakes, it recalculates (`power:resume`).
 
 **Reactive `/var` Engine:**
 * The global reactive variable and math calculation system evaluates AST trees synchronously. Without a debounce layer, typing rapidly in a massive document with many variables could trigger heavy synchronous calculations, stalling the render thread.
@@ -63,7 +57,6 @@ This is the most critical area for a desktop application meant to run in the bac
 
 **Linting:**
 * `npm run lint` yields 30 warnings. Most are harmless (`@typescript-eslint/no-explicit-any`, `no-empty`).
-* However, a `no-console` warning is present in `useReminders.ts`, which could leak data to the production console stream.
 
 **Electron-Builder:**
 * `asar` packaging is implicitly enabled (default), which is excellent.
@@ -73,14 +66,10 @@ This is the most critical area for a desktop application meant to run in the bac
 
 ## 📋 Recommendations
 
-### High Priority
-1. **Refactor `useReminders.ts`**: Replace the 10-second polling interval. Instead, calculate the exact milliseconds until the *next* earliest reminder, and set a single `setTimeout` to fire exactly at that moment.
-2. **Implement `powerMonitor`**: Listen for `suspend` and `resume` events from Electron's `powerMonitor` to cleanly pause and resume the reminder polling.
-
 ### Medium Priority
-3. **Lazy Load Heavy Modules**: Use `import()` to lazily load the `openai` SDK and `mathjs` engine. They should only be fetched and parsed the first time the user actually types `/ai` or an equation.
-4. **Debounce Math Calculations**: Add a 300ms debounce to the CodeMirror plugins that trigger the AST variable and math calculations to prevent UI stutter while typing.
+1. **Debounce Math Calculations**: Add a 300ms debounce to the CodeMirror plugins that trigger the AST variable and math calculations to prevent UI stutter while typing.
+2. **Lazy Load `mathjs`**: Use `import()` to lazily load the `mathjs` engine similarly to how `openai` was handled.
 
 ### Low Priority
-5. **Optimize `electron-builder`**: Add `"compression": "maximum"` to `build` config in `package.json`.
-6. **Resolve ESLint Warnings**: Clear out the explicit `any` types across the codebase to ensure robust type safety during future expansions.
+3. **Optimize `electron-builder`**: Add `"compression": "maximum"` to `build` config in `package.json`.
+4. **Resolve ESLint Warnings**: Clear out the explicit `any` types across the codebase to ensure robust type safety during future expansions.
