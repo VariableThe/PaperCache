@@ -30,7 +30,9 @@ describe('Settings Component', () => {
   })
 
   it('loads API key status from IPC', async () => {
-    ;(window.electronAPI.getApiKeyStatus as any).mockResolvedValue(true)
+    ;(
+      window.electronAPI.getApiKeyStatus as unknown as { mockResolvedValue: (v: boolean) => void }
+    ).mockResolvedValue(true)
     await act(async () => {
       render(<Settings />)
     })

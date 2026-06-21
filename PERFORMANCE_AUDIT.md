@@ -57,7 +57,7 @@ This critical area for a background desktop app is fully resolved.
 **Status: 🟢 Excellent**
 
 **Linting:**
-* `npm run lint` yields 0 errors and only 13 minimal warnings (`no-empty`, `no-console`, and some remaining `any` types that are safe or intentional). The majority of the codebase is now strongly typed.
+* `npm run lint` yields 0 errors and only 8 minimal warnings (`no-empty`, `no-console`, and some remaining `any` types that are safe or intentional). The majority of the codebase is now strongly typed.
 
 **Electron-Builder:**
 * `asar` packaging is efficiently enabled.

@@ -3,7 +3,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { ViewUpdate } from '@codemirror/view'
 import { useAppStore } from '../store/useAppStore'
 import { useSettingsStore } from '../store/useSettingsStore'
-import { MathEvaluator } from '../lib/editor/MathEvaluator'
+
 import { useEditorExtensions } from '../lib/editor/extensions'
 
 import { type TransactionSpec } from '@codemirror/state'
@@ -54,14 +54,17 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
 
       if (viewUpdate?.transactions?.some((tr) => tr.docChanged)) {
         if (editorRef.current?.view) {
-          MathEvaluator.triggerMathEvaluation(editorRef.current.view)
+          const view = editorRef.current.view
+          import('../lib/editor/MathEvaluator').then((m) => {
+            m.MathEvaluator.triggerMathEvaluation(view)
+          })
         }
       }
     },
     [currentNoteIndex, setNotes]
   )
 
-  const extensions = useEditorExtensions(handleEditorChange)
+  const extensions = useEditorExtensions()
 
   useEffect(() => {
     const handleWindowFocus = () => {

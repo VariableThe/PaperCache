@@ -37,6 +37,7 @@ function handleDueReminders(notes: Note[]) {
   for (const r of allReminders) {
     if (now >= r.dueAt.getTime()) {
       if (!notified.has(r.key)) {
+        // eslint-disable-next-line no-console
         console.log('Triggering OS notification for:', r.label)
         new Notification('PaperCache Reminder', {
           body: r.label,
