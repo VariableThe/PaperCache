@@ -8,7 +8,7 @@ Currently, only the latest version of PaperCache receives security updates. Plea
 
 We take the security of PaperCache seriously. If you discover a security vulnerability, we would appreciate it if you could report it privately so it can be addressed before being disclosed publicly.
 
-Please report any security issues to: **adityasharma.variable@gmail.com**
+Please report any security issues to: **security@papercache.app**
 
 When reporting, please include:
 - A description of the vulnerability.

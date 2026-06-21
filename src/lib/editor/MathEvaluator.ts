@@ -71,6 +71,9 @@ export class MathEvaluator {
   static triggerMathEvaluation(view: EditorView) {
     if (this.evalTimeout) window.clearTimeout(this.evalTimeout)
     this.evalTimeout = window.setTimeout(async () => {
+      // Guard against the editor being unmounted during the timeout
+      if (!view.state) return
+
       const docStr = view.state.doc.toString()
       const scope = VariableScope.getScope()
       const changes = await this.evaluateMathChanges(docStr, scope)

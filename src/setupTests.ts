@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom'
+import { vi } from 'vitest'
 
 // Mock matchMedia which is not present in jsdom but might be needed by some components
 if (typeof window !== 'undefined') {

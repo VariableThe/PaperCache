@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import Settings from './Settings'
 
 describe('Settings Component', () => {
@@ -17,8 +17,11 @@ describe('Settings Component', () => {
     } as any // eslint-disable-line @typescript-eslint/no-explicit-any
   })
 
-  it('renders settings headers correctly', () => {
-    render(<Settings />)
+  it('renders settings headers correctly', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
+
     expect(screen.getByText('Settings')).toBeInTheDocument()
     expect(screen.getByText('AI Configuration')).toBeInTheDocument()
     expect(screen.getByText('Global Shortcuts')).toBeInTheDocument()
@@ -28,14 +31,18 @@ describe('Settings Component', () => {
 
   it('loads API key status from IPC', async () => {
     ;(window.electronAPI.getApiKeyStatus as any).mockResolvedValue(true)
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
 
-    await waitFor(() => expect(screen.getByText('API Key ✅ (Set)')).toBeInTheDocument())
+    expect(screen.getByText('API Key ✅ (Set)')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Enter new key to replace existing')).toBeInTheDocument()
   })
 
-  it('updates state when inputs change', () => {
-    render(<Settings />)
+  it('updates state when inputs change', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...')
     fireEvent.change(apiKeyInput, { target: { value: 'sk-new-key' } })
@@ -44,7 +51,9 @@ describe('Settings Component', () => {
   })
 
   it('saves settings to IPC on Save Settings button click', async () => {
-    render(<Settings />)
+    await act(async () => {
+      render(<Settings />)
+    })
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...')
     fireEvent.change(apiKeyInput, { target: { value: 'sk-new-key' } })
@@ -58,8 +67,10 @@ describe('Settings Component', () => {
     })
   })
 
-  it('calls quitApp when Quit PaperCache is clicked', () => {
-    render(<Settings />)
+  it('calls quitApp when Quit PaperCache is clicked', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
 
     const quitButton = screen.getByText('Quit')
     fireEvent.click(quitButton)

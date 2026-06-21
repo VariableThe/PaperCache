@@ -72,12 +72,18 @@ export default function Settings() {
   )
 
   const saveSettings = async () => {
-    if (apiKey) {
-      await window.electronAPI.setApiKey(apiKey)
-    }
     localStorage.setItem(SETTINGS_KEYS.API_BASE_URL, apiBaseUrl)
     localStorage.setItem(SETTINGS_KEYS.API_MODEL, apiModel)
     localStorage.setItem(SETTINGS_KEYS.AI_SYSTEM_PROMPT, aiSystemPrompt)
+
+    if (apiKey) {
+      const success = await window.electronAPI.setApiKey(apiKey)
+      if (!success) {
+        alert('Failed to save API key securely. Check console.')
+      }
+    } else {
+      await window.electronAPI.setApiKey('') // clear key
+    }
 
     localStorage.setItem(SETTINGS_KEYS.FONT_FAMILY, fontFamily)
     localStorage.setItem(SETTINGS_KEYS.SHOW_RULINGS, showRulings.toString())

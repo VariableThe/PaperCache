@@ -356,17 +356,32 @@ app.on('web-contents-created', (event, contents) => {
 
 app.whenReady().then(() => {
   // Content Security Policy
-  const isDev = !!process.env.VITE_DEV_SERVER_URL
+  const isDev = !!process.env.VITE_DEV_SERVER_URL;
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const isDevCSP =
+      "default-src 'none'; " +
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: https:; " +
+      "connect-src 'self' https: wss:; " +
+      "font-src 'self' data: https:; " +
+      "object-src 'none'; " +
+      "base-uri 'none';"
+    const isProdCSP =
+      "default-src 'none'; " +
+      "script-src 'self' 'unsafe-eval'; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: https:; " +
+      "connect-src 'self' https:; " +
+      "font-src 'self' data: https:; " +
+      "object-src 'none'; " +
+      "base-uri 'none';"
+
     callback({
       responseHeaders: {
         ...details.responseHeaders,
         // unsafe-eval is required for mathjs dynamic compilation
-        'Content-Security-Policy': [
-          isDev
-            ? "default-src 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';"
-            : "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';",
-        ],
+        'Content-Security-Policy': [isDev ? isDevCSP : isProdCSP],
       },
     })
   })
@@ -651,24 +666,26 @@ try {
   } else {
     memoryApiKey = file
   }
-} catch {}
+} catch {
+  // Empty
+}
 
 ipcMain.handle('set-api-key', (_, key: string) => {
-  memoryApiKey = key
+  memoryApiKey = key;
   try {
-    const dataToSave = safeStorage.isEncryptionAvailable()
-      ? safeStorage.encryptString(key).toString('base64')
+    const dataToSave = safeStorage.isEncryptionAvailable() 
+      ? safeStorage.encryptString(key).toString('base64') 
       : key
     fs.writeFileSync(path.join(NOTES_DIR, 'config.enc'), dataToSave)
     return true
-  } catch (e) {
-    console.error('Failed to save API key:', e)
+  } catch (err) {
+    console.error('Failed to set API key:', err)
     return false
   }
 })
 
 ipcMain.handle('get-api-key-status', () => {
-  return !!memoryApiKey && memoryApiKey.length > 0;
+  return !!memoryApiKey && memoryApiKey.length > 0
 })
 
 ipcMain.on('check-for-updates', () => {

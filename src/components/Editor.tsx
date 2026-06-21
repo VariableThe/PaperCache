@@ -1,17 +1,21 @@
 import { useCallback, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { ViewUpdate } from '@codemirror/view'
-import { useAppStore } from '../../store/useAppStore'
-import { useSettingsStore } from '../../store/useSettingsStore'
-import { MathEvaluator } from './MathEvaluator'
-import { useEditorExtensions } from './extensions'
+import { useAppStore } from '../store/useAppStore'
+import { useSettingsStore } from '../store/useSettingsStore'
+import { MathEvaluator } from '../lib/editor/MathEvaluator'
+import { useEditorExtensions } from '../lib/editor/extensions'
+
+import { type TransactionSpec } from '@codemirror/state'
+import { EditorView } from '@codemirror/view'
 
 export interface EditorRef {
-  dispatch: (tx: any) => void
+  dispatch: (tx: TransactionSpec) => void
   focus: () => void
+  view?: EditorView
 }
 
-export const Editor = forwardRef<EditorRef>((props, ref) => {
+export const Editor = forwardRef<EditorRef>((_props, ref) => {
   const notes = useAppStore((state) => state.notes)
   const setNotes = useAppStore((state) => state.setNotes)
   const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
@@ -19,10 +23,10 @@ export const Editor = forwardRef<EditorRef>((props, ref) => {
 
   const themePreset = useSettingsStore((state) => state.themePreset)
 
-  const editorRef = useRef<any>(null)
+  const editorRef = useRef<EditorRef>(null)
 
   useImperativeHandle(ref, () => ({
-    dispatch: (tx: any) => {
+    dispatch: (tx: TransactionSpec) => {
       if (editorRef.current?.view) {
         editorRef.current.view.dispatch(tx)
       }
@@ -36,12 +40,17 @@ export const Editor = forwardRef<EditorRef>((props, ref) => {
 
   const handleEditorChange = useCallback(
     (val: string, viewUpdate?: ViewUpdate) => {
-      const updatedNotes = [...notes]
-      if (updatedNotes[currentNoteIndex]) {
-        updatedNotes[currentNoteIndex].content = val
-        setNotes(updatedNotes)
-        window.electronAPI.saveNote(activeNote.id, val)
-      }
+      setNotes((prevNotes) => {
+        const updatedNotes = [...prevNotes]
+        if (updatedNotes[currentNoteIndex]) {
+          updatedNotes[currentNoteIndex] = {
+            ...updatedNotes[currentNoteIndex],
+            content: val,
+          }
+          window.electronAPI.saveNote(updatedNotes[currentNoteIndex].id, val)
+        }
+        return updatedNotes
+      })
 
       if (viewUpdate?.transactions?.some((tr) => tr.docChanged)) {
         if (editorRef.current?.view) {
@@ -49,7 +58,7 @@ export const Editor = forwardRef<EditorRef>((props, ref) => {
         }
       }
     },
-    [notes, currentNoteIndex, activeNote.id, setNotes]
+    [currentNoteIndex, setNotes]
   )
 
   const extensions = useEditorExtensions(handleEditorChange)

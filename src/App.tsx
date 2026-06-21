@@ -6,6 +6,7 @@ import { RemindersPage } from './components/RemindersPage'
 
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
+import { useAIStore } from './store/useAIStore'
 
 import { useNoteStorage } from './hooks/useNoteStorage'
 import { useVariables } from './hooks/useVariables'
@@ -15,7 +16,7 @@ import { useGlobalHotkey } from './hooks/useGlobalHotkey'
 import { NoteSearch } from './components/NoteSearch'
 import { MainActionMenu } from './components/MainActionMenu'
 import { NoteTitleBar } from './components/NoteTitleBar'
-import { Editor, EditorRef } from './components/Editor'
+import { Editor, type EditorRef } from './components/Editor'
 
 function App() {
   const notes = useAppStore((state) => state.notes)
@@ -29,7 +30,8 @@ function App() {
   const showNoteSearch = useAppStore((state) => state.showNoteSearch)
   const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
 
-  const { fontFamily, bgType, bgColor, bgImage } = useSettingsStore()
+  const { themePreset, fontFamily, showRulings, bgType, bgColor, bgImage, textColor, numColor } =
+    useSettingsStore()
 
   const editorRef = useRef<EditorRef>(null)
 

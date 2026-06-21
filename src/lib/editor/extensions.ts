@@ -9,12 +9,29 @@ import { insertTab, indentLess } from '@codemirror/commands'
 import { mdHighlighting } from './matchers'
 import { numberPlugin, symbolPlugin, aiPlugin, mathPlugin, decomposedPlugins } from './plugins'
 import { useAIStore } from '../../store/useAIStore'
-import { useAppStore } from '../../store/useAppStore'
+import { useAppStore, type Note } from '../../store/useAppStore'
+
+const handleDeleteNote = () => {
+  const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
+  if (note) {
+    if (note.id.startsWith('commands/')) {
+      alert('Files in the commands folder cannot be deleted.')
+      return true
+    }
+    if (confirm('Delete this note?')) {
+      window.electronAPI.deleteNote(note.id)
+      useAppStore.getState().setNotes((prev: Note[]) => prev.filter((n: Note) => n.id !== note.id))
+      if (useAppStore.getState().currentNoteIndex >= useAppStore.getState().notes.length - 1)
+        useAppStore
+          .getState()
+          .setCurrentNoteIndex(Math.max(0, useAppStore.getState().notes.length - 2))
+    }
+  }
+  return true
+}
 
 export function useEditorExtensions(handleEditorChange: (val: string) => void) {
   const { apiBaseUrl, apiModel, aiSystemPrompt } = useAIStore()
-  const setNotes = useAppStore((state) => state.setNotes)
-  const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
 
   return useMemo(
     () => [
@@ -55,47 +72,11 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
           },
           {
             key: 'Mod-Backspace',
-            run: () => {
-              const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
-              if (note) {
-                if (note.id.startsWith('commands/')) {
-                  alert('Files in the commands folder cannot be deleted.')
-                  return true
-                }
-                if (confirm('Delete this note?')) {
-                  window.electronAPI.deleteNote(note.id)
-                  setNotes((prev) => prev.filter((n) => n.id !== note.id))
-                  if (
-                    useAppStore.getState().currentNoteIndex >=
-                    useAppStore.getState().notes.length - 1
-                  )
-                    setCurrentNoteIndex(Math.max(0, useAppStore.getState().notes.length - 2))
-                }
-              }
-              return true
-            },
+            run: () => handleDeleteNote(),
           },
           {
             key: 'Mod-Delete',
-            run: () => {
-              const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
-              if (note) {
-                if (note.id.startsWith('commands/')) {
-                  alert('Files in the commands folder cannot be deleted.')
-                  return true
-                }
-                if (confirm('Delete this note?')) {
-                  window.electronAPI.deleteNote(note.id)
-                  setNotes((prev) => prev.filter((n) => n.id !== note.id))
-                  if (
-                    useAppStore.getState().currentNoteIndex >=
-                    useAppStore.getState().notes.length - 1
-                  )
-                    setCurrentNoteIndex(Math.max(0, useAppStore.getState().notes.length - 2))
-                }
-              }
-              return true
-            },
+            run: () => handleDeleteNote(),
           },
           {
             key: 'Enter',
@@ -118,17 +99,15 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
                 const prompt = lineText.substring(prefixLength).trim()
 
                 const thinkingText = '\n\u200B...\u200C\n'
-                const markerStart = line.to
-                const markerEnd = markerStart + thinkingText.length
-                view.dispatch({ changes: { from: markerStart, insert: thinkingText } })
+                view.dispatch({ changes: { from: line.to, insert: thinkingText } })
                 ;(async () => {
                   try {
                     const isKeySet = await window.electronAPI.getApiKeyStatus()
                     if (!isKeySet) {
                       view.dispatch({
                         changes: {
-                          from: markerStart,
-                          to: markerEnd,
+                          from: line.to,
+                          to: line.to + thinkingText.length,
                           insert: '\n\u200BError - Set your OpenAI API key in settings\u200C\n',
                         },
                       })
@@ -184,8 +163,8 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
 
                         view.dispatch({
                           changes: {
-                            from: markerStart,
-                            to: markerEnd,
+                            from: line.to,
+                            to: line.to + thinkingText.length,
                             insert: '\n\u200B' + response + '\u200C\n',
                           },
                         })
@@ -193,8 +172,8 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
                       .catch((error) => {
                         view.dispatch({
                           changes: {
-                            from: markerStart,
-                            to: markerEnd,
+                            from: line.to,
+                            to: line.to + thinkingText.length,
                             insert: '\n\u200BError - ' + error.message + '\u200C\n',
                           },
                         })
@@ -202,8 +181,8 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
                   } catch (err: unknown) {
                     view.dispatch({
                       changes: {
-                        from: markerStart,
-                        to: markerEnd,
+                        from: line.to,
+                        to: line.to + thinkingText.length,
                         insert:
                           '\n\u200BSetup Error - ' +
                           ((err as Error).message || String(err)) +
@@ -257,6 +236,6 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
         },
       }),
     ],
-    [apiBaseUrl, apiModel, aiSystemPrompt, handleEditorChange, setCurrentNoteIndex, setNotes]
+    [apiBaseUrl, apiModel, aiSystemPrompt, handleEditorChange]
   )
 }
