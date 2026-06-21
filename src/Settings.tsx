@@ -134,7 +134,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="settings-container">
+    <div className="settings-container" style={{ fontFamily }}>
       <div className="settings-header">
         <h2>Settings</h2>
       </div>
@@ -186,7 +186,7 @@ export default function Settings() {
                 border: '1px solid rgba(128,128,128,0.2)',
                 color: 'inherit',
                 borderRadius: '4px',
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'inherit',
                 resize: 'vertical',
                 textAlign: 'center',
               }}

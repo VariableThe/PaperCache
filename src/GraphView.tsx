@@ -80,6 +80,7 @@ export default function GraphView({
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
+        fontFamily: 'inherit',
       }}
     >
       <div
@@ -91,14 +92,7 @@ export default function GraphView({
           borderBottom: `1px solid ${textColor}22`,
         }}
       >
-        <h2
-          style={{
-            margin: 0,
-            color: textColor,
-            fontWeight: 500,
-            fontFamily: "'JetBrains Mono', monospace",
-          }}
-        >
+        <h2 style={{ margin: 0, color: textColor, fontWeight: 700, fontFamily: 'inherit' }}>
           Graph View
         </h2>
         <button

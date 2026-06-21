@@ -86,7 +86,8 @@ function App() {
   }, [])
 
   const containerStyle: React.CSSProperties = {
-    fontFamily: fontFamily === 'monospace' ? 'var(--font-mono)' : 'var(--font-sans)',
+    fontFamily: fontFamily,
+    '--font-family': fontFamily,
   } as React.CSSProperties
 
   if (bgType === 'color') {

@@ -209,7 +209,7 @@ body {
 }
 
 .cm-code-lang {
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: inherit;
   font-size: 0.65em;
   margin-right: 6px;
   opacity: 0.7;
@@ -219,7 +219,7 @@ body {
 
 .cm-code-block-line {
   background-color: rgba(128, 128, 128, 0.08);
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: inherit;
   padding-left: 12px !important;
   padding-right: 12px !important;
   display: block !important;
@@ -308,7 +308,7 @@ body {
   border-bottom: 1px solid rgba(128, 128, 128, 0.2);
   outline: none;
   box-sizing: border-box;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: inherit;
 }
 
 .note-search-list {
@@ -712,7 +712,7 @@ body {
 }
 
 .cm-rem-line-text {
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  font-family: inherit;
 }
 
 .cm-rem-widget.cm-rem-overdue {
