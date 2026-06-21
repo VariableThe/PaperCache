@@ -6,7 +6,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveNote: (id: string, content: string) => ipcRenderer.invoke('save-note', { id, content }),
   deleteNote: (id: string) => ipcRenderer.invoke('delete-note', id),
   renameNote: (oldId: string, newId: string) => ipcRenderer.invoke('rename-note', { oldId, newId }),
-  openAIChat: (args: { model: string, messages: { role: string; content: string }[], apiKey: string, baseURL: string }) => ipcRenderer.invoke('openai-chat', args),
+  openAIChat: (args: { model: string, messages: { role: string; content: string }[], baseURL: string }) => ipcRenderer.invoke('openai-chat', args),
+  setApiKey: (key: string) => ipcRenderer.invoke('set-api-key', key),
+  getApiKeyStatus: () => ipcRenderer.invoke('get-api-key-status'),
+  checkForUpdates: () => ipcRenderer.send('check-for-updates'),
   readNote: (id: string) => ipcRenderer.invoke('read-note', id),
   exportNote: (filename: string, content: string) =>
     ipcRenderer.invoke('export-note', filename, content),

@@ -12,6 +12,8 @@ describe('Settings Component', () => {
       updateGlobalShortcut: vi.fn(),
       closeWindow: vi.fn(),
       quitApp: vi.fn(),
+      getApiKeyStatus: vi.fn().mockResolvedValue(false),
+      setApiKey: vi.fn().mockResolvedValue(true),
     } as any // eslint-disable-line @typescript-eslint/no-explicit-any
   })
 
@@ -24,12 +26,12 @@ describe('Settings Component', () => {
     expect(screen.getByText('Appearance')).toBeInTheDocument()
   })
 
-  it('loads initial state from localStorage', async () => {
-    localStorage.setItem('papercache-apikey-secure', 'sk-test-key')
+  it('loads API key status from IPC', async () => {
+    ;(window.electronAPI.getApiKeyStatus as any).mockResolvedValue(true)
     render(<Settings />)
 
-    const apiKeyInput = screen.getByPlaceholderText('sk-...') as HTMLInputElement
-    await waitFor(() => expect(apiKeyInput.value).toBe('sk-test-key'))
+    await waitFor(() => expect(screen.getByText('API Key ✅ (Set)')).toBeInTheDocument())
+    expect(screen.getByPlaceholderText('Enter new key to replace existing')).toBeInTheDocument()
   })
 
   it('updates state when inputs change', () => {
@@ -41,7 +43,7 @@ describe('Settings Component', () => {
     expect((apiKeyInput as HTMLInputElement).value).toBe('sk-new-key')
   })
 
-  it('saves settings to localStorage on Save Settings button click', async () => {
+  it('saves settings to IPC on Save Settings button click', async () => {
     render(<Settings />)
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...')
@@ -51,7 +53,7 @@ describe('Settings Component', () => {
     fireEvent.click(saveButton)
 
     await waitFor(() => {
-      expect(localStorage.getItem('papercache-apikey-secure')).toBe('sk-new-key')
+      expect(window.electronAPI.setApiKey).toHaveBeenCalledWith('sk-new-key')
       expect(window.electronAPI.closeWindow).toHaveBeenCalled()
     })
   })

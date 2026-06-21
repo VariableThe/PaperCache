@@ -4,6 +4,9 @@
   "version": "0.1.17",
   "type": "module",
   "main": "dist-electron/main.js",
+  "engines": {
+    "node": ">=22"
+  },
   "author": {
     "name": "Aditya Sharma",
     "email": "adityasharma.variable@gmail.com"
@@ -44,6 +47,10 @@
       "dist-electron/**/*",
       "package.json"
     ],
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    },
     "mac": {
       "icon": "public/icon.png",
       "category": "public.app-category.productivity",
@@ -77,7 +84,7 @@
     "@codemirror/view": "^6.43.0",
     "@lezer/highlight": "^1.2.3",
     "@uiw/react-codemirror": "^4.25.10",
-    "marked": "^18.0.4",
+    "electron-updater": "^6.8.9",
     "mathjs": "^15.2.0",
     "openai": "^6.39.1",
     "react": "^19.2.6",

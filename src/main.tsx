@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import Settings from './Settings.tsx'
-import { migrateApiKeyFromLocalStorage } from './lib/safeStorage'
+import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 
 function Root() {
   const [hash, setHash] = useState(window.location.hash)
@@ -17,7 +17,36 @@ function Root() {
 
   useEffect(() => {
     async function migrate() {
-      await migrateApiKeyFromLocalStorage('papercache-apikey')
+      // Migrate legacy plain text key if it exists
+      const plain = localStorage.getItem('papercache-apikey')
+      if (plain) {
+        try {
+          const success = await window.electronAPI.setApiKey(plain)
+          if (success) {
+            localStorage.removeItem('papercache-apikey')
+          }
+        } catch (e) {
+          console.error('Failed to migrate plain API key', e)
+        }
+      }
+
+      // Migrate legacy encrypted key if it exists
+      const secureEncrypted = localStorage.getItem('papercache-apikey-secure')
+      if (secureEncrypted) {
+        try {
+          // Decrypt it using the old method, then send to new IPC
+          const decrypted = await window.electronAPI.safeStorageDecrypt(secureEncrypted)
+          if (decrypted) {
+            const success = await window.electronAPI.setApiKey(decrypted)
+            if (success) {
+              localStorage.removeItem('papercache-apikey-secure')
+            }
+          }
+        } catch (e) {
+          console.error('Failed to migrate secure API key', e)
+        }
+      }
+
       setMigrated(true)
     }
     migrate()
@@ -25,7 +54,11 @@ function Root() {
 
   if (!migrated) return null
 
-  return <StrictMode>{hash === '#/settings' ? <Settings /> : <App />}</StrictMode>
+  return (
+    <StrictMode>
+      <ErrorBoundary>{hash === '#/settings' ? <Settings /> : <App />}</ErrorBoundary>
+    </StrictMode>
+  )
 }
 
 createRoot(document.getElementById('root')!).render(<Root />)
