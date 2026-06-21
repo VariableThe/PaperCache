@@ -14,7 +14,8 @@ import {
   powerMonitor,
   session,
 } from 'electron'
-import { autoUpdater } from 'electron-updater'
+import electronUpdater from 'electron-updater'
+const { autoUpdater } = electronUpdater
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
