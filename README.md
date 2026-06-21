@@ -98,6 +98,15 @@ PaperCache brings AI right into your note — no subscription, no middleman. You
 
 ---
 
+## Support
+
+If you find PaperCache useful, consider buying me a coffee to support its ongoing development!
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/thevariable)
+
+---
+
 ## License
 
 MIT License.
+
