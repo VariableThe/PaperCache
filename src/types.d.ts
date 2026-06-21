@@ -7,9 +7,11 @@ export interface ElectronAPI {
   openAIChat: (args: {
     model: string
     messages: { role: string; content: string }[]
-    apiKey: string
     baseURL: string
   }) => Promise<unknown>
+  setApiKey: (key: string) => Promise<boolean>
+  getApiKeyStatus: () => Promise<boolean>
+  checkForUpdates: () => void
   readNote: (id: string) => Promise<string>
   exportNote: (filename: string, content: string) => Promise<boolean>
   openSettings: () => void

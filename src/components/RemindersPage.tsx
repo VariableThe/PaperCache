@@ -84,6 +84,16 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
     }
   }, [])
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
     <div
       style={{
@@ -97,7 +107,7 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontFamily: 'inherit',
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -110,7 +120,7 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
           alignItems: 'center',
         }}
       >
-        <h2 style={{ margin: 0, fontWeight: 500, color: textColor }}>Tasks</h2>
+        <h2 style={{ margin: 0, fontWeight: 700, color: textColor }}>Tasks</h2>
         <button
           onClick={onClose}
           style={{
@@ -246,8 +256,8 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                     <span
                       style={{
-                        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                        fontWeight: 500,
+                        fontFamily: 'inherit',
+                        fontWeight: 600,
                         color: rem.done
                           ? isDark
                             ? '#666'
@@ -267,7 +277,8 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
                           fontSize: '11px',
                           color: isDark ? '#777' : '#999',
                           marginTop: '2px',
-                          fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                          fontFamily: 'inherit',
+                          fontWeight: 400,
                         }}
                       >
                         Created {rem.creationDate}
@@ -283,7 +294,8 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
                         background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
                         padding: '4px 8px',
                         borderRadius: '4px',
-                        fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+                        fontFamily: 'inherit',
+                        fontWeight: 500,
                       }}
                     >
                       {isOverdue ? 'Overdue: ' : 'Due: '}

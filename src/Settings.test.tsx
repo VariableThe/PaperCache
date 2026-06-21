@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import Settings from './Settings'
 
 describe('Settings Component', () => {
@@ -12,11 +12,16 @@ describe('Settings Component', () => {
       updateGlobalShortcut: vi.fn(),
       closeWindow: vi.fn(),
       quitApp: vi.fn(),
+      getApiKeyStatus: vi.fn().mockResolvedValue(false),
+      setApiKey: vi.fn().mockResolvedValue(true),
     } as any // eslint-disable-line @typescript-eslint/no-explicit-any
   })
 
-  it('renders settings headers correctly', () => {
-    render(<Settings />)
+  it('renders settings headers correctly', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
+
     expect(screen.getByText('Settings')).toBeInTheDocument()
     expect(screen.getByText('AI Configuration')).toBeInTheDocument()
     expect(screen.getByText('Global Shortcuts')).toBeInTheDocument()
@@ -24,16 +29,20 @@ describe('Settings Component', () => {
     expect(screen.getByText('Appearance')).toBeInTheDocument()
   })
 
-  it('loads initial state from localStorage', async () => {
-    localStorage.setItem('papercache-apikey-secure', 'sk-test-key')
-    render(<Settings />)
+  it('loads API key status from IPC', async () => {
+    ;(window.electronAPI.getApiKeyStatus as any).mockResolvedValue(true)
+    await act(async () => {
+      render(<Settings />)
+    })
 
-    const apiKeyInput = screen.getByPlaceholderText('sk-...') as HTMLInputElement
-    await waitFor(() => expect(apiKeyInput.value).toBe('sk-test-key'))
+    expect(screen.getByText('API Key ✅ (Set)')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Enter new key to replace existing')).toBeInTheDocument()
   })
 
-  it('updates state when inputs change', () => {
-    render(<Settings />)
+  it('updates state when inputs change', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...')
     fireEvent.change(apiKeyInput, { target: { value: 'sk-new-key' } })
@@ -41,8 +50,10 @@ describe('Settings Component', () => {
     expect((apiKeyInput as HTMLInputElement).value).toBe('sk-new-key')
   })
 
-  it('saves settings to localStorage on Save Settings button click', async () => {
-    render(<Settings />)
+  it('saves settings to IPC on Save Settings button click', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
 
     const apiKeyInput = screen.getByPlaceholderText('sk-...')
     fireEvent.change(apiKeyInput, { target: { value: 'sk-new-key' } })
@@ -51,13 +62,15 @@ describe('Settings Component', () => {
     fireEvent.click(saveButton)
 
     await waitFor(() => {
-      expect(localStorage.getItem('papercache-apikey-secure')).toBe('sk-new-key')
+      expect(window.electronAPI.setApiKey).toHaveBeenCalledWith('sk-new-key')
       expect(window.electronAPI.closeWindow).toHaveBeenCalled()
     })
   })
 
-  it('calls quitApp when Quit PaperCache is clicked', () => {
-    render(<Settings />)
+  it('calls quitApp when Quit PaperCache is clicked', async () => {
+    await act(async () => {
+      render(<Settings />)
+    })
 
     const quitButton = screen.getByText('Quit')
     fireEvent.click(quitButton)

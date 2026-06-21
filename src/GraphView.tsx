@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useEffect } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 
 import { getFolderColor } from './utils'
@@ -68,6 +68,16 @@ export default function GraphView({
     [onNodeClick]
   )
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
     <div
       style={{
@@ -80,6 +90,7 @@ export default function GraphView({
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
+        fontFamily: 'inherit',
       }}
     >
       <div
@@ -91,7 +102,7 @@ export default function GraphView({
           borderBottom: `1px solid ${textColor}22`,
         }}
       >
-        <h2 style={{ margin: 0, color: textColor, fontWeight: 500, fontFamily: 'sans-serif' }}>
+        <h2 style={{ margin: 0, color: textColor, fontWeight: 700, fontFamily: 'inherit' }}>
           Graph View
         </h2>
         <button
@@ -133,10 +144,12 @@ export default function GraphView({
             ctx.fillStyle = node.folder ? getFolderColor(node.folder) : accentColor
             ctx.fill()
 
-            ctx.textAlign = 'center'
-            ctx.textBaseline = 'middle'
-            ctx.fillStyle = textColor
-            ctx.fillText(label, node.x, node.y + 10)
+            if (globalScale >= 1.5) {
+              ctx.textAlign = 'center'
+              ctx.textBaseline = 'middle'
+              ctx.fillStyle = textColor
+              ctx.fillText(label, node.x as number, (node.y as number) + 10)
+            }
           }}
         />
       </div>

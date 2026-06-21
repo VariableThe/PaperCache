@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
-import { getSecure, setSecure } from './lib/safeStorage'
 import { SETTINGS_KEYS } from './lib/settingsKeys'
 import './Settings.css'
 
 export default function Settings() {
   const [apiKey, setApiKey] = useState('')
+  const [isApiKeySet, setIsApiKeySet] = useState(false)
 
   useEffect(() => {
-    getSecure('papercache-apikey').then((key) => {
-      if (key) setApiKey(key)
+    window.electronAPI.getApiKeyStatus().then((status) => {
+      setIsApiKeySet(status)
     })
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,11 +72,18 @@ export default function Settings() {
   )
 
   const saveSettings = async () => {
-    await setSecure('papercache-apikey', apiKey)
-    localStorage.removeItem('papercache-apikey')
     localStorage.setItem(SETTINGS_KEYS.API_BASE_URL, apiBaseUrl)
     localStorage.setItem(SETTINGS_KEYS.API_MODEL, apiModel)
     localStorage.setItem(SETTINGS_KEYS.AI_SYSTEM_PROMPT, aiSystemPrompt)
+
+    if (apiKey) {
+      const success = await window.electronAPI.setApiKey(apiKey)
+      if (!success) {
+        alert('Failed to save API key securely. Check console.')
+      }
+    } else {
+      await window.electronAPI.setApiKey('') // clear key
+    }
 
     localStorage.setItem(SETTINGS_KEYS.FONT_FAMILY, fontFamily)
     localStorage.setItem(SETTINGS_KEYS.SHOW_RULINGS, showRulings.toString())
@@ -127,7 +134,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="settings-container">
+    <div className="settings-container" style={{ fontFamily }}>
       <div className="settings-header">
         <h2>Settings</h2>
       </div>
@@ -136,12 +143,12 @@ export default function Settings() {
         <section>
           <h3>AI Configuration</h3>
           <div className="setting-group">
-            <label>API Key</label>
+            <label>API Key {isApiKeySet ? '✅ (Set)' : ''}</label>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-..."
+              placeholder={isApiKeySet ? 'Enter new key to replace existing' : 'sk-...'}
             />
           </div>
 
@@ -179,7 +186,7 @@ export default function Settings() {
                 border: '1px solid rgba(128,128,128,0.2)',
                 color: 'inherit',
                 borderRadius: '4px',
-                fontFamily: "'JetBrains Mono', monospace",
+                fontFamily: 'inherit',
                 resize: 'vertical',
                 textAlign: 'center',
               }}

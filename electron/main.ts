@@ -12,7 +12,10 @@ import {
   dialog,
   safeStorage,
   powerMonitor,
+  session,
 } from 'electron'
+import electronUpdater from 'electron-updater'
+const { autoUpdater } = electronUpdater
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import fs from 'node:fs'
@@ -35,8 +38,15 @@ if (!fs.existsSync(COMMANDS_DIR)) {
   fs.mkdirSync(COMMANDS_DIR)
 }
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'basics.md'),
+function writeCommandFile(name: string, content: string) {
+  const filePath = path.join(COMMANDS_DIR, name)
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, content)
+  }
+}
+
+writeCommandFile(
+  'basics.md',
   `# Basics
 
 - **Zoom**: \`Cmd + +\` to zoom in, \`Cmd + -\` to zoom out, \`Cmd + 0\` to reset.
@@ -56,11 +66,11 @@ fs.writeFileSync(
 *Example use:* Press \`Cmd+K\` right now, select "Settings", and set your global hotkey!
 
 Next: [Folders](/file commands/folders.md)
-`,
+`
 )
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'folders.md'),
+writeCommandFile(
+  'folders.md',
   `# Folders
 
 Organize your notes by using a \`/\` in the note title.
@@ -70,11 +80,11 @@ Folders automatically receive a unique color identifier in the Graph View and Se
 If you rename this note (click the title at the top left) to \`projects/PaperCache.md\`, it will automatically be placed inside a \`projects\` folder!
 
 Next: [Variables](/file commands/variables.md)
-`,
+`
 )
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'variables.md'),
+writeCommandFile(
+  'variables.md',
   `# Variables & Math
 
 PaperCache is a smart scratchpad. You can define variables and write math equations that auto-calculate.
@@ -92,11 +102,11 @@ x * 3 = \u200B30
 API_KEY
 
 Next: [Markdown & Code](/file commands/markdown.md)
-`,
+`
 )
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'markdown.md'),
+writeCommandFile(
+  'markdown.md',
   `# Markdown & Code
 
 PaperCache supports full markdown with seamless inline editing.
@@ -127,11 +137,11 @@ Type \`/ai <prompt>\` and press enter to summon an AI assistant directly into yo
 \`/ai Write a python function to reverse a string\`
 
 Next: [Formats & Colors](/file commands/formats.md)
-`,
+`
 )
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'formats.md'),
+writeCommandFile(
+  'formats.md',
   `# Formats & Colors
 
 PaperCache automatically recognizes and highlights common formats so you can easily spot them in your notes.
@@ -146,11 +156,11 @@ Dates and times are also highlighted to help you keep track of your schedule.
 Meeting on 31-05-2024 at 14:30.
 
 Next: [Tags](/file commands/tags.md)
-`,
+`
 )
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'tags.md'),
+writeCommandFile(
+  'tags.md',
   `# Tags
 
 You can tag your notes anywhere by typing an exclamation mark followed by a word (e.g., !important or !work).
@@ -163,11 +173,11 @@ When you open the search menu (\`Cmd+P\`), you'll see all your unique tags at th
 Next: [Tasks](/file commands/tasks.md)
 
 [Back to Welcome](/file Welcome.md)
-`,
+`
 )
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'tasks.md'),
+writeCommandFile(
+  'tasks.md',
   `# Tasks & Reminders
 
 Stay on top of your work by using tasks!
@@ -184,17 +194,17 @@ Overdue tasks will automatically highlight in red.
 Next: [Ready](/file commands/ready.md)
 
 [Back to Welcome](/file Welcome.md)
-`,
+`
 )
 
-fs.writeFileSync(
-  path.join(COMMANDS_DIR, 'ready.md'),
+writeCommandFile(
+  'ready.md',
   `# Ready to get started?
 
 You're all set to use PaperCache! Start jotting down your thoughts, creating folders, and exploring the capabilities.
 
 [Back to Welcome](/file Welcome.md)
-`,
+`
 )
 
 const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
@@ -346,6 +356,39 @@ app.on('web-contents-created', (event, contents) => {
 })
 
 app.whenReady().then(() => {
+  // Content Security Policy
+  const isDev = !!process.env.VITE_DEV_SERVER_URL;
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const isDevCSP =
+      "default-src 'none'; " +
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline'; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: https:; " +
+      "connect-src 'self' https: wss:; " +
+      "font-src 'self' data: https:; " +
+      "object-src 'none'; " +
+      "base-uri 'none';"
+    const isProdCSP =
+      "default-src 'none'; " +
+      "script-src 'self' 'unsafe-eval'; " +
+      "style-src 'self' 'unsafe-inline'; " +
+      "img-src 'self' data: https:; " +
+      "connect-src 'self' https:; " +
+      "font-src 'self' data: https:; " +
+      "object-src 'none'; " +
+      "base-uri 'none';"
+
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        // unsafe-eval is required for mathjs dynamic compilation
+        'Content-Security-Policy': [isDev ? isDevCSP : isProdCSP],
+      },
+    })
+  })
+
+  autoUpdater.checkForUpdatesAndNotify()
+
   createWindow()
 
   powerMonitor.on('suspend', () => {
@@ -379,6 +422,7 @@ app.whenReady().then(() => {
 
   const contextMenu = Menu.buildFromTemplate([
     { label: 'Show/Hide PaperCache', click: toggleWindow },
+    { label: 'Check for Updates', click: () => autoUpdater.checkForUpdatesAndNotify() },
     { type: 'separator' },
     {
       label: 'Quit',
@@ -615,11 +659,56 @@ ipcMain.on('open-settings', () => {
 })
 
 
-ipcMain.handle('openai-chat', async (_, { model, messages, apiKey, baseURL }) => {
+let memoryApiKey = ''
+try {
+  const file = fs.readFileSync(path.join(NOTES_DIR, 'config.enc'), 'utf-8')
+  if (safeStorage.isEncryptionAvailable()) {
+    memoryApiKey = safeStorage.decryptString(Buffer.from(file, 'base64'))
+  } else {
+    memoryApiKey = file
+  }
+} catch {
+  // Empty
+}
+
+ipcMain.handle('set-api-key', (_, key: string) => {
+  memoryApiKey = key;
+  try {
+    const dataToSave = safeStorage.isEncryptionAvailable() 
+      ? safeStorage.encryptString(key).toString('base64') 
+      : key
+    fs.writeFileSync(path.join(NOTES_DIR, 'config.enc'), dataToSave)
+    return true
+  } catch (err) {
+    console.error('Failed to set API key:', err)
+    return false
+  }
+})
+
+ipcMain.handle('get-api-key-status', () => {
+  return !!memoryApiKey && memoryApiKey.length > 0
+})
+
+ipcMain.on('check-for-updates', () => {
+  autoUpdater.checkForUpdatesAndNotify()
+})
+
+ipcMain.handle('openai-chat', async (_, { model, messages, baseURL }) => {
+  // Input Validation
+  if (typeof model !== 'string' || model.trim() === '') {
+    throw new Error('Invalid model provided')
+  }
+  if (!Array.isArray(messages)) {
+    throw new Error('Messages must be an array')
+  }
+  if (baseURL && typeof baseURL !== 'string') {
+    throw new Error('Invalid baseURL provided')
+  }
+
   try {
     const OpenAI = (await import('openai')).default
     const openai = new OpenAI({
-      apiKey: apiKey || 'dummy',
+      apiKey: memoryApiKey || 'dummy',
       baseURL: baseURL || undefined,
     })
     const completion = await openai.chat.completions.create({
