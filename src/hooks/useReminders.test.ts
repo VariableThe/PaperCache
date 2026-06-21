@@ -19,7 +19,7 @@ describe('useReminders', () => {
       window.electronAPI = {
         onPowerSuspend: vi.fn().mockReturnValue(vi.fn()),
         onPowerResume: vi.fn().mockReturnValue(vi.fn()),
-      } as Partial<Window['electronAPI']> as any
+      } as unknown as Window['electronAPI']
     }
 
     // Clear localStorage

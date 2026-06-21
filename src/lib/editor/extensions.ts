@@ -30,7 +30,7 @@ const handleDeleteNote = () => {
   return true
 }
 
-export function useEditorExtensions(handleEditorChange: (val: string) => void) {
+export function useEditorExtensions() {
   const { apiBaseUrl, apiModel, aiSystemPrompt } = useAIStore()
 
   return useMemo(
@@ -236,6 +236,6 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
         },
       }),
     ],
-    [apiBaseUrl, apiModel, aiSystemPrompt, handleEditorChange]
+    [apiBaseUrl, apiModel, aiSystemPrompt]
   )
 }

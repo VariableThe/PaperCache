@@ -35,6 +35,7 @@ export function NoteTitleBar() {
           prev.map((n) => (n.id === activeNote.id ? { ...n, content: newContent } : n))
         )
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Failed to save note', e)
       }
     } else {
@@ -50,6 +51,7 @@ export function NoteTitleBar() {
           setNotes((prev) => prev.map((n) => (n.id === activeNote.id ? { ...n, id: newId } : n)))
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Failed to rename note', e)
       }
     }
