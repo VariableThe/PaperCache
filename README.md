@@ -5,6 +5,10 @@
   **A floating markdown scratchpad for developers and power users.**
 </div>
 
+> **PaperCache exists because we refuse to compromise.** We refuse to accept that Electron apps must be bloated. We refuse to accept that scratchpads must be dumb. We refuse to accept that productivity tools must be expensive or closed-source.
+>
+> This is a tool built by a developer, for developers, with an obsession for performance, privacy, and polish. It's the scratchpad we always wanted but could never find—so we built it ourselves. Read our [Core Philosophy](PHILOSOPHY.md).
+
 Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need it.
 
 ---
