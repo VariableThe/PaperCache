@@ -118,17 +118,20 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
                 const prompt = lineText.substring(prefixLength).trim()
 
                 const thinkingText = '\n\u200B...\u200C\n'
-                view.dispatch({ changes: { from: line.to, insert: thinkingText } })
+                const markerStart = line.to
+                const markerEnd = markerStart + thinkingText.length
+                view.dispatch({ changes: { from: markerStart, insert: thinkingText } })
                 ;(async () => {
                   try {
                     const isKeySet = await window.electronAPI.getApiKeyStatus()
                     if (!isKeySet) {
-                      const docStr = view.state.doc.toString()
-                      const errorVal = docStr.replace(
-                        '\n\u200B...\u200C\n',
-                        '\n\u200BError - Set your OpenAI API key in settings\u200C\n'
-                      )
-                      handleEditorChange(errorVal)
+                      view.dispatch({
+                        changes: {
+                          from: markerStart,
+                          to: markerEnd,
+                          insert: '\n\u200BError - Set your OpenAI API key in settings\u200C\n',
+                        },
+                      })
                       return
                     }
 
@@ -179,30 +182,34 @@ export function useEditorExtensions(handleEditorChange: (val: string) => void) {
                           )
                         }
 
-                        const docStr = view.state.doc.toString()
-                        const finalVal = docStr.replace(
-                          '\n\u200B...\u200C\n',
-                          '\n\u200B' + response + '\u200C\n'
-                        )
-                        handleEditorChange(finalVal)
+                        view.dispatch({
+                          changes: {
+                            from: markerStart,
+                            to: markerEnd,
+                            insert: '\n\u200B' + response + '\u200C\n',
+                          },
+                        })
                       })
                       .catch((error) => {
-                        const docStr = view.state.doc.toString()
-                        const errorVal = docStr.replace(
-                          '\n\u200B...\u200C\n',
-                          '\n\u200BError - ' + error.message + '\u200C\n'
-                        )
-                        handleEditorChange(errorVal)
+                        view.dispatch({
+                          changes: {
+                            from: markerStart,
+                            to: markerEnd,
+                            insert: '\n\u200BError - ' + error.message + '\u200C\n',
+                          },
+                        })
                       })
                   } catch (err: unknown) {
-                    const docStr = view.state.doc.toString()
-                    const errorVal = docStr.replace(
-                      '\n\u200B...\u200C\n',
-                      '\n\u200BSetup Error - ' +
-                        ((err as Error).message || String(err)) +
-                        '\u200C\n'
-                    )
-                    handleEditorChange(errorVal)
+                    view.dispatch({
+                      changes: {
+                        from: markerStart,
+                        to: markerEnd,
+                        insert:
+                          '\n\u200BSetup Error - ' +
+                          ((err as Error).message || String(err)) +
+                          '\u200C\n',
+                      },
+                    })
                   }
                 })()
 

@@ -356,18 +356,18 @@ app.on('web-contents-created', (event, contents) => {
 
 app.whenReady().then(() => {
   // Content Security Policy
-  const isDev = !!process.env.VITE_DEV_SERVER_URL;
+  const isDev = !!process.env.VITE_DEV_SERVER_URL
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
         // unsafe-eval is required for mathjs dynamic compilation
         'Content-Security-Policy': [
-          isDev 
+          isDev
             ? "default-src 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https: wss:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';"
-            : "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';"
-        ]
-      }
+            : "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';",
+        ],
+      },
     })
   })
 
@@ -651,18 +651,19 @@ try {
   } else {
     memoryApiKey = file
   }
-} catch (e) {}
+} catch {}
 
 ipcMain.handle('set-api-key', (_, key: string) => {
-  memoryApiKey = key;
+  memoryApiKey = key
   try {
-    const dataToSave = safeStorage.isEncryptionAvailable() 
-      ? safeStorage.encryptString(key).toString('base64') 
-      : key;
-    fs.writeFileSync(path.join(NOTES_DIR, 'config.enc'), dataToSave);
-    return true;
+    const dataToSave = safeStorage.isEncryptionAvailable()
+      ? safeStorage.encryptString(key).toString('base64')
+      : key
+    fs.writeFileSync(path.join(NOTES_DIR, 'config.enc'), dataToSave)
+    return true
   } catch (e) {
-    return false;
+    console.error('Failed to save API key:', e)
+    return false
   }
 })
 

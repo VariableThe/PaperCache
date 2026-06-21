@@ -36,7 +36,8 @@ function Root() {
         try {
           // Decrypt it using the old method, then send to new IPC
           const decrypted = await window.electronAPI.safeStorageDecrypt(secureEncrypted)
-          if (decrypted) {
+          // Validate that the decrypted value looks like a valid API key
+          if (decrypted && decrypted.startsWith('sk-ant-') && decrypted.length >= 20) {
             const success = await window.electronAPI.setApiKey(decrypted)
             if (success) {
               localStorage.removeItem('papercache-apikey-secure')
