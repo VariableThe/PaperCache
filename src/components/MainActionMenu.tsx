@@ -8,6 +8,7 @@ export function MainActionMenu() {
   const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
   const setShowGraphView = useAppStore((state) => state.setShowGraphView)
   const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
+  const setShowSettingsModal = useAppStore((state) => state.setShowSettingsModal)
 
   const { bgType, bgColor, textColor, fontFamily } = useSettingsStore()
 
@@ -31,7 +32,7 @@ export function MainActionMenu() {
       }}
     >
       <button
-        onClick={() => window.electronAPI.openSettings()}
+        onClick={() => setShowSettingsModal(true)}
         style={{
           background: 'transparent',
           border: 'none',

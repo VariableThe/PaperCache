@@ -47,212 +47,10 @@ function getSafeNotePath(id: string): string {
   return fullPath
 }
 
-function writeCommandFile(name: string, content: string) {
-  const filePath = path.join(COMMANDS_DIR, name)
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, content)
-  }
-}
+import { initializeOnboarding } from './onboarding.js'
 
-writeCommandFile(
-  'basics.md',
-  `# Basics
+initializeOnboarding(NOTES_DIR, COMMANDS_DIR)
 
-- **Zoom**: \`Cmd + +\` to zoom in, \`Cmd + -\` to zoom out, \`Cmd + 0\` to reset.
-- **New Note**: \`Cmd + N\` from anywhere when app is running.
-- **Note Search**: \`Cmd + P\` to search across all your notes.
-- **Main Menu**: \`Cmd + K\` to open the action menu.
-- **Export Note**: \`Cmd + E\` to export the current note as markdown.
-- **Graph View**: \`Cmd + G\` to see how your notes connect.
-- **Highlight**: \`Cmd + H\` to highlight selected text.
-- **Cancel/Close**: Press \`Esc\` to exit modals.
-
-## Global Shortcuts
-- **Toggle Visibility**: \`Cmd+Shift+C\` from anywhere on your OS to hide or show PaperCache.
-- **Global New Note**: \`Cmd+Shift+N\` to spawn a new floating note anywhere.
-- **Settings**: \`Cmd+Shift+S\` to open the settings panel.
-
-*Example use:* Press \`Cmd+K\` right now, select "Settings", and set your global hotkey!
-
-Next: [Folders](/file commands/folders.md)
-`
-)
-
-writeCommandFile(
-  'folders.md',
-  `# Folders
-
-Organize your notes by using a \`/\` in the note title.
-Folders automatically receive a unique color identifier in the Graph View and Search list.
-
-*Example use:*
-If you rename this note (click the title at the top left) to \`projects/PaperCache.md\`, it will automatically be placed inside a \`projects\` folder!
-
-Next: [Variables](/file commands/variables.md)
-`
-)
-
-writeCommandFile(
-  'variables.md',
-  `# Variables & Math
-
-PaperCache is a smart scratchpad. You can define variables and write math equations that auto-calculate.
-
-**Local Variables:** (Only works in this note)
-/var x = 10
-
-*Example use:* Type \`x * 3 =\` below and watch it calculate!
-x * 3 = \u200B30
-
-**Global Variables:** (Works across ALL your notes)
-/globvar API_KEY = "sk-123"
-
-*Example use:* Just type API_KEY anywhere and see it highlight when your cursor leaves the word!
-API_KEY
-
-Next: [Markdown & Code](/file commands/markdown.md)
-`
-)
-
-writeCommandFile(
-  'markdown.md',
-  `# Markdown & Code
-
-PaperCache supports full markdown with seamless inline editing.
-
-## Highlighting
-Select text and press \`Cmd+H\` to highlight it.
-*Example use:* ==This text is highlighted!==
-
-## Code Snippets
-You can write code snippets inside triple backticks \`\`\` and specify the language name right after the backticks for syntax highlighting.
-*Example use:*
-\`\`\`javascript
-function greet(name) {
-  return "Hello, " + name + "!";
-}
-\`\`\`
-*(Tip: Click the copy button in the top right of the code block to copy its contents!)*
-
-## Horizontal Rules
-Type \`---\` on a new line to create a beautiful horizontal divider.
-*Example use:*
-
----
-
-## Inline AI Assistance
-Type \`/ai <prompt>\` and press enter to summon an AI assistant directly into your document.
-*Example use:*
-\`/ai Write a python function to reverse a string\`
-
-Next: [Formats & Colors](/file commands/formats.md)
-`
-)
-
-writeCommandFile(
-  'formats.md',
-  `# Formats & Colors
-
-PaperCache automatically recognizes and highlights common formats so you can easily spot them in your notes.
-
-## Colors
-Type any hex color, and it will be highlighted with a matching pill! You can click the small colored circle inside the pill to quickly copy the hex code to your clipboard.
-*Example use:* #D97757 or #3B82F6 or #10B981
-
-## Dates & Times
-Dates and times are also highlighted to help you keep track of your schedule.
-*Example use:* 
-Meeting on 31-05-2024 at 14:30.
-
-Next: [Tags](/file commands/tags.md)
-`
-)
-
-writeCommandFile(
-  'tags.md',
-  `# Tags
-
-You can tag your notes anywhere by typing an exclamation mark followed by a word (e.g., !important or !work).
-
-*Example use:*
-This is a note about a !project. 
-
-When you open the search menu (\`Cmd+P\`), you'll see all your unique tags at the top. Click any tag to instantly filter your notes!
-
-Next: [Tasks](/file commands/tasks.md)
-
-[Back to Welcome](/file Welcome.md)
-`
-)
-
-writeCommandFile(
-  'tasks.md',
-  `# Tasks & Reminders
-
-Stay on top of your work by using tasks!
-
-Type \`/task\` to create a new task.
-If you want to set a deadline, just type \` @ \` followed by a time shorthand after the task.
-*Example use:*
-/task Buy groceries @ 2h
-
-PaperCache understands shorthands like \`2d\`, \`3h45m\`, \`tmrw\`, or even exact dates like \`31-12-2024 15:00\`.
-Once you set a task, press \`Cmd+T\` (or \`Ctrl+T\`) to open the Tasks Page and see everything that's due!
-Overdue tasks will automatically highlight in red.
-
-Next: [Ready](/file commands/ready.md)
-
-[Back to Welcome](/file Welcome.md)
-`
-)
-
-writeCommandFile(
-  'ready.md',
-  `# Ready to get started?
-
-You're all set to use PaperCache! Start jotting down your thoughts, creating folders, and exploring the capabilities.
-
-[Back to Welcome](/file Welcome.md)
-`
-)
-
-const welcomePath = path.join(NOTES_DIR, 'Welcome.md')
-let shouldWriteWelcome = true
-if (fs.existsSync(welcomePath)) {
-  const content = fs.readFileSync(welcomePath, 'utf-8')
-  if (content.includes('[7. Tasks]')) {
-    shouldWriteWelcome = false
-  }
-}
-
-if (shouldWriteWelcome) {
-  fs.writeFileSync(
-    welcomePath,
-    `# Welcome to PaperCache!
-
-PaperCache is your intelligent, minimalist markdown scratchpad. 
-
-To navigate, use **Cmd + Click** (or **Ctrl + Click**) on any internal link. You can look at all the files in the order you want!
-
-Here's an interactive checkbox to try out right now:
-/check I am learning PaperCache!
-
-Try Cmd+Clicking these to learn the ropes:
-- [1. Basics](/file commands/basics.md)
-- [2. Folders](/file commands/folders.md)
-- [3. Variables](/file commands/variables.md)
-- [4. Markdown & Code](/file commands/markdown.md)
-- [5. Formats & Colors](/file commands/formats.md)
-- [6. Tags](/file commands/tags.md)
-- [7. Tasks](/file commands/tasks.md)
-
-*(Press \`Cmd+K\` at any time to open the main menu!)*
-`,
-  )
-
-  const now = new Date()
-  fs.utimesSync(welcomePath, now, new Date(now.getTime() + 10000))
-}
 
 // Hide dock icon for stealth mode
 if (app.dock) {
@@ -342,13 +140,9 @@ function createWindow() {
   win.on('blur', () => {
     // Only hide if we aren't in the middle of opening a native dialog like export
     if (!isExporting && win) {
-      if (settingsWin && !settingsWin.isDestroyed() && settingsWin.isFocused()) {
-        win.hide()
-      } else {
-        win.hide()
-        if (process.platform === 'darwin') {
-          app.hide()
-        }
+      win.hide()
+      if (process.platform === 'darwin') {
+        app.hide()
       }
     }
   })
@@ -585,135 +379,95 @@ ipcMain.handle('close-window', (event) => {
   }
 })
 
-// Helper to get all files recursively
-function getAllFiles(dirPath: string, arrayOfFiles: string[] = []) {
-  if (!fs.existsSync(dirPath)) return arrayOfFiles
-  const files = fs.readdirSync(dirPath)
-  files.forEach((file) => {
-    const fullPath = path.join(dirPath, file)
-    if (fs.statSync(fullPath).isDirectory()) {
-      arrayOfFiles = getAllFiles(fullPath, arrayOfFiles)
-    } else {
-      if (file.endsWith('.md')) {
-        arrayOfFiles.push(fullPath)
-      }
-    }
-  })
+// Helper to get all files recursively (async version)
+async function getAllFilesAsync(dirPath: string, arrayOfFiles: string[] = []) {
+  try {
+    const files = await fs.promises.readdir(dirPath)
+    await Promise.all(
+      files.map(async (file) => {
+        const fullPath = path.join(dirPath, file)
+        const stat = await fs.promises.stat(fullPath)
+        if (stat.isDirectory()) {
+          await getAllFilesAsync(fullPath, arrayOfFiles)
+        } else {
+          if (file.endsWith('.md')) {
+            arrayOfFiles.push(fullPath)
+          }
+        }
+      })
+    )
+  } catch (e) {}
   return arrayOfFiles
 }
 
 // Helper to clean empty directories
-function cleanEmptyFoldersRecursively(folder: string) {
+async function cleanEmptyFoldersRecursively(folder: string) {
   if (folder === NOTES_DIR || !folder.startsWith(NOTES_DIR)) return
-  if (!fs.existsSync(folder)) return
-  const files = fs.readdirSync(folder)
-  if (files.length === 0) {
-    fs.rmdirSync(folder)
-    cleanEmptyFoldersRecursively(path.dirname(folder))
+  try {
+    const files = await fs.promises.readdir(folder)
+    if (files.length === 0) {
+      await fs.promises.rmdir(folder)
+      await cleanEmptyFoldersRecursively(path.dirname(folder))
+    }
+  } catch (e) {
+    // Ignore if not exists or can't read
   }
 }
 
-ipcMain.handle('get-notes', () => {
-  const files = getAllFiles(NOTES_DIR)
-  const notes = files
-    .map((filePath) => {
-      const stats = fs.statSync(filePath)
+ipcMain.handle('get-notes', async () => {
+  const files = await getAllFilesAsync(NOTES_DIR)
+  const notesData = await Promise.all(
+    files.map(async (filePath) => {
+      const stats = await fs.promises.stat(filePath)
       const id = path.relative(NOTES_DIR, filePath).split(path.sep).join('/')
+      const content = await fs.promises.readFile(filePath, 'utf-8')
       return {
         id,
-        content: fs.readFileSync(filePath, 'utf-8'),
+        content,
         mtime: stats.mtime.getTime(),
       }
     })
-    .sort((a, b) => b.mtime - a.mtime)
+  )
 
-  return notes
+  return notesData.sort((a, b) => b.mtime - a.mtime)
 })
 
-ipcMain.handle('save-note', (event, { id, content }) => {
+ipcMain.handle('save-note', async (event, { id, content }) => {
   const filePath = getSafeNotePath(id)
-  fs.mkdirSync(path.dirname(filePath), { recursive: true })
-  fs.writeFileSync(filePath, content, 'utf-8')
+  await fs.promises.mkdir(path.dirname(filePath), { recursive: true })
+  await fs.promises.writeFile(filePath, content, 'utf-8')
   return true
 })
 
-ipcMain.handle('delete-note', (event, id) => {
+ipcMain.handle('delete-note', async (event, id) => {
   if (id.startsWith('commands/')) {
     return false
   }
   const filePath = getSafeNotePath(id)
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath)
-    cleanEmptyFoldersRecursively(path.dirname(filePath))
+  try {
+    await fs.promises.access(filePath)
+    await fs.promises.unlink(filePath)
+    await cleanEmptyFoldersRecursively(path.dirname(filePath))
+  } catch (e) {
+    console.error(`Failed to delete note ${id}:`, e)
   }
   return true
 })
 
-ipcMain.handle('rename-note', (event, { oldId, newId }) => {
+ipcMain.handle('rename-note', async (event, { oldId, newId }) => {
   const oldPath = getSafeNotePath(oldId)
   const newPath = getSafeNotePath(newId)
-  if (fs.existsSync(oldPath)) {
-    fs.mkdirSync(path.dirname(newPath), { recursive: true })
-    fs.renameSync(oldPath, newPath)
-    cleanEmptyFoldersRecursively(path.dirname(oldPath))
+  try {
+    await fs.promises.access(oldPath)
+    await fs.promises.mkdir(path.dirname(newPath), { recursive: true })
+    await fs.promises.rename(oldPath, newPath)
+    await cleanEmptyFoldersRecursively(path.dirname(oldPath))
+  } catch (e) {
+    console.error(`Failed to rename note from ${oldId} to ${newId}:`, e)
   }
   return true
 })
 
-let settingsWin: BrowserWindow | null = null
-
-ipcMain.on('open-settings', () => {
-  if (settingsWin) {
-    settingsWin.show()
-    settingsWin.focus()
-    return
-  }
-
-  let bounds: any = { width: 900, height: 700 }
-  if (win && !win.isDestroyed()) {
-    bounds = win.getBounds()
-  }
-
-  settingsWin = new BrowserWindow({
-    width: bounds.width,
-    height: bounds.height,
-    x: bounds.x,
-    y: bounds.y,
-    titleBarStyle: 'hiddenInset',
-    icon: path.join(__dirname, '../public/icon.png'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: false,
-      contextIsolation: true,
-      webSecurity: true,
-    },
-  })
-
-  settingsWin.webContents.setWindowOpenHandler(() => {
-    return { action: 'deny' }
-  })
-
-  settingsWin.webContents.on('will-navigate', (event, url) => {
-    const isLocalhost = url.startsWith('http://localhost:') || url.startsWith('http://127.0.0.1:')
-    const isFile = url.startsWith('file://')
-    if (!isLocalhost && !isFile) {
-      event.preventDefault()
-    }
-  })
-
-  if (process.env.VITE_DEV_SERVER_URL) {
-    settingsWin.loadURL(process.env.VITE_DEV_SERVER_URL + '#/settings')
-  } else {
-    settingsWin.loadFile(path.join(__dirname, '../dist/index.html'), { hash: '/settings' })
-  }
-
-  settingsWin.on('closed', () => {
-    settingsWin = null
-    if (win && !win.isDestroyed()) {
-      win.show()
-    }
-  })
-})
 
 
 let memoryApiKey = ''
@@ -724,17 +478,20 @@ try {
   } else {
     memoryApiKey = file
   }
-} catch {
-  // Empty
+} catch (err) {
+  // Config doesn't exist yet, ignore
+  if ((err as NodeJS.ErrnoException).code !== 'ENOENT') {
+    console.error('Failed to load API key config:', err)
+  }
 }
 
-ipcMain.handle('set-api-key', (_, key: string) => {
+ipcMain.handle('set-api-key', async (_, key: string) => {
   memoryApiKey = key;
   try {
     const dataToSave = safeStorage.isEncryptionAvailable() 
       ? safeStorage.encryptString(key).toString('base64') 
       : key
-    fs.writeFileSync(path.join(NOTES_DIR, 'config.enc'), dataToSave)
+    await fs.promises.writeFile(path.join(NOTES_DIR, 'config.enc'), dataToSave)
     return true
   } catch (err) {
     console.error('Failed to set API key:', err)
@@ -763,16 +520,32 @@ ipcMain.handle('openai-chat', async (_, { model, messages, baseURL }) => {
   }
 
   try {
-    const OpenAI = (await import('openai')).default
-    const openai = new OpenAI({
-      apiKey: memoryApiKey || 'dummy',
-      baseURL: baseURL || undefined,
+    let endpoint = baseURL || 'https://api.openai.com/v1/chat/completions'
+    if (!endpoint.endsWith('/chat/completions')) {
+      endpoint = endpoint.replace(/\/$/, '') + '/chat/completions'
+    }
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${memoryApiKey || 'dummy'}`,
+        'HTTP-Referer': 'https://github.com/papercache/papercache',
+        'X-Title': 'PaperCache',
+      },
+      body: JSON.stringify({ model, messages }),
     })
-    const completion = await openai.chat.completions.create({
-      model: model,
-      messages: messages,
-    })
-    return completion
+    
+    const text = await response.text()
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status} ${text}`)
+    }
+    
+    try {
+      return JSON.parse(text)
+    } catch (e) {
+      throw new Error(`Invalid API response. Expected JSON but received: ${text.substring(0, 200)}...`)
+    }
   } catch (error: any) {
     throw new Error(error.message || 'Unknown API Error')
   }
@@ -790,7 +563,7 @@ ipcMain.on('set-launch-startup', (_, value: boolean) => {
 })
 
 ipcMain.handle('read-note', async (_, id) => {
-  return fs.readFileSync(getSafeNotePath(id), 'utf-8')
+  return await fs.promises.readFile(getSafeNotePath(id), 'utf-8')
 })
 
 ipcMain.handle('export-note', async (_, filename: string, content: string) => {
@@ -804,7 +577,7 @@ ipcMain.handle('export-note', async (_, filename: string, content: string) => {
       ],
     })
     if (filePath) {
-      fs.writeFileSync(filePath, content, 'utf-8')
+      await fs.promises.writeFile(filePath, content, 'utf-8')
       return true
     }
     return false
@@ -820,7 +593,11 @@ ipcMain.on('open-external', (_, url) => {
 })
 
 ipcMain.on('open-file', (_, filePath) => {
-  const absolutePath = path.isAbsolute(filePath) ? filePath : path.join(NOTES_DIR, filePath)
+  const absolutePath = path.resolve(NOTES_DIR, filePath)
+  if (!absolutePath.startsWith(NOTES_DIR + path.sep) && absolutePath !== NOTES_DIR) {
+    console.warn(`[Security Blocked] Attempted to open file outside NOTES_DIR: ${absolutePath}`)
+    return
+  }
   shell.openPath(absolutePath)
 })
 

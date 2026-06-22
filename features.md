@@ -7,15 +7,15 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Full Markdown Support**: Renders standard Markdown syntax directly inline using a custom CodeMirror setup. Hides Markdown formatting characters when the cursor is not active on them.
 - **Custom Highlighting**: Select text and press `Cmd+H` to apply custom `==highlighting==`.
 - **Code Snippets**: Supports triple backtick fenced code blocks with language-specific syntax highlighting, along with a built-in one-click "Copy Code" button that displays a checkmark upon success.
-- **Color Format Recognition**: Automatically detects hex colors (e.g., `#D97757` or `#fff`) and renders a small inline preview color pill.
-- **Date & Time Formats**: Highlights standard date (`YYYY-MM-DD`) and time (`HH:MM` or `HH:MM:SS`) formats into clean, distinct pills.
+- **Color Format Recognition**: Automatically detects hex colors (e.g., `#D97757` or `#fff`) and renders a small inline preview color pill. Clicking on the circle in the color pill copies the hex code to your clipboard.
+- **Date & Time Formats**: Highlights standard date (`DD-MM-YYYY` or `YYYY-MM-DD`) and time (`HH:MM` or `HH:MM:SS`) formats into clean, distinct pills.
 - **Interactive Checkboxes**: Type `/check` to create an interactive checkbox widget. Clicking it changes it to `/checked` and visually strikes through the text on that line!
 - **Tasks & Reminders**: Type `/task` to create a task widget. Add a space followed by `@` and a time (like `1d2h`, `tmrw`, or a specific date `YYYY-MM-DD HH:MM`) to set a due date. Press `Cmd+T` (or `Ctrl+T`) to open the Tasks Page, which tracks all tasks, calculates due times, and highlights overdue tasks in red.
 - **Customizable Theming & Fonts**: Customize fonts, text colors, background colors, background images, and individual highlight colors for variables, AI, and math. Supports full dark mode (`grid-dark`, `blueprint`) and custom zoom scaling.
 
 ## Math, Variables, and Calculations
 
-- **Reactive Math Calculations**: Type an equation followed by an `=` sign (e.g., `2+2=`), and PaperCache auto-calculates and appends the result instantly (using `mathjs`).
+- **Reactive Math Calculations**: Type an equation followed by an `=` sign (e.g., `2+2=`), and PaperCache auto-calculates and appends the result instantly (using `expr-eval`).
 - **Local Variables**: Define variables inline using `/var name = value` (e.g., `/var x = 10`). These replace variables in text with clean pills and instantly recalculate math formulas anywhere in the note.
 - **Global Variables**: Define variables that persist across _all_ notes using `/globvar name = value`. Any other note can reference them natively.
 - **Auto-Reevaluation**: If a variable is updated anywhere, the entire document instantly recalculates and updates any dependent equations, acting as a lightweight spreadsheet inside a Markdown file.

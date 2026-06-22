@@ -1,18 +1,13 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useVariables } from './useVariables'
+import { useVariableStore } from '../store/useVariableStore'
 import { useAppStore } from '../store/useAppStore'
-
-declare global {
-  interface Window {
-    __globalVariables?: Record<string, unknown>
-  }
-}
 
 describe('useVariables', () => {
   beforeEach(() => {
     // Reset global state
-    window.__globalVariables = undefined
+    useVariableStore.setState({ globals: {} })
 
     // Reset store
     useAppStore.setState({ notes: [] })
@@ -29,9 +24,10 @@ describe('useVariables', () => {
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect(window.__globalVariables).toBeDefined()
-      expect(window.__globalVariables?.x).toBe(10)
-      expect(window.__globalVariables?.y).toBe(20)
+      const vars = useVariableStore.getState().globals
+      expect(vars).toBeDefined()
+      expect(vars.x).toBe(10)
+      expect(vars.y).toBe(20)
     })
   })
 
@@ -43,9 +39,10 @@ describe('useVariables', () => {
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect(window.__globalVariables).toBeDefined()
-      expect(window.__globalVariables?.a).toBe(5)
-      expect(window.__globalVariables?.b).toBe(10)
+      const vars = useVariableStore.getState().globals
+      expect(vars).toBeDefined()
+      expect(vars.a).toBe(5)
+      expect(vars.b).toBe(10)
     })
   })
 
@@ -54,12 +51,15 @@ describe('useVariables', () => {
       notes: [{ id: '1', content: '/globvar name = John Doe', mtime: 0 }],
     })
 
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect(window.__globalVariables).toBeDefined()
-      expect(window.__globalVariables?.name).toBe('John Doe')
+      const vars = useVariableStore.getState().globals
+      expect(vars).toBeDefined()
+      expect(vars.name).toBe('John Doe')
     })
+    consoleSpy.mockRestore()
   })
 
   it('should process variables across multiple notes', async () => {
@@ -73,9 +73,10 @@ describe('useVariables', () => {
     renderHook(() => useVariables())
 
     await waitFor(() => {
-      expect(window.__globalVariables).toBeDefined()
-      expect(window.__globalVariables?.val1).toBe(100)
-      expect(window.__globalVariables?.val2).toBe(150)
+      const vars = useVariableStore.getState().globals
+      expect(vars).toBeDefined()
+      expect(vars.val1).toBe(100)
+      expect(vars.val2).toBe(150)
     })
   })
 })

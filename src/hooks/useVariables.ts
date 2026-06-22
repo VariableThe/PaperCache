@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 
 import { useAppStore } from '../store/useAppStore'
+import { useVariableStore } from '../store/useVariableStore'
+import { Parser } from 'expr-eval'
 
 export function useVariables() {
   const notes = useAppStore((state) => state.notes)
@@ -12,25 +14,22 @@ export function useVariables() {
       const globals: Record<string, unknown> = {}
       const reVar = /^\/globvar\s+([a-zA-Z0-9_]+)\s*=\s*(.*)$/gm
 
-      let mathjs: { evaluate: (e: string, s: unknown) => unknown } | null = null
+      const parser = new Parser()
 
       for (const note of notes) {
         let varMatch
         while ((varMatch = reVar.exec(note.content)) !== null) {
           const name = varMatch[1]
           try {
-            if (!mathjs) {
-              mathjs = await import('mathjs')
-            }
-            globals[name] = mathjs.evaluate(varMatch[2], globals)
-          } catch {
+            globals[name] = parser.evaluate(varMatch[2], globals as any)
+          } catch (e) {
+            console.error(`useVariables evaluation error for ${name}:`, e)
             globals[name] = varMatch[2].trim()
           }
         }
       }
       if (abort) return
-      ;(window as unknown as { __globalVariables: Record<string, unknown> }).__globalVariables =
-        globals
+      useVariableStore.getState().setGlobals(globals)
     }
     syncVars()
     return () => {

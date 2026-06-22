@@ -1,6 +1,6 @@
 import { ViewPlugin, Decoration, EditorView, ViewUpdate } from '@codemirror/view'
 import { VariableWidget } from './widgets'
-import { VariableScope, scopeChangedEffect } from './VariableScope'
+import { scopeChangedEffect, getScope } from './VariableScope'
 
 export const variablePlugin = ViewPlugin.fromClass(
   class {
@@ -28,7 +28,7 @@ export const variablePlugin = ViewPlugin.fromClass(
         )
       }
 
-      const scope = VariableScope.getScope()
+      const scope = getScope()
       const scopeKeys = Object.keys(scope).sort((a, b) => b.length - a.length)
 
       if (scopeKeys.length === 0) return Decoration.none
@@ -68,7 +68,8 @@ export const variablePlugin = ViewPlugin.fromClass(
       try {
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
-      } catch {
+      } catch (e) {
+        console.error('variablePlugin error:', e)
         return Decoration.none
       }
     }

@@ -5,7 +5,7 @@ import { useAppStore } from '../store/useAppStore'
 import { useSettingsStore } from '../store/useSettingsStore'
 
 import { useEditorExtensions } from '../lib/editor/extensions'
-
+import { MathEvaluator } from '../lib/editor/MathEvaluator'
 import { type TransactionSpec } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 
@@ -38,16 +38,23 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
     },
   }))
 
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const handleEditorChange = useCallback(
     (val: string, viewUpdate?: ViewUpdate) => {
       setNotes((prevNotes) => {
         const updatedNotes = [...prevNotes]
         if (updatedNotes[currentNoteIndex]) {
+          const note = updatedNotes[currentNoteIndex]
           updatedNotes[currentNoteIndex] = {
-            ...updatedNotes[currentNoteIndex],
+            ...note,
             content: val,
           }
-          window.electronAPI.saveNote(updatedNotes[currentNoteIndex].id, val)
+
+          if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+          saveTimeoutRef.current = setTimeout(() => {
+            window.electronAPI.saveNote(note.id, val)
+          }, 500)
         }
         return updatedNotes
       })
@@ -55,9 +62,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
       if (viewUpdate?.transactions?.some((tr) => tr.docChanged)) {
         if (editorRef.current?.view) {
           const view = editorRef.current.view
-          import('../lib/editor/MathEvaluator').then((m) => {
-            m.MathEvaluator.triggerMathEvaluation(view)
-          })
+          MathEvaluator.triggerMathEvaluation(view)
         }
       }
     },
@@ -75,6 +80,12 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
     window.addEventListener('focus', handleWindowFocus)
     return () => window.removeEventListener('focus', handleWindowFocus)
   }, [])
+
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
+  }, [currentNoteIndex])
 
   return (
     <div className="editor-container">

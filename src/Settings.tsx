@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { SETTINGS_KEYS } from './lib/settingsKeys'
+import { useSettingsStore } from './store/useSettingsStore'
 import './Settings.css'
 
-export default function Settings() {
+export default function Settings({ onClose }: { onClose?: () => void }) {
   const [apiKey, setApiKey] = useState('')
   const [isApiKeySet, setIsApiKeySet] = useState(false)
 
@@ -13,12 +14,13 @@ export default function Settings() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !e.defaultPrevented) {
-        window.electronAPI.closeWindow()
+        if (onClose) onClose()
+        else window.electronAPI.closeWindow()
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [onClose])
   const [apiBaseUrl, setApiBaseUrl] = useState(
     localStorage.getItem(SETTINGS_KEYS.API_BASE_URL) || 'https://openrouter.ai/api/v1'
   )
@@ -44,32 +46,21 @@ export default function Settings() {
   )
 
   // Appearance State
-  const [fontFamily, setFontFamily] = useState(
-    localStorage.getItem(SETTINGS_KEYS.FONT_FAMILY) || "'JetBrains Mono', monospace"
+  const initialSettings = useSettingsStore.getState()
+  const [fontFamily, setFontFamily] = useState(initialSettings.fontFamily)
+  const [showRulings, setShowRulings] = useState(initialSettings.showRulings)
+  const [themePreset, setThemePreset] = useState(initialSettings.themePreset)
+  const [bgType, setBgType] = useState<'preset' | 'color' | 'image'>(
+    initialSettings.bgType || 'preset'
   )
-  const [showRulings, setShowRulings] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHOW_RULINGS) !== 'false'
-  )
-  const [themePreset, setThemePreset] = useState(
-    localStorage.getItem(SETTINGS_KEYS.THEME_PRESET) || 'grid-light'
-  )
-  const [bgType, setBgType] = useState(localStorage.getItem(SETTINGS_KEYS.BG_TYPE) || 'color') // preset, color, image
-  const [bgColor, setBgColor] = useState(localStorage.getItem(SETTINGS_KEYS.BG_COLOR) || '#ffffff')
-  const [bgImage, setBgImage] = useState(localStorage.getItem(SETTINGS_KEYS.BG_IMAGE) || '')
+  const [bgColor, setBgColor] = useState(initialSettings.bgColor)
+  const [bgImage, setBgImage] = useState(initialSettings.bgImage)
 
-  const [textColor, setTextColor] = useState(
-    localStorage.getItem(SETTINGS_KEYS.TEXT_COLOR) || '#000000'
-  )
-  const [numColor, setNumColor] = useState(
-    localStorage.getItem(SETTINGS_KEYS.NUM_COLOR) || '#8ab4f8'
-  )
-  const [symColor, setSymColor] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SYM_COLOR) || '#ff0000'
-  )
-  const [aiColor, setAiColor] = useState(localStorage.getItem(SETTINGS_KEYS.AI_COLOR) || '#8b5cf6')
-  const [mathColor, setMathColor] = useState(
-    localStorage.getItem(SETTINGS_KEYS.MATH_COLOR) || '#10b981'
-  )
+  const [textColor, setTextColor] = useState(initialSettings.textColor)
+  const [numColor, setNumColor] = useState(initialSettings.numColor)
+  const [symColor, setSymColor] = useState(initialSettings.symColor)
+  const [aiColor, setAiColor] = useState(initialSettings.aiColor)
+  const [mathColor, setMathColor] = useState(initialSettings.mathColor)
 
   const saveSettings = async () => {
     localStorage.setItem(SETTINGS_KEYS.API_BASE_URL, apiBaseUrl)
@@ -85,18 +76,19 @@ export default function Settings() {
       await window.electronAPI.setApiKey('') // clear key
     }
 
-    localStorage.setItem(SETTINGS_KEYS.FONT_FAMILY, fontFamily)
-    localStorage.setItem(SETTINGS_KEYS.SHOW_RULINGS, showRulings.toString())
-    localStorage.setItem(SETTINGS_KEYS.THEME_PRESET, themePreset)
-    localStorage.setItem(SETTINGS_KEYS.BG_TYPE, bgType)
-    localStorage.setItem(SETTINGS_KEYS.BG_COLOR, bgColor)
-    localStorage.setItem(SETTINGS_KEYS.BG_IMAGE, bgImage)
-
-    localStorage.setItem(SETTINGS_KEYS.TEXT_COLOR, textColor)
-    localStorage.setItem(SETTINGS_KEYS.NUM_COLOR, numColor)
-    localStorage.setItem(SETTINGS_KEYS.SYM_COLOR, symColor)
-    localStorage.setItem(SETTINGS_KEYS.AI_COLOR, aiColor)
-    localStorage.setItem(SETTINGS_KEYS.MATH_COLOR, mathColor)
+    useSettingsStore.getState().setSettings({
+      fontFamily,
+      showRulings,
+      themePreset,
+      bgType: bgType as 'color' | 'image',
+      bgColor,
+      bgImage,
+      textColor,
+      numColor,
+      symColor,
+      aiColor,
+      mathColor,
+    })
 
     // Startup
     localStorage.setItem(SETTINGS_KEYS.LAUNCH_STARTUP, launchAtStartup.toString())
@@ -122,11 +114,19 @@ export default function Settings() {
     // Dispatch storage event manually for the same window to pick it up immediately
     window.dispatchEvent(new Event('storage'))
 
-    window.electronAPI.closeWindow() // actually closes settings window
+    if (onClose) {
+      onClose()
+    } else {
+      window.electronAPI.closeWindow() // actually closes settings window
+    }
   }
 
   const closeSettings = () => {
-    window.electronAPI.closeWindow()
+    if (onClose) {
+      onClose()
+    } else {
+      window.electronAPI.closeWindow()
+    }
   }
 
   const quitApp = () => {
@@ -134,7 +134,10 @@ export default function Settings() {
   }
 
   return (
-    <div className="settings-container" style={{ fontFamily }}>
+    <div
+      className="settings-container"
+      style={{ fontFamily, width: '100%', maxWidth: '800px', margin: '0 auto' }}
+    >
       <div className="settings-header">
         <h2>Settings</h2>
       </div>
@@ -250,7 +253,10 @@ export default function Settings() {
 
           <div className="setting-group">
             <label>Background Type</label>
-            <select value={bgType} onChange={(e) => setBgType(e.target.value)}>
+            <select
+              value={bgType}
+              onChange={(e) => setBgType(e.target.value as 'preset' | 'color' | 'image')}
+            >
               <option value="preset">Preset Theme</option>
               <option value="color">Solid Color</option>
               <option value="image">Custom Image URL</option>

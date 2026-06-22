@@ -29,13 +29,3 @@ export const symbolMatcher = new MatchDecorator({
   regexp: /[+\-*/=^()]/g,
   decoration: Decoration.mark({ class: 'cm-custom-symbol' }),
 })
-
-export const aiMatcher = new MatchDecorator({
-  regexp: /\u200B[\s\S]*?\u200C/g,
-  decoration: Decoration.mark({ class: 'cm-custom-ai' }),
-})
-
-export const mathMatcher = new MatchDecorator({
-  regexp: /\u200B.*/g, // matches zero-width space and everything after it
-  decoration: Decoration.mark({ class: 'cm-custom-math' }),
-})

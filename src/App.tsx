@@ -6,7 +6,6 @@ import { RemindersPage } from './components/RemindersPage'
 
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
-import { useAIStore } from './store/useAIStore'
 
 import { useNoteStorage } from './hooks/useNoteStorage'
 import { useVariables } from './hooks/useVariables'
@@ -17,6 +16,7 @@ import { NoteSearch } from './components/NoteSearch'
 import { MainActionMenu } from './components/MainActionMenu'
 import { NoteTitleBar } from './components/NoteTitleBar'
 import { Editor, type EditorRef } from './components/Editor'
+import Settings from './Settings'
 
 function App() {
   const notes = useAppStore((state) => state.notes)
@@ -29,6 +29,8 @@ function App() {
   const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
   const showNoteSearch = useAppStore((state) => state.showNoteSearch)
   const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
+  const showSettingsModal = useAppStore((state) => state.showSettingsModal)
+  const setShowSettingsModal = useAppStore((state) => state.setShowSettingsModal)
 
   const { themePreset, fontFamily, showRulings, bgType, bgColor, bgImage, textColor, numColor } =
     useSettingsStore()
@@ -50,40 +52,6 @@ function App() {
       }, 50)
     }
   }, [showNoteSearch])
-
-  // Listen to storage events to update settings if changed from Settings window
-  useEffect(() => {
-    const handleStorageChange = () => {
-      // Refresh Settings Store
-      useSettingsStore.setState({
-        themePreset: localStorage.getItem('papercache-theme-preset') || 'grid-light',
-        fontFamily: localStorage.getItem('papercache-font') || 'monospace',
-        showRulings: localStorage.getItem('papercache-rulings') !== 'false',
-        bgType: (localStorage.getItem('papercache-bg-type') as 'color' | 'image') || 'color',
-        bgColor: localStorage.getItem('papercache-bg-color') || '#ffffff',
-        bgImage: localStorage.getItem('papercache-bg-image') || '',
-        textColor: localStorage.getItem('papercache-color-text') || '#333333',
-        numColor: localStorage.getItem('papercache-color-num') || '#8ab4f8',
-        symColor: localStorage.getItem('papercache-color-sym') || '#c586c0',
-        aiColor: localStorage.getItem('papercache-ai-color') || '#8b5cf6',
-        mathColor: localStorage.getItem('papercache-math-color') || '#10b981',
-      })
-      // Refresh AI Store
-      useAIStore.setState({
-        apiBaseUrl:
-          localStorage.getItem('papercache-api-base-url') || 'https://openrouter.ai/api/v1',
-        apiModel:
-          localStorage.getItem('papercache-api-model') || 'nvidia/nemotron-3-super-120b-a12b:free',
-        aiSystemPrompt:
-          localStorage.getItem('papercache-ai-system-prompt') ||
-          'You are a helpful assistant directly inside a markdown note. You can format your responses with markdown.',
-      })
-    }
-    window.addEventListener('storage', handleStorageChange)
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-    }
-  }, [])
 
   const containerStyle: React.CSSProperties = {
     fontFamily: fontFamily,
@@ -126,21 +94,22 @@ function App() {
             }
           }}
           onToggleReminder={(noteId, from, to, insert) => {
-            setNotes((prevNotes) => {
-              const newNotes = [...prevNotes]
-              const idx = newNotes.findIndex((n) => n.id === noteId)
-              if (idx !== -1) {
-                const note = newNotes[idx]
-                const newContent = note.content.slice(0, from) + insert + note.content.slice(to)
-                newNotes[idx] = { ...note, content: newContent }
-                window.electronAPI.saveNote(note.id, newContent)
+            const currentNotes = useAppStore.getState().notes
+            const idx = currentNotes.findIndex((n) => n.id === noteId)
+            if (idx === -1) return
+            const note = currentNotes[idx]
+            const newContent = note.content.slice(0, from) + insert + note.content.slice(to)
 
-                if (idx === currentNoteIndex) {
-                  editorRef.current?.dispatch({ changes: { from, to, insert } })
-                }
-              }
-              return newNotes
-            })
+            // Side-effects outside of state updater
+            window.electronAPI.saveNote(note.id, newContent)
+            if (idx === currentNoteIndex) {
+              editorRef.current?.dispatch({ changes: { from, to, insert } })
+            }
+
+            // Pure state update
+            setNotes((prevNotes) =>
+              prevNotes.map((n) => (n.id === noteId ? { ...n, content: newContent } : n))
+            )
           }}
         />
       )}
@@ -167,6 +136,24 @@ function App() {
       )}
 
       <Editor ref={editorRef} />
+
+      {showSettingsModal && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: bgType === 'color' ? bgColor : '#1a1a1a',
+            zIndex: 9999,
+            overflow: 'auto',
+          }}
+        >
+          <Settings onClose={() => setShowSettingsModal(false)} />
+        </div>
+      )}
     </div>
   )
 }
