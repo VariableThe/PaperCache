@@ -38,6 +38,15 @@ if (!fs.existsSync(COMMANDS_DIR)) {
   fs.mkdirSync(COMMANDS_DIR)
 }
 
+function getSafeNotePath(id: string): string {
+  const fullPath = path.resolve(NOTES_DIR, id)
+  const relative = path.relative(NOTES_DIR, fullPath)
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
+    throw new Error('Access denied: Invalid path')
+  }
+  return fullPath
+}
+
 function writeCommandFile(name: string, content: string) {
   const filePath = path.join(COMMANDS_DIR, name)
   if (!fs.existsSync(filePath)) {
@@ -305,7 +314,22 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: true,
     },
+  })
+
+  // Prevent new window creation
+  win.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' }
+  })
+
+  // Prevent navigation to external sites inside the app
+  win.webContents.on('will-navigate', (event, url) => {
+    const isLocalhost = url.startsWith('http://localhost:') || url.startsWith('http://127.0.0.1:')
+    const isFile = url.startsWith('file://')
+    if (!isLocalhost && !isFile) {
+      event.preventDefault()
+    }
   })
 
   win.on('close', saveWindowState)
@@ -439,26 +463,36 @@ app.whenReady().then(() => {
   // Wait for settings to load before registering new note shortcut to get custom one
   // Registration is handled via IPC from the renderer on startup
 
+  let currentNewNoteShortcut = ''
+  let currentToggleShortcut = ''
+  let isShortcutsPaused = false
+
   const registerNewNoteShortcut = (combo: string) => {
+    currentNewNoteShortcut = combo
     try {
       if (globalShortcut.isRegistered(combo)) {
         globalShortcut.unregister(combo)
       }
-      globalShortcut.register(combo, () => {
-        if (win) {
-          bringToActiveSpace(win)
-          win.webContents.send('trigger-new-note')
-        }
-      })
+      if (!isShortcutsPaused && combo) {
+        globalShortcut.register(combo, () => {
+          if (win) {
+            bringToActiveSpace(win)
+            win.webContents.send('trigger-new-note')
+          }
+        })
+      }
     } catch (e) {}
   }
 
   const registerToggleShortcut = (combo: string) => {
+    currentToggleShortcut = combo
     try {
       if (globalShortcut.isRegistered(combo)) {
         globalShortcut.unregister(combo)
       }
-      globalShortcut.register(combo, toggleWindow)
+      if (!isShortcutsPaused && combo) {
+        globalShortcut.register(combo, toggleWindow)
+      }
     } catch (e) {}
   }
 
@@ -473,6 +507,17 @@ app.whenReady().then(() => {
         registerToggleShortcut(newShortcut)
       }
     } catch (e) {}
+  })
+
+  ipcMain.on('pause-shortcuts', () => {
+    isShortcutsPaused = true
+    globalShortcut.unregisterAll()
+  })
+
+  ipcMain.on('resume-shortcuts', () => {
+    isShortcutsPaused = false
+    if (currentNewNoteShortcut) registerNewNoteShortcut(currentNewNoteShortcut)
+    if (currentToggleShortcut) registerToggleShortcut(currentToggleShortcut)
   })
 
   app.on('activate', () => {
@@ -586,7 +631,7 @@ ipcMain.handle('get-notes', () => {
 })
 
 ipcMain.handle('save-note', (event, { id, content }) => {
-  const filePath = path.join(NOTES_DIR, id)
+  const filePath = getSafeNotePath(id)
   fs.mkdirSync(path.dirname(filePath), { recursive: true })
   fs.writeFileSync(filePath, content, 'utf-8')
   return true
@@ -596,7 +641,7 @@ ipcMain.handle('delete-note', (event, id) => {
   if (id.startsWith('commands/')) {
     return false
   }
-  const filePath = path.join(NOTES_DIR, id)
+  const filePath = getSafeNotePath(id)
   if (fs.existsSync(filePath)) {
     fs.unlinkSync(filePath)
     cleanEmptyFoldersRecursively(path.dirname(filePath))
@@ -605,8 +650,8 @@ ipcMain.handle('delete-note', (event, id) => {
 })
 
 ipcMain.handle('rename-note', (event, { oldId, newId }) => {
-  const oldPath = path.join(NOTES_DIR, oldId)
-  const newPath = path.join(NOTES_DIR, newId)
+  const oldPath = getSafeNotePath(oldId)
+  const newPath = getSafeNotePath(newId)
   if (fs.existsSync(oldPath)) {
     fs.mkdirSync(path.dirname(newPath), { recursive: true })
     fs.renameSync(oldPath, newPath)
@@ -642,6 +687,18 @@ ipcMain.on('open-settings', () => {
       contextIsolation: true,
       webSecurity: true,
     },
+  })
+
+  settingsWin.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' }
+  })
+
+  settingsWin.webContents.on('will-navigate', (event, url) => {
+    const isLocalhost = url.startsWith('http://localhost:') || url.startsWith('http://127.0.0.1:')
+    const isFile = url.startsWith('file://')
+    if (!isLocalhost && !isFile) {
+      event.preventDefault()
+    }
   })
 
   if (process.env.VITE_DEV_SERVER_URL) {
@@ -733,7 +790,7 @@ ipcMain.on('set-launch-startup', (_, value: boolean) => {
 })
 
 ipcMain.handle('read-note', async (_, id) => {
-  return fs.readFileSync(path.join(NOTES_DIR, id), 'utf-8')
+  return fs.readFileSync(getSafeNotePath(id), 'utf-8')
 })
 
 ipcMain.handle('export-note', async (_, filename: string, content: string) => {
@@ -757,7 +814,9 @@ ipcMain.handle('export-note', async (_, filename: string, content: string) => {
 })
 
 ipcMain.on('open-external', (_, url) => {
-  shell.openExternal(url)
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('mailto:')) {
+    shell.openExternal(url)
+  }
 })
 
 ipcMain.on('open-file', (_, filePath) => {

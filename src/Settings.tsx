@@ -332,37 +332,80 @@ export default function Settings() {
 function ShortcutInput({ value, onChange }: { value: string; onChange: (val: string) => void }) {
   const [recording, setRecording] = useState(false)
 
-  const formatShortcutDisplay = (shortcut: string) => {
-    if (!shortcut) return 'Click to record'
-    return shortcut
-      .split('+')
-      .map((part) => {
-        switch (part) {
-          case 'CommandOrControl':
-          case 'Command':
-            return '⌘'
-          case 'Control':
-            return '⌃'
-          case 'Shift':
-            return '⇧'
-          case 'Alt':
-          case 'Option':
-            return '⌥'
-          case 'Up':
-            return '↑'
-          case 'Down':
-            return '↓'
-          case 'Left':
-            return '←'
-          case 'Right':
-            return '→'
-          case 'Space':
-            return '␣'
-          default:
-            return part
-        }
-      })
-      .join(' ')
+  useEffect(() => {
+    if (recording) {
+      if (window.electronAPI.pauseShortcuts) window.electronAPI.pauseShortcuts()
+    } else {
+      if (window.electronAPI.resumeShortcuts) window.electronAPI.resumeShortcuts()
+    }
+  }, [recording])
+
+  const renderShortcutDisplay = (shortcut: string) => {
+    if (!shortcut) return <span>Click to record</span>
+    const parts = shortcut.split('+')
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {parts.map((part, index) => {
+          let display = part
+          switch (part) {
+            case 'CommandOrControl':
+            case 'Command':
+              display = '⌘'
+              break
+            case 'Control':
+              display = '⌃'
+              break
+            case 'Shift':
+              display = '⇧'
+              break
+            case 'Alt':
+            case 'Option':
+              display = '⌥'
+              break
+            case 'Up':
+              display = '↑'
+              break
+            case 'Down':
+              display = '↓'
+              break
+            case 'Left':
+              display = '←'
+              break
+            case 'Right':
+              display = '→'
+              break
+            case 'Space':
+              display = '␣'
+              break
+          }
+          return (
+            <span key={index} style={{ display: 'flex', alignItems: 'center' }}>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '24px',
+                  height: '24px',
+                  padding: '0 6px',
+                  background: 'rgba(128,128,128,0.2)',
+                  borderRadius: '6px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+              >
+                {display}
+              </span>
+              {index < parts.length - 1 && (
+                <span style={{ margin: '0 4px', opacity: 0.5, fontSize: '14px' }}>+</span>
+              )}
+            </span>
+          )
+        })}
+      </div>
+    )
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -422,7 +465,7 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
         fontSize: '13px',
       }}
     >
-      {recording ? 'Recording... (Press Esc to cancel)' : formatShortcutDisplay(value)}
+      {recording ? 'Recording... (Press Esc to cancel)' : renderShortcutDisplay(value)}
     </button>
   )
 }
