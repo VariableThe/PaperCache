@@ -79,6 +79,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
   return (
     <div className="editor-container">
       <CodeMirror
+        key={activeNote.id}
         ref={editorRef}
         value={activeNote.content}
         onChange={handleEditorChange}
