@@ -30,13 +30,10 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 ## Screenshots
 
 <div align="center">
-  <img src="Screenshots/editor-formatting.png" width="400" alt="Editor and Formatting">
-  <img src="Screenshots/ai-demo.png" width="400" alt="Inline AI">
+  <img src="Screenshots/demo-3.png" width="400" alt="Editor and Formatting">
+  <img src="Screenshots/demo-2.png" width="400" alt="Interactive Checkboxes and Math">
   <br><br>
-  <img src="Screenshots/knowledge-management.png" width="400" alt="Knowledge Management">
-  <img src="Screenshots/search.png" width="400" alt="Search">
-  <br><br>
-  <img src="Screenshots/graph-view.png" width="400" alt="Graph View">
+  <img src="Screenshots/demo-1.png" width="400" alt="Knowledge Management and AI">
 </div>
 
 ---
