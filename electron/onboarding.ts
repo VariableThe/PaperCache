@@ -2,9 +2,16 @@ import path from 'node:path'
 import fs from 'node:fs'
 
 export function initializeOnboarding(NOTES_DIR: string, COMMANDS_DIR: string) {
-  function writeCommandFile(name: string, content: string) {
+  function writeCommandFile(name: string, content: string, forceMatch?: string) {
     const filePath = path.join(COMMANDS_DIR, name)
-    if (!fs.existsSync(filePath)) {
+    if (fs.existsSync(filePath)) {
+      if (forceMatch) {
+        const existingContent = fs.readFileSync(filePath, 'utf-8')
+        if (!existingContent.includes(forceMatch)) {
+          fs.writeFileSync(filePath, content)
+        }
+      }
+    } else {
       fs.writeFileSync(filePath, content)
     }
   }
@@ -26,7 +33,8 @@ export function initializeOnboarding(NOTES_DIR: string, COMMANDS_DIR: string) {
 
   writeCommandFile(
     'markdown.md',
-    `# Markdown & Code\n\nPaperCache supports full markdown with seamless inline editing.\n\n## Highlighting\nSelect text and press \`Cmd+H\` to highlight it.\n*Example use:* ==This text is highlighted!==\n\n## Code Snippets\nYou can write code snippets inside triple backticks \`\`\` and specify the language name right after the backticks for syntax highlighting.\n*Example use:*\n\`\`\`javascript\nfunction greet(name) {\n  return "Hello, " + name + "!";\n}\n\`\`\`\n*(Tip: Click the copy button in the top right of the code block to copy its contents!)*\n\n## Horizontal Rules\nType \`---\` on a new line to create a beautiful horizontal divider.\n*Example use:*\n\n---\n\n## Inline AI Assistance\nTo use the AI, first grab a free API key from [OpenRouter](https://openrouter.ai/keys) and paste it into Settings (\`Cmd+Shift+S\`).\n\nType \`/ai <prompt>\` and press enter to summon an AI assistant directly into your document.\nYou can also type \`/ctx <prompt>\` to automatically include the entire note's text in your prompt! AI responses are highlighted with a distinct background so you can easily distinguish them from your own writing.\n*Example use:*\n\`/ai Write a python function to reverse a string\`\n\nNext: [Formats & Colors](/file commands/formats.md)\n`
+    `# Markdown & Code\n\nPaperCache supports full markdown with seamless inline editing.\n\n## Highlighting\nSelect text and press \`Cmd+H\` to highlight it.\n*Example use:* ==This text is highlighted!==\n\n## Code Snippets\nYou can write code snippets inside triple backticks \`\`\` and specify the language name right after the backticks for syntax highlighting.\n*Example use:*\n\`\`\`javascript\nfunction greet(name) {\n  return "Hello, " + name + "!";\n}\n\`\`\`\n*(Tip: Click the copy button in the top right of the code block to copy its contents!)*\n\n## Horizontal Rules\nType \`---\` on a new line to create a beautiful horizontal divider.\n*Example use:*\n\n---\n\n## Inline AI Assistance\nTo use the AI, first grab a free API key from [OpenRouter](https://openrouter.ai/keys) and paste it into Settings (\`Cmd+Shift+S\`).\n\nType \`/ai <prompt>\` and press enter to summon an AI assistant directly into your document.\nYou can also type \`/ctx <prompt>\` to automatically include the entire note's text in your prompt! AI responses are highlighted with a distinct background so you can easily distinguish them from your own writing.\n*Example use:*\n\`/ai Write a python function to reverse a string\`\n\nNext: [Formats & Colors](/file commands/formats.md)\n`,
+    'OpenRouter'
   )
 
   writeCommandFile(
