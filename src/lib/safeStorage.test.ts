@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setSecure, getSecure } from './safeStorage'
 
 describe('safeStorage (Renderer Flow)', () => {

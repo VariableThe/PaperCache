@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 import { useAppStore } from '../store/useAppStore'
 import { useVariableStore } from '../store/useVariableStore'
-import { Parser } from 'expr-eval'
+import { Parser, type Values } from 'expr-eval'
 
 export function useVariables() {
   const notes = useAppStore((state) => state.notes)
@@ -21,7 +21,7 @@ export function useVariables() {
         while ((varMatch = reVar.exec(note.content)) !== null) {
           const name = varMatch[1]
           try {
-            globals[name] = parser.evaluate(varMatch[2], globals as Record<string, unknown>)
+            globals[name] = parser.evaluate(varMatch[2], globals as Values)
           } catch (e) {
             // eslint-disable-next-line no-console
             console.error(`useVariables evaluation error for ${name}:`, e)
