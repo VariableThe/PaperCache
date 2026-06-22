@@ -17,7 +17,7 @@ This document details the performance improvements made in V0.4.0. The primary g
 ## 2. Testing Methodology & Environment
 *To ensure reproducibility, all metrics were captured under the following conditions:*
 - **Hardware:** MacBook Air M4, 16GB RAM (Baseline mid-tier dev machine).
-- **OS:** macOS 14.0.
+- **OS:** macOS 15.7.5
 - **Dataset:** Workspace containing 500 markdown notes, averaging 2KB each.
 - **Tooling:** Chromium DevTools (Performance & Memory tabs), Electron `process.memoryUsage()`, and custom `performance.mark()` IPC timers.
 
