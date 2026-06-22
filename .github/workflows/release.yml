@@ -40,9 +40,6 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci
-      
-      - name: Sync package.json version
-        run: npm --no-git-tag-version version ${{ needs.create-tag.outputs.new_version }}
         
       - run: npm run build
       
