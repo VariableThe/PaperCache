@@ -5,9 +5,7 @@
   **A floating markdown scratchpad for developers and power users.**
 </div>
 
-> **PaperCache exists because we refuse to compromise.** We refuse to accept that Electron apps must be bloated. We refuse to accept that scratchpads must be dumb. We refuse to accept that productivity tools must be expensive or closed-source.
->
-> This is a tool built by a developer, for developers, with an obsession for performance, privacy, and polish. It's the scratchpad we always wanted but could never find—so we built it ourselves. Read our [Core Philosophy](PHILOSOPHY.md).
+> **Why PaperCache?** I saw a cool tool called Antinote, but it was locked behind a paywall. I wanted something similar that was open source and fit my own workflow perfectly, so I built PaperCache to match it. It solved my problem, and I figured other people might have the exact same needs, so I made it completely free and open for everyone. Read the full story in our [Core Philosophy](PHILOSOPHY.md).
 
 Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need it.
 
