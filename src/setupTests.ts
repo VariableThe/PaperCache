@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom'
-import { vi } from 'vitest'
+import { vi, afterEach } from 'vitest'
+import type { ElectronAPI } from './types'
 
 // Mock matchMedia which is not present in jsdom but might be needed by some components
 if (typeof window !== 'undefined') {
@@ -19,25 +20,37 @@ if (typeof window !== 'undefined') {
 }
 
 // Mock electronAPI for testing environments
-if (typeof window !== 'undefined' && !window.electronAPI) {
+if (typeof window !== 'undefined') {
   window.electronAPI = {
-    getPlatform: () => 'darwin',
-    openExternal: vi.fn(),
-    saveNote: vi.fn(),
-    deleteNote: vi.fn(),
-    renameNote: vi.fn(),
-    openAIChat: vi.fn(),
+    closeWindow: vi.fn(),
+    getNotes: vi.fn().mockResolvedValue([]),
+    saveNote: vi.fn().mockResolvedValue(true),
+    deleteNote: vi.fn().mockResolvedValue(true),
+    renameNote: vi.fn().mockResolvedValue(true),
+    openAIChat: vi.fn().mockResolvedValue(''),
+    setApiKey: vi.fn().mockResolvedValue(true),
+    getApiKeyStatus: vi.fn().mockResolvedValue(true),
+    checkForUpdates: vi.fn(),
     readNote: vi.fn().mockResolvedValue(''),
-    exportNote: vi.fn(),
-    openSettings: vi.fn(),
+    exportNote: vi.fn().mockResolvedValue(true),
+    setDialogOpen: vi.fn().mockResolvedValue(undefined),
+    quitApp: vi.fn(),
+    openExternal: vi.fn(),
+    openFile: vi.fn(),
+    onSwipeGesture: vi.fn().mockReturnValue(() => {}),
+    setLaunchAtStartup: vi.fn(),
+    updateGlobalShortcut: vi.fn(),
+    onTriggerNewNote: vi.fn().mockReturnValue(() => {}),
+    onTriggerTasks: vi.fn().mockReturnValue(() => {}),
     safeStorageEncrypt: vi.fn((val) => Promise.resolve(val)),
     safeStorageDecrypt: vi.fn((val) => Promise.resolve(val)),
-    getAppVersion: vi.fn().mockResolvedValue('1.0.0'),
-    openDevTools: vi.fn(),
-    onReminderFired: vi.fn(),
-    onUpdateGlobalShortcut: vi.fn(),
     onPowerSuspend: vi.fn().mockReturnValue(() => {}),
     onPowerResume: vi.fn().mockReturnValue(() => {}),
-    removeListener: vi.fn(),
-  } as unknown as typeof window.electronAPI
+    pauseShortcuts: vi.fn(),
+    resumeShortcuts: vi.fn(),
+  } as ElectronAPI
 }
+
+afterEach(() => {
+  vi.clearAllMocks()
+})

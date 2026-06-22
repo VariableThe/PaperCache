@@ -2,10 +2,10 @@
 
 > A floating markdown scratchpad for developers and power users.
 
-PaperCache is an Electron-based application built with an obsession for performance, privacy, and polish. It is designed to be a frictionless note-taking tool that lives in the background and is summoned via a global hotkey.
+PaperCache is a Tauri-based application built with an obsession for performance, privacy, and polish. It is designed to be a frictionless note-taking tool that lives in the background and is summoned via a global hotkey.
 
 ## Technical Architecture
-- **Framework:** Electron
+- **Framework:** Tauri + Rust
 - **Frontend:** React, TypeScript, Vite
 - **State Management:** Zustand
 
@@ -19,23 +19,21 @@ PaperCache is an Electron-based application built with an obsession for performa
 - **Tagging & Folders:** Uses `!tagname` for tags and `/` in note titles for folders.
 
 ## Codebase Map
-- `/electron`: Contains the Electron main process code and IPC setup.
-  - `preload.ts`: The IPC bridge. **Must always be updated in tandem with `src/types.d.ts`.**
+- `/src-tauri`: Contains the Tauri Rust backend code.
 - `/src`: Contains the React renderer code.
-  - `types.d.ts`: Contains IPC channel typings.
+  - `types.d.ts`: Contains IPC channel typings. Must be updated when adding Rust commands.
 - `/tests`: Test files for vitest.
 
 ## AI Agent Rules (Strict Constraints)
 If you are an AI coding assistant working on this repository, you **must** adhere to the following rules:
 1. **Pull Requests:** Never push to `main` directly. Use feature branches and PRs.
 2. **Pre-PR Checks:** Always run `npm run lint` and `npx vitest run`.
-3. **Preload/Types Contract:** Never modify `electron/preload.ts` or `src/types.d.ts` in isolation.
-4. **Secrets:** API keys must live in Electron's `safeStorage`.
+3. **Preload/Types Contract:** IPC contract: `src/types.d.ts` ↔ `src/api.ts` via `invoke()`.
+4. **Secrets:** Never add secrets to Rust source — use keyring crate via `commands/keychain.rs`.
 5. **Zustand:** Use slice subscriptions (`state => state.x`), never subscribe to the whole store.
-6. **IPC Listeners:** All `ipcRenderer.on` registrations in `preload.ts` must return an unsubscribe function.
-7. **Lazy Loading:** Dynamic `import()` for dependencies over 1MB unpacked.
-8. **Timers:** No `setInterval`. Use targeted `setTimeout` chains or event-driven patterns.
-9. **Security Context:** `contextIsolation: true` and `nodeIntegration: false` are non-negotiable.
+6. **Lazy Loading:** Dynamic `import()` for dependencies over 1MB unpacked.
+7. **Timers:** No `setInterval`. Use targeted `setTimeout` chains or event-driven patterns.
+8. **Tauri Config:** IPC Channels and configurations must be properly set in `tauri.conf.json`.
 
 ## Useful Documentation
 - [AGENTS.md](.agents/AGENTS.md) - Detailed rules for AI coding agents.

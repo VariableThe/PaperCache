@@ -5,6 +5,9 @@ import App from './App.tsx'
 import Settings from './Settings.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 
+import { tauriApi } from './api'
+window.electronAPI = tauriApi
+
 function Root() {
   const [hash, setHash] = useState(window.location.hash)
   const [migrated, setMigrated] = useState(false)

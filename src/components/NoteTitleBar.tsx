@@ -63,10 +63,11 @@ export function NoteTitleBar() {
   }
 
   return (
-    <div className="drag-region">
+    <div className="drag-region" data-tauri-drag-region>
       {isRenaming ? (
         <input
           className="rename-input"
+          data-tauri-drag-region="false"
           autoFocus
           value={renameValue}
           onChange={(e) => setRenameValue(e.target.value)}
@@ -77,6 +78,7 @@ export function NoteTitleBar() {
       ) : (
         <span
           className="note-title"
+          data-tauri-drag-region="false"
           onClick={(e) => {
             e.stopPropagation()
             startRename()

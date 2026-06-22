@@ -1,25 +1,37 @@
-# Performance Audit: PaperCache V0.4.0
+# Performance Audit: PaperCache V0.5.0-beta (Tauri Migration)
 
-**Date:** October 26, 2024  
+**Date:** June 22, 2026
 **Auditor:** VariableThe  
-**App Version:** 0.4.0 (Post-Refactor)  
+**App Version:** 0.5.0-beta (Tauri Migration)  
 
 ## 1. Executive Summary (The TL;DR)
-This document details the performance improvements made in V0.4.0. The primary goals were eliminating main-thread I/O blocking, reducing the initial JS parse time, and fixing React state-induced UI stutters.
+This document details the performance improvements made in V0.5.0-beta by migrating from Electron to Tauri and Rust. The primary goals were drastically reducing the application size and background RAM usage by eliminating the embedded Node.js runtime and Chromium binaries.
 
-| Metric | V0.3.0 (Baseline) | V0.4.0 (Current) | Delta |
+| Metric | V0.4.0 (Electron) | V0.5.0-beta (Tauri) | Delta |
 | :--- | :--- | :--- | :--- |
-| **Initial Bundle Size (JS)** | 18.4 MB | 1.1 MB | **-94%** |
-| **Cold Start to Interactive** | 1,450 ms | 320 ms | **-77%** |
-| **Idle CPU Usage** | 2.5% | 0.0% | **Zero polling** |
-| **IPC Save Latency (500 notes)**| 450 ms (UI Freeze) | 12 ms (Async) | **Non-blocking** |
+| **App Installer Size (DMG)** | ~80.0 MB | ~7.3 MB | **-90%** |
+| **Idle RAM Usage** | ~120 MB | ~40 MB | **-66%** |
+| **Idle CPU Usage** | 0.0% | 0.0% | **Maintained** |
+| **IPC Save Latency (500 notes)**| 12 ms (Async) | <5 ms (Rust fs) | **Faster** |
 
 ## 2. Testing Methodology & Environment
 *To ensure reproducibility, all metrics were captured under the following conditions:*
 - **Hardware:** MacBook Air M4, 16GB RAM (Baseline mid-tier dev machine).
 - **OS:** macOS 15.7.5
 - **Dataset:** Workspace containing 500 markdown notes, averaging 2KB each.
-- **Tooling:** Chromium DevTools (Performance & Memory tabs), Electron `process.memoryUsage()`, and custom `performance.mark()` IPC timers.
+- **Tooling:** Activity Monitor, `ls -lh`, and Rust `std::time::Instant`.
+
+## 3. The Tauri Migration (V0.5.0-beta)
+*Goal: Remove the massive Electron overhead for a background utility.*
+
+- **Removed Node.js & Chromium:** Replaced with Rust backend and native OS webview (WebKit on macOS).
+  - *Impact:* The `.dmg` size plummeted from ~80MB down to 7.3MB.
+- **Rust Backend:** All IPC calls now run through a highly optimized Rust backend using `std::fs` asynchronously.
+  - *Impact:* IPC latency is effectively instantaneous, with lower memory overhead for background processes.
+
+---
+
+## Historical: V0.4.0 Performance Audit
 
 ## 3. Bundle & Ship Size Optimization
 *Goal: Reduce the amount of JavaScript V8 must parse on cold start.*

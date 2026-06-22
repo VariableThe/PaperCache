@@ -3,19 +3,18 @@
 ## Safety & Process
 - **Pull Requests Required**: Never push new features directly to the `main` branch. Always create a new branch and push your changes as a Pull Request (PR) for review.
 - **Pre-PR Checks**: Run `npm run lint` and `npx vitest run` before opening any PR — don't open a PR with failing checks.
-- **Preload/Types Contract**: Never modify `electron/preload.ts` or `src/types.d.ts` in isolation — these two files are a contract and must always be updated together.
-- **Secrets Management**: Never store secrets, API keys, or credentials in code — API keys live in Electron's `safeStorage` only.
+- **Preload/Types Contract**: IPC contract: `src/types.d.ts` ↔ `src/api.ts` via `invoke()`. Never modify these files in isolation.
+- **Secrets Management**: Never add secrets to Rust source — use keyring crate via `commands/keychain.rs`.
 
 ## Code Conventions
 - **Zustand Slices**: Zustand stores must use slice subscriptions (`state => state.x`), never subscribe to the whole store.
-- **IPC Listeners**: All `ipcRenderer.on` registrations in `preload.ts` must return an unsubscribe function.
 - **Lazy Loading**: Dynamic `import()` for any dependency over 1MB unpacked — check with `npx cost-of-modules` before adding new deps.
 - **Timers**: No `setInterval` in renderer or main process — use targeted `setTimeout` chains or event-driven patterns.
 
-## Electron-specific
-- **Security Context**: `contextIsolation: true` and `nodeIntegration: false` are non-negotiable — never change these.
+## Tauri & Rust
+- **Security Context**: Follow Tauri's strict security model. Do not enable dangerous IPC scopes unless absolutely necessary.
 - **IPC Types**: All new IPC channels must be declared in `src/types.d.ts` with proper types before use.
-- **Power Management**: New background work in main process must handle `powerMonitor` suspend/resume events.
+- **Asynchronous Rust**: Use `tauri::command(async)` for I/O bound operations in Rust to avoid blocking the main thread.
 
 ## Scope & Workflows
 - **Focused PRs**: Don't refactor and add features in the same PR.

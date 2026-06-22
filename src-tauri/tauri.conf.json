@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.tauri.app/2.0.0/tauri.schema.json",
+  "productName": "PaperCache",
+  "version": "0.5.0-beta",
+  "identifier": "com.variablethe.papercache",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "PaperCache",
+        "width": 800,
+        "height": 600,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi", "appimage", "deb", "dmg", "app"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/VariableThe/PaperCache/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEE1M0IwODc2Q0EyMDYzQ0UKUldUT1l5REtkZ2c3cGE4d1BRWEVoaStaUndnQlVHK3NRam8zWW1maXFaUzFoMlVsNnIrVHNhZWwK"
+    }
+  }
+}
