@@ -12,7 +12,7 @@ export default function Settings() {
     })
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !e.defaultPrevented) {
         window.electronAPI.closeWindow()
       }
     }
@@ -198,21 +198,11 @@ export default function Settings() {
           <h3>Global Shortcuts</h3>
           <div className="setting-group">
             <label>Toggle App Visibility</label>
-            <input
-              type="text"
-              value={globalShortcutToggle}
-              onChange={(e) => setGlobalShortcutToggle(e.target.value)}
-              placeholder="e.g. CommandOrControl+Shift+C"
-            />
+            <ShortcutInput value={globalShortcutToggle} onChange={setGlobalShortcutToggle} />
           </div>
           <div className="setting-group">
             <label>New Note (Global)</label>
-            <input
-              type="text"
-              value={globalShortcutNewNote}
-              onChange={(e) => setGlobalShortcutNewNote(e.target.value)}
-              placeholder="e.g. CommandOrControl+Shift+N"
-            />
+            <ShortcutInput value={globalShortcutNewNote} onChange={setGlobalShortcutNewNote} />
           </div>
         </section>
 
@@ -336,5 +326,70 @@ export default function Settings() {
         </button>
       </div>
     </div>
+  )
+}
+
+function ShortcutInput({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [recording, setRecording] = useState(false)
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!recording) return
+    e.preventDefault()
+
+    if (e.key === 'Escape') {
+      setRecording(false)
+      return
+    }
+
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      onChange('')
+      setRecording(false)
+      return
+    }
+
+    const modifiers = []
+    if (e.metaKey || e.ctrlKey) modifiers.push('CommandOrControl')
+    if (e.altKey) modifiers.push('Alt')
+    if (e.shiftKey) modifiers.push('Shift')
+
+    // Don't record if only a modifier is pressed
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
+      return
+    }
+
+    let key = e.key.toUpperCase()
+    if (key === ' ') key = 'Space'
+    // Map arrows and other special keys
+    if (key === 'ARROWUP') key = 'Up'
+    if (key === 'ARROWDOWN') key = 'Down'
+    if (key === 'ARROWLEFT') key = 'Left'
+    if (key === 'ARROWRIGHT') key = 'Right'
+
+    const shortcut = [...modifiers, key].join('+')
+    onChange(shortcut)
+    setRecording(false)
+  }
+
+  return (
+    <button
+      className="shortcut-input-btn"
+      onClick={() => setRecording(true)}
+      onKeyDown={handleKeyDown}
+      onBlur={() => setRecording(false)}
+      style={{
+        padding: '8px 12px',
+        background: recording ? 'rgba(138, 180, 248, 0.2)' : 'rgba(128,128,128,0.1)',
+        border: recording ? '1px solid #8ab4f8' : '1px solid rgba(128,128,128,0.2)',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        minWidth: '220px',
+        textAlign: 'left',
+        color: 'inherit',
+        fontFamily: 'inherit',
+        fontSize: '13px',
+      }}
+    >
+      {recording ? 'Recording... (Press Esc to cancel)' : value || 'Click to record'}
+    </button>
   )
 }
