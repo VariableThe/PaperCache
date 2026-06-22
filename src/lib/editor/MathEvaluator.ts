@@ -4,7 +4,7 @@ import { Parser } from 'expr-eval'
 
 export function evaluateMath(
   docStr: string,
-  scope: Record<string, any>
+  scope: Record<string, unknown>
 ): { from: number; to: number; insert: string }[] {
   const parser = new Parser()
   const changes: { from: number; to: number; insert: string }[] = []
@@ -27,6 +27,7 @@ export function evaluateMath(
             insert: '\u200B' + result,
           })
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.error(`MathEvaluator new evaluation error for ${expr}:`, e)
         }
       }
@@ -57,6 +58,7 @@ export function evaluateMath(
           }
         }
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error(`MathEvaluator old evaluation error for ${expr}:`, e)
       }
     }

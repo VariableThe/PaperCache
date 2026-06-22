@@ -30,9 +30,10 @@ export class VariableScope {
         const name = varMatch[1]
         try {
           const mergedScope = Object.assign({}, globalVars, newScope)
-          const val = parser.evaluate(varMatch[2], mergedScope as any)
+          const val = parser.evaluate(varMatch[2], mergedScope as Record<string, unknown>)
           newScope[name] = val
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.error(`VariableScope evaluation error for ${name}:`, e)
           newScope[name] = varMatch[2].trim()
         }

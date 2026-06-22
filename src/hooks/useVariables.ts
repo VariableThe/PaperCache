@@ -21,8 +21,9 @@ export function useVariables() {
         while ((varMatch = reVar.exec(note.content)) !== null) {
           const name = varMatch[1]
           try {
-            globals[name] = parser.evaluate(varMatch[2], globals as any)
+            globals[name] = parser.evaluate(varMatch[2], globals as Record<string, unknown>)
           } catch (e) {
+            // eslint-disable-next-line no-console
             console.error(`useVariables evaluation error for ${name}:`, e)
             globals[name] = varMatch[2].trim()
           }

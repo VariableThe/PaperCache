@@ -58,10 +58,8 @@ pub fn run() {
                         api.prevent_close();
                         let _ = w.hide();
                     }
-                    tauri::WindowEvent::Focused(focused) => {
-                        if !focused && !is_dialog_open.load(Ordering::SeqCst) {
-                            let _ = w.hide();
-                        }
+                    tauri::WindowEvent::Focused(focused) if !focused && !is_dialog_open.load(Ordering::SeqCst) => {
+                        let _ = w.hide();
                     }
                     _ => {}
                 }

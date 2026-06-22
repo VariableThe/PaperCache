@@ -16,10 +16,11 @@ First of all, thank you for considering contributing to PaperCache!
    npm ci
    ```
 
-3. **Start the development server:**
+3. **Start the Tauri development server:**
    ```bash
-   npm run dev
+   npm run tauri dev
    ```
+   > **Prerequisite:** A [Rust toolchain](https://rustup.rs) is required to compile the native backend.
 
 ## Development Guidelines
 - **Pull Requests Required**: Never push new features directly to the `main` branch. Always create a new branch and push your changes as a Pull Request (PR) for review.

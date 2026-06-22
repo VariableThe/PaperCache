@@ -35,7 +35,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Note Context Injection**: Type `/ctx <prompt>` instead to automatically package the entire text of the current note along with your prompt, allowing the AI to read your document before answering.
 - **Configurable Models & Custom Endpoints**: Easily switch out your API Key, System Prompt, API Base URL, and specific AI Model in the settings panel.
 - **Free Top-Tier Defaults**: PaperCache comes fully pre-configured to point to OpenRouter's free tier, using powerful models like `nvidia/nemotron-3-super-120b-a12b:free` out of the box!
-- **Secure API Storage**: API keys are securely encrypted at rest using your operating system's native keychain (via Electron's `safeStorage`).
+- **Secure API Storage**: API keys are securely encrypted at rest using your operating system's native keychain (via the Rust `keyring` crate).
 
 ## Desktop System Integration
 

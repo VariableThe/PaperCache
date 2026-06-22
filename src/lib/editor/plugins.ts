@@ -63,6 +63,7 @@ export const aiPlugin = ViewPlugin.fromClass(
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Failed to set AI decorations:', e)
         return Decoration.none
       }
@@ -106,6 +107,7 @@ export const mathPlugin = ViewPlugin.fromClass(
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('Failed to set Math decorations:', e)
         return Decoration.none
       }

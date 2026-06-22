@@ -1,23 +1,19 @@
 import { describe, it, expect, vitest } from 'vitest'
-import { evaluateMath } from '../src/lib/editor/MathEvaluator'
+import { evaluateMath } from './MathEvaluator'
 
 describe('MathEvaluator', () => {
   it('evaluates new math expressions ending with =', () => {
     const docStr = '1 + 2 =\n'
     const scope = {}
     const changes = evaluateMath(docStr, scope)
-    expect(changes).toEqual([
-      { from: 7, to: 7, insert: '\u200B3' }
-    ])
+    expect(changes).toEqual([{ from: 7, to: 7, insert: '\u200B3' }])
   })
 
   it('updates existing evaluations if they changed', () => {
     const docStr = '1 + 3 =\u200B3'
     const scope = {}
     const changes = evaluateMath(docStr, scope)
-    expect(changes).toEqual([
-      { from: 8, to: 9, insert: '4' }
-    ])
+    expect(changes).toEqual([{ from: 8, to: 9, insert: '4' }])
   })
 
   it('ignores invalid expressions', () => {
@@ -40,8 +36,6 @@ describe('MathEvaluator', () => {
     const docStr = 'x * 2 =\n'
     const scope = { x: 5 }
     const changes = evaluateMath(docStr, scope)
-    expect(changes).toEqual([
-      { from: 7, to: 7, insert: '\u200B10' }
-    ])
+    expect(changes).toEqual([{ from: 7, to: 7, insert: '\u200B10' }])
   })
 })
