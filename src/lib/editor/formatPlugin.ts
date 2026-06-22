@@ -135,7 +135,8 @@ export const formatPlugin = ViewPlugin.fromClass(
       try {
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
-      } catch {
+      } catch (e) {
+        console.error('formatPlugin error:', e)
         return Decoration.none
       }
     }

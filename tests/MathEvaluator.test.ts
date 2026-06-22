@@ -1,43 +1,45 @@
-import { describe, it, expect } from 'vitest'
-import { MathEvaluator } from '../src/lib/editor/MathEvaluator'
+import { describe, it, expect, vitest } from 'vitest'
+import { evaluateMath } from '../src/lib/editor/MathEvaluator'
 
 describe('MathEvaluator', () => {
-  it('evaluates new math expressions ending with =', async () => {
+  it('evaluates new math expressions ending with =', () => {
     const docStr = '1 + 2 =\n'
     const scope = {}
-    const changes = await MathEvaluator.evaluateMathChanges(docStr, scope)
+    const changes = evaluateMath(docStr, scope)
     expect(changes).toEqual([
       { from: 7, to: 7, insert: '\u200B3' }
     ])
   })
 
-  it('updates existing evaluations if they changed', async () => {
+  it('updates existing evaluations if they changed', () => {
     const docStr = '1 + 3 =\u200B3'
     const scope = {}
-    const changes = await MathEvaluator.evaluateMathChanges(docStr, scope)
+    const changes = evaluateMath(docStr, scope)
     expect(changes).toEqual([
       { from: 8, to: 9, insert: '4' }
     ])
   })
 
-  it('ignores invalid expressions', async () => {
+  it('ignores invalid expressions', () => {
     const docStr = '1 + * 2 =\n'
     const scope = {}
-    const changes = await MathEvaluator.evaluateMathChanges(docStr, scope)
+    const consoleSpy = vitest.spyOn(console, 'error').mockImplementation(() => {})
+    const changes = evaluateMath(docStr, scope)
     expect(changes).toEqual([])
+    consoleSpy.mockRestore()
   })
 
-  it('ignores /var definitions', async () => {
+  it('ignores /var definitions', () => {
     const docStr = '/var x = 10\n'
     const scope = {}
-    const changes = await MathEvaluator.evaluateMathChanges(docStr, scope)
+    const changes = evaluateMath(docStr, scope)
     expect(changes).toEqual([]) // Because it's a variable declaration, not a math expression to evaluate inline
   })
 
-  it('uses provided scope', async () => {
+  it('uses provided scope', () => {
     const docStr = 'x * 2 =\n'
     const scope = { x: 5 }
-    const changes = await MathEvaluator.evaluateMathChanges(docStr, scope)
+    const changes = evaluateMath(docStr, scope)
     expect(changes).toEqual([
       { from: 7, to: 7, insert: '\u200B10' }
     ])

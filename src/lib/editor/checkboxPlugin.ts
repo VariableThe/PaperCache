@@ -65,7 +65,8 @@ export const checkboxPlugin = ViewPlugin.fromClass(
       try {
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
-      } catch {
+      } catch (e) {
+        console.error('checkboxPlugin error:', e)
         return Decoration.none
       }
     }

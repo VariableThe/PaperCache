@@ -1,24 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { useAppStore, type Note } from '../store/useAppStore'
 import { SETTINGS_KEYS } from '../lib/settingsKeys'
-
+import { parseAllTasks } from '../lib/taskUtils'
 function parseReminders(content: string, noteId: string) {
   const reminders: { dueAt: Date; label: string; key: string }[] = []
-  const reRem =
-    /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/gm
+  const tasks = parseAllTasks(content)
 
-  let match
-  while ((match = reRem.exec(content)) !== null) {
-    const isDone = match[1] === 'task-done'
-    const label = match[3]
-    const targetStr = match[4]
-    if (!isDone && targetStr) {
-      const targetMs = new Date(targetStr).getTime()
+  for (const task of tasks) {
+    if (!task.isDone && task.targetStr) {
+      const targetMs = new Date(task.targetStr).getTime()
       if (!isNaN(targetMs)) {
         reminders.push({
           dueAt: new Date(targetMs),
-          label,
-          key: `${noteId}-${targetMs}-${label}`,
+          label: task.label,
+          key: `${noteId}-${targetMs}-${task.label}`,
         })
       }
     }

@@ -2,9 +2,6 @@ import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
 
 export function useGlobalHotkey() {
-  const showMainActionMenu = useAppStore((state) => state.showMainActionMenu)
-  const showNoteSearch = useAppStore((state) => state.showNoteSearch)
-  const showGraphView = useAppStore((state) => state.showGraphView)
   const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
   const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
   const setShowGraphView = useAppStore((state) => state.setShowGraphView)
@@ -17,20 +14,22 @@ export function useGlobalHotkey() {
 
   useEffect(() => {
     const handleGlobalKeyDown = async (e: KeyboardEvent) => {
+      const state = useAppStore.getState()
+
       if (e.key === 'Escape') {
-        if (showMainActionMenu) {
+        if (state.showMainActionMenu) {
           e.preventDefault()
           e.stopPropagation()
           setShowMainActionMenu(false)
           return
         }
-        if (showNoteSearch) {
+        if (state.showNoteSearch) {
           e.preventDefault()
           e.stopPropagation()
           setShowNoteSearch(false)
           return
         }
-        if (showGraphView) {
+        if (state.showGraphView) {
           e.preventDefault()
           e.stopPropagation()
           setShowGraphView(false)
@@ -41,7 +40,7 @@ export function useGlobalHotkey() {
       // Settings Shortcut
       if (e.key.toLowerCase() === 's' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
         e.preventDefault()
-        window.electronAPI.openSettings()
+        useAppStore.getState().setShowSettingsModal(true)
       }
 
       // Graph View Shortcut
@@ -146,9 +145,6 @@ export function useGlobalHotkey() {
       disposeTasks?.()
     }
   }, [
-    showMainActionMenu,
-    showNoteSearch,
-    showGraphView,
     setShowGraphView,
     setShowMainActionMenu,
     setShowNoteSearch,

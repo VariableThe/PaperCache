@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { SETTINGS_KEYS } from '../lib/settingsKeys'
+import { persist } from 'zustand/middleware'
+
 export interface SettingsState {
   themePreset: string
   fontFamily: string
@@ -24,63 +25,57 @@ export interface SettingsState {
   setSymColor: (color: string) => void
   setAiColor: (color: string) => void
   setMathColor: (color: string) => void
+  setSettings: (
+    settings: Partial<
+      Omit<
+        SettingsState,
+        | 'setSettings'
+        | 'setThemePreset'
+        | 'setFontFamily'
+        | 'setShowRulings'
+        | 'setBgType'
+        | 'setBgColor'
+        | 'setBgImage'
+        | 'setTextColor'
+        | 'setNumColor'
+        | 'setSymColor'
+        | 'setAiColor'
+        | 'setMathColor'
+      >
+    >
+  ) => void
 }
 
-export const useSettingsStore = create<SettingsState>((set) => ({
-  themePreset: localStorage.getItem(SETTINGS_KEYS.THEME_PRESET) || 'grid-light',
-  fontFamily: localStorage.getItem(SETTINGS_KEYS.FONT_FAMILY) || "'JetBrains Mono', monospace",
-  showRulings: localStorage.getItem(SETTINGS_KEYS.SHOW_RULINGS) !== 'false',
-  bgType: (localStorage.getItem(SETTINGS_KEYS.BG_TYPE) as 'color' | 'image') || 'color',
-  bgColor: localStorage.getItem(SETTINGS_KEYS.BG_COLOR) || '#ffffff',
-  bgImage: localStorage.getItem(SETTINGS_KEYS.BG_IMAGE) || '',
-  textColor: localStorage.getItem(SETTINGS_KEYS.TEXT_COLOR) || '#000000',
-  numColor: localStorage.getItem(SETTINGS_KEYS.NUM_COLOR) || '#8ab4f8',
-  symColor: localStorage.getItem(SETTINGS_KEYS.SYM_COLOR) || '#ff0000',
-  aiColor: localStorage.getItem(SETTINGS_KEYS.AI_COLOR) || '#8b5cf6',
-  mathColor: localStorage.getItem(SETTINGS_KEYS.MATH_COLOR) || '#10b981',
+export const useSettingsStore = create<SettingsState>()(
+  persist(
+    (set) => ({
+      themePreset: 'grid-light',
+      fontFamily: "'JetBrains Mono', monospace",
+      showRulings: true,
+      bgType: 'color',
+      bgColor: '#ffffff',
+      bgImage: '',
+      textColor: '#000000',
+      numColor: '#8ab4f8',
+      symColor: '#ff0000',
+      aiColor: '#8b5cf6',
+      mathColor: '#10b981',
 
-  setThemePreset: (themePreset) => {
-    localStorage.setItem(SETTINGS_KEYS.THEME_PRESET, themePreset)
-    set({ themePreset })
-  },
-  setFontFamily: (fontFamily) => {
-    localStorage.setItem(SETTINGS_KEYS.FONT_FAMILY, fontFamily)
-    set({ fontFamily })
-  },
-  setShowRulings: (showRulings) => {
-    localStorage.setItem(SETTINGS_KEYS.SHOW_RULINGS, String(showRulings))
-    set({ showRulings })
-  },
-  setBgType: (bgType) => {
-    localStorage.setItem(SETTINGS_KEYS.BG_TYPE, bgType)
-    set({ bgType })
-  },
-  setBgColor: (bgColor) => {
-    localStorage.setItem(SETTINGS_KEYS.BG_COLOR, bgColor)
-    set({ bgColor })
-  },
-  setBgImage: (bgImage) => {
-    localStorage.setItem(SETTINGS_KEYS.BG_IMAGE, bgImage)
-    set({ bgImage })
-  },
-  setTextColor: (textColor) => {
-    localStorage.setItem(SETTINGS_KEYS.TEXT_COLOR, textColor)
-    set({ textColor })
-  },
-  setNumColor: (numColor) => {
-    localStorage.setItem(SETTINGS_KEYS.NUM_COLOR, numColor)
-    set({ numColor })
-  },
-  setSymColor: (symColor) => {
-    localStorage.setItem(SETTINGS_KEYS.SYM_COLOR, symColor)
-    set({ symColor })
-  },
-  setAiColor: (aiColor) => {
-    localStorage.setItem(SETTINGS_KEYS.AI_COLOR, aiColor)
-    set({ aiColor })
-  },
-  setMathColor: (mathColor) => {
-    localStorage.setItem(SETTINGS_KEYS.MATH_COLOR, mathColor)
-    set({ mathColor })
-  },
-}))
+      setThemePreset: (themePreset) => set({ themePreset }),
+      setFontFamily: (fontFamily) => set({ fontFamily }),
+      setShowRulings: (showRulings) => set({ showRulings }),
+      setBgType: (bgType) => set({ bgType }),
+      setBgColor: (bgColor) => set({ bgColor }),
+      setBgImage: (bgImage) => set({ bgImage }),
+      setTextColor: (textColor) => set({ textColor }),
+      setNumColor: (numColor) => set({ numColor }),
+      setSymColor: (symColor) => set({ symColor }),
+      setAiColor: (aiColor) => set({ aiColor }),
+      setMathColor: (mathColor) => set({ mathColor }),
+      setSettings: (settings) => set((state) => ({ ...state, ...settings })),
+    }),
+    {
+      name: 'papercache-settings-store',
+    }
+  )
+)

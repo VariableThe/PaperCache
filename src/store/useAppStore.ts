@@ -22,6 +22,7 @@ interface AppState {
   showNoteActionMenu: boolean
   showMainActionMenu: boolean
   actionMenuIndex: number
+  showSettingsModal: boolean
 
   setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void
   setCurrentNoteIndex: (index: number) => void
@@ -37,6 +38,7 @@ interface AppState {
   setShowNoteActionMenu: (show: boolean) => void
   setShowMainActionMenu: (show: boolean | ((prev: boolean) => boolean)) => void
   setActionMenuIndex: (index: number | ((prev: number) => number)) => void
+  setShowSettingsModal: (show: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -54,6 +56,7 @@ export const useAppStore = create<AppState>((set) => ({
   showNoteActionMenu: false,
   showMainActionMenu: false,
   actionMenuIndex: 0,
+  showSettingsModal: false,
 
   setNotes: (notes) =>
     set((state) => ({
@@ -103,4 +106,5 @@ export const useAppStore = create<AppState>((set) => ({
           ? actionMenuIndex(state.actionMenuIndex)
           : actionMenuIndex,
     })),
+  setShowSettingsModal: (showSettingsModal) => set({ showSettingsModal }),
 }))

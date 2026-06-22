@@ -1,4 +1,5 @@
 import React from 'react'
+import { parseAllTasks } from '../lib/taskUtils'
 
 interface Note {
   id: string
@@ -38,20 +39,18 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
 
   // Parse reminders from all notes
   const reminders: ReminderItem[] = []
-  const reRem =
-    /\/(task(?:-done)?)(?:\s+\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\))?\s+(.*?)(?:\s+@\s+(\d{4}-\d{2}-\d{2}(?:\s+\d{2}:\d{2}(?::\d{2})?)?))?[ \t]*$/gm
 
   notes.forEach((note) => {
-    let match
-    while ((match = reRem.exec(note.content)) !== null) {
+    const tasks = parseAllTasks(note.content)
+    for (const task of tasks) {
       reminders.push({
         noteId: note.id,
-        done: match[1] === 'task-done',
-        creationDate: match[2] || null,
-        label: match[3],
-        targetMs: match[4] ? new Date(match[4]).getTime() : null,
-        matchIndex: match.index,
-        matchLength: match[0].length,
+        done: task.isDone,
+        creationDate: task.creationDate,
+        label: task.label,
+        targetMs: task.targetStr ? new Date(task.targetStr).getTime() : null,
+        matchIndex: task.matchIndex,
+        matchLength: task.matchLength,
       })
     }
   })

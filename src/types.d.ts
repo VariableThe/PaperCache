@@ -14,7 +14,7 @@ export interface ElectronAPI {
   checkForUpdates: () => void
   readNote: (id: string) => Promise<string>
   exportNote: (filename: string, content: string) => Promise<boolean>
-  openSettings: () => void
+
   quitApp: () => void
   openExternal: (url: string) => void
   openFile: (path: string) => void

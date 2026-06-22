@@ -104,7 +104,8 @@ export const codeBlockPlugin = ViewPlugin.fromClass(
       try {
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
-      } catch {
+      } catch (e) {
+        console.error('codeBlockPlugin error:', e)
         return Decoration.none
       }
     }

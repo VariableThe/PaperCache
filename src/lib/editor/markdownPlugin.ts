@@ -181,7 +181,8 @@ export const markdownPlugin = ViewPlugin.fromClass(
       try {
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
-      } catch {
+      } catch (e) {
+        console.error('markdownPlugin error:', e)
         return Decoration.none
       }
     }

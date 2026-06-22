@@ -11,27 +11,26 @@ import { numberPlugin, symbolPlugin, aiPlugin, mathPlugin, decomposedPlugins } f
 import { useAIStore } from '../../store/useAIStore'
 import { useAppStore, type Note } from '../../store/useAppStore'
 
-const handleDeleteNote = () => {
-  const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
-  if (note) {
-    if (note.id.startsWith('commands/')) {
-      alert('Files in the commands folder cannot be deleted.')
-      return true
-    }
-    if (confirm('Delete this note?')) {
-      window.electronAPI.deleteNote(note.id)
-      useAppStore.getState().setNotes((prev: Note[]) => prev.filter((n: Note) => n.id !== note.id))
-      if (useAppStore.getState().currentNoteIndex >= useAppStore.getState().notes.length - 1)
-        useAppStore
-          .getState()
-          .setCurrentNoteIndex(Math.max(0, useAppStore.getState().notes.length - 2))
-    }
-  }
-  return true
-}
-
 export function useEditorExtensions() {
   const { apiBaseUrl, apiModel, aiSystemPrompt } = useAIStore()
+
+  const handleDeleteNote = () => {
+    const state = useAppStore.getState()
+    const note = state.notes[state.currentNoteIndex]
+    if (note) {
+      if (note.id.startsWith('commands/')) {
+        alert('Files in the commands folder cannot be deleted.')
+        return true
+      }
+      if (confirm('Delete this note?')) {
+        window.electronAPI.deleteNote(note.id)
+        state.setNotes((prev: Note[]) => prev.filter((n: Note) => n.id !== note.id))
+        if (state.currentNoteIndex >= state.notes.length - 1)
+          state.setCurrentNoteIndex(Math.max(0, state.notes.length - 2))
+      }
+    }
+    return true
+  }
 
   return useMemo(
     () => [
@@ -143,41 +142,28 @@ export function useEditorExtensions() {
 
                     messages.push({ role: 'user', content: finalPrompt })
 
-                    window.electronAPI
-                      .openAIChat({
-                        model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
-                        messages: messages,
-                        baseURL: finalBaseUrl || '',
-                      })
-                      .then((completion: any) => {
-                        let response: string
-                        if (completion.choices && completion.choices.length > 0) {
-                          response = completion.choices[0].message?.content || ''
-                        } else if (completion.error) {
-                          throw new Error(completion.error.message || 'Unknown API Error')
-                        } else {
-                          throw new Error(
-                            'Unexpected response format: ' + JSON.stringify(completion)
-                          )
-                        }
+                    const completion: any = await window.electronAPI.openAIChat({
+                      model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
+                      messages: messages,
+                      baseURL: finalBaseUrl || '',
+                    })
 
-                        view.dispatch({
-                          changes: {
-                            from: line.to,
-                            to: line.to + thinkingText.length,
-                            insert: '\n\u200B' + response + '\u200C\n',
-                          },
-                        })
-                      })
-                      .catch((error) => {
-                        view.dispatch({
-                          changes: {
-                            from: line.to,
-                            to: line.to + thinkingText.length,
-                            insert: '\n\u200BError - ' + error.message + '\u200C\n',
-                          },
-                        })
-                      })
+                    let response: string
+                    if (completion.choices && completion.choices.length > 0) {
+                      response = completion.choices[0].message?.content || ''
+                    } else if (completion.error) {
+                      throw new Error(completion.error.message || 'Unknown API Error')
+                    } else {
+                      throw new Error('Unexpected response format: ' + JSON.stringify(completion))
+                    }
+
+                    view.dispatch({
+                      changes: {
+                        from: line.to,
+                        to: line.to + thinkingText.length,
+                        insert: '\n\u200B' + response + '\u200C\n',
+                      },
+                    })
                   } catch (err: unknown) {
                     view.dispatch({
                       changes: {
