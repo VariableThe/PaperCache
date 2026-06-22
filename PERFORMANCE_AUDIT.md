@@ -56,8 +56,3 @@ This document details the performance improvements made in V0.4.0. The primary g
    - *Mitigation:* We accept this for V0.4.0 as graph view is a secondary feature. V0.5.0 will implement WebGL (via `react-force-graph`) or web workers for layout calculation.
 2. **Regex Parsing on Large Files:** The custom DSL regex runs on the entire document string on every keystroke. For files >50KB, this causes minor input latency.
    - *Mitigation:* CodeMirror's incremental parsing helps, but we may need to move the DSL parser to a Web Worker in the future.
-
-## 7. Appendix
-- [Link to V0.3.0 Chromium Performance Trace (.json)](#)
-- [Link to V0.4.0 Chromium Performance Trace (.json)](#)
-- [Link to V0.4.0 Heap Snapshot showing Zustand memory profile](#)
