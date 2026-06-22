@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view'
 import { getScope } from './VariableScope'
-import { Parser } from 'expr-eval'
+import { Parser, type Values } from 'expr-eval'
 
 export function evaluateMath(
   docStr: string,
@@ -20,7 +20,7 @@ export function evaluateMath(
       const expr = text.substring(0, text.lastIndexOf('=')).trim()
       if (expr && !expr.startsWith('/var') && !expr.startsWith('/globvar')) {
         try {
-          const result = String(parser.evaluate(expr, scope))
+          const result = String(parser.evaluate(expr, scope as Values))
           changes.push({
             from: offset + lineLen,
             to: offset + lineLen,
@@ -45,7 +45,7 @@ export function evaluateMath(
     const expr = exprPart.replace(/=\s*$/, '').trim()
     if (expr) {
       try {
-        const newResult = String(parser.evaluate(expr, scope))
+        const newResult = String(parser.evaluate(expr, scope as Values))
         if (newResult !== oldResult) {
           const startReplace = calcMatch.index + exprPart.length + 1 // +1 for \u200B
           const endReplace = calcMatch.index + calcMatch[0].length
