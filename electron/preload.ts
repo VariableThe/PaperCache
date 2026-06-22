@@ -47,4 +47,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('power:resume', handler)
     return () => ipcRenderer.removeListener('power:resume', handler)
   },
+  pauseShortcuts: () => ipcRenderer.send('pause-shortcuts'),
+  resumeShortcuts: () => ipcRenderer.send('resume-shortcuts'),
 })

@@ -12,7 +12,7 @@ export default function Settings() {
     })
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !e.defaultPrevented) {
         window.electronAPI.closeWindow()
       }
     }
@@ -198,21 +198,11 @@ export default function Settings() {
           <h3>Global Shortcuts</h3>
           <div className="setting-group">
             <label>Toggle App Visibility</label>
-            <input
-              type="text"
-              value={globalShortcutToggle}
-              onChange={(e) => setGlobalShortcutToggle(e.target.value)}
-              placeholder="e.g. CommandOrControl+Shift+C"
-            />
+            <ShortcutInput value={globalShortcutToggle} onChange={setGlobalShortcutToggle} />
           </div>
           <div className="setting-group">
             <label>New Note (Global)</label>
-            <input
-              type="text"
-              value={globalShortcutNewNote}
-              onChange={(e) => setGlobalShortcutNewNote(e.target.value)}
-              placeholder="e.g. CommandOrControl+Shift+N"
-            />
+            <ShortcutInput value={globalShortcutNewNote} onChange={setGlobalShortcutNewNote} />
           </div>
         </section>
 
@@ -336,5 +326,146 @@ export default function Settings() {
         </button>
       </div>
     </div>
+  )
+}
+
+function ShortcutInput({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [recording, setRecording] = useState(false)
+
+  useEffect(() => {
+    if (recording) {
+      if (window.electronAPI.pauseShortcuts) window.electronAPI.pauseShortcuts()
+    } else {
+      if (window.electronAPI.resumeShortcuts) window.electronAPI.resumeShortcuts()
+    }
+  }, [recording])
+
+  const renderShortcutDisplay = (shortcut: string) => {
+    if (!shortcut) return <span>Click to record</span>
+    const parts = shortcut.split('+')
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {parts.map((part, index) => {
+          let display = part
+          switch (part) {
+            case 'CommandOrControl':
+            case 'Command':
+              display = '⌘'
+              break
+            case 'Control':
+              display = '⌃'
+              break
+            case 'Shift':
+              display = '⇧'
+              break
+            case 'Alt':
+            case 'Option':
+              display = '⌥'
+              break
+            case 'Up':
+              display = '↑'
+              break
+            case 'Down':
+              display = '↓'
+              break
+            case 'Left':
+              display = '←'
+              break
+            case 'Right':
+              display = '→'
+              break
+            case 'Space':
+              display = '␣'
+              break
+          }
+          return (
+            <span key={index} style={{ display: 'flex', alignItems: 'center' }}>
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  minWidth: '24px',
+                  height: '24px',
+                  padding: '0 6px',
+                  background: 'rgba(128,128,128,0.2)',
+                  borderRadius: '6px',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                }}
+              >
+                {display}
+              </span>
+              {index < parts.length - 1 && (
+                <span style={{ margin: '0 4px', opacity: 0.5, fontSize: '14px' }}>+</span>
+              )}
+            </span>
+          )
+        })}
+      </div>
+    )
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!recording) return
+    e.preventDefault()
+
+    if (e.key === 'Escape') {
+      setRecording(false)
+      return
+    }
+
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      onChange('')
+      setRecording(false)
+      return
+    }
+
+    const modifiers = []
+    if (e.metaKey || e.ctrlKey) modifiers.push('CommandOrControl')
+    if (e.altKey) modifiers.push('Alt')
+    if (e.shiftKey) modifiers.push('Shift')
+
+    // Don't record if only a modifier is pressed
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
+      return
+    }
+
+    let key = e.key.toUpperCase()
+    if (key === ' ') key = 'Space'
+    // Map arrows and other special keys
+    if (key === 'ARROWUP') key = 'Up'
+    if (key === 'ARROWDOWN') key = 'Down'
+    if (key === 'ARROWLEFT') key = 'Left'
+    if (key === 'ARROWRIGHT') key = 'Right'
+
+    const shortcut = [...modifiers, key].join('+')
+    onChange(shortcut)
+    setRecording(false)
+  }
+
+  return (
+    <button
+      className="shortcut-input-btn"
+      onClick={() => setRecording(true)}
+      onKeyDown={handleKeyDown}
+      onBlur={() => setRecording(false)}
+      style={{
+        padding: '8px 12px',
+        background: recording ? 'rgba(138, 180, 248, 0.2)' : 'rgba(128,128,128,0.1)',
+        border: recording ? '1px solid #8ab4f8' : '1px solid rgba(128,128,128,0.2)',
+        borderRadius: '6px',
+        cursor: 'pointer',
+        minWidth: '220px',
+        textAlign: 'left',
+        color: 'inherit',
+        fontFamily: 'inherit',
+        fontSize: '13px',
+      }}
+    >
+      {recording ? 'Recording... (Press Esc to cancel)' : renderShortcutDisplay(value)}
+    </button>
   )
 }
