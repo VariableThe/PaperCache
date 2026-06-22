@@ -1,0 +1,44 @@
+# PaperCache
+
+> A floating markdown scratchpad for developers and power users.
+
+PaperCache is an Electron-based application built with an obsession for performance, privacy, and polish. It is designed to be a frictionless note-taking tool that lives in the background and is summoned via a global hotkey.
+
+## Technical Architecture
+- **Framework:** Electron
+- **Frontend:** React, TypeScript, Vite
+- **State Management:** Zustand
+
+## Core Features
+- **Global Hotkey & Background Execution:** No dock icon, no window chrome. It appears instantly over the active window.
+- **Reactive Math & Variables:** Supports defining variables (`/var x = 10`) and inline math evaluation. Includes global variables (`/globvar`).
+- **Inline AI Integration:** Users can type `/ai <prompt>` to insert AI responses directly into the editor using OpenAI, OpenRouter, or local LLMs (like Ollama).
+- **Tasks & Reminders:** Built-in task tracking with due dates (`/task @ 1d2h`) and a unified Tasks view.
+- **Graph View:** Visualizes connections between notes (`Cmd+G`).
+- **Interactive Elements:** Auto-highlighting of hex colors/dates, interactive checkboxes (`/check`).
+- **Tagging & Folders:** Uses `!tagname` for tags and `/` in note titles for folders.
+
+## Codebase Map
+- `/electron`: Contains the Electron main process code and IPC setup.
+  - `preload.ts`: The IPC bridge. **Must always be updated in tandem with `src/types.d.ts`.**
+- `/src`: Contains the React renderer code.
+  - `types.d.ts`: Contains IPC channel typings.
+- `/tests`: Test files for vitest.
+
+## AI Agent Rules (Strict Constraints)
+If you are an AI coding assistant working on this repository, you **must** adhere to the following rules:
+1. **Pull Requests:** Never push to `main` directly. Use feature branches and PRs.
+2. **Pre-PR Checks:** Always run `npm run lint` and `npx vitest run`.
+3. **Preload/Types Contract:** Never modify `electron/preload.ts` or `src/types.d.ts` in isolation.
+4. **Secrets:** API keys must live in Electron's `safeStorage`.
+5. **Zustand:** Use slice subscriptions (`state => state.x`), never subscribe to the whole store.
+6. **IPC Listeners:** All `ipcRenderer.on` registrations in `preload.ts` must return an unsubscribe function.
+7. **Lazy Loading:** Dynamic `import()` for dependencies over 1MB unpacked.
+8. **Timers:** No `setInterval`. Use targeted `setTimeout` chains or event-driven patterns.
+9. **Security Context:** `contextIsolation: true` and `nodeIntegration: false` are non-negotiable.
+
+## Useful Documentation
+- [AGENTS.md](.agents/AGENTS.md) - Detailed rules for AI coding agents.
+- [PHILOSOPHY.md](PHILOSOPHY.md) - The core philosophy behind the app.
+- [PERFORMANCE_AUDIT.md](PERFORMANCE_AUDIT.md) - Performance considerations and benchmarks.
+- [features.md](features.md) - Exhaustive list of features.
