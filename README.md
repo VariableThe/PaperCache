@@ -49,7 +49,13 @@ brew install --cask papercache
 
 **Direct download:** grab the latest `.app` or `.exe` from [Releases](https://github.com/VariableThe/PaperCache/releases).
 
-> If macOS blocks the app, run: `xattr -cr /Applications/PaperCache.app`
+⚠️ **Note on macOS Gatekeeper ("App is damaged" error)** Because PaperCache is an open-source utility and is not code-signed with a paid Apple Developer ID, macOS will apply a quarantine flag to the application upon manual download, throwing a false "damaged app" warning.
+
+To fix this, simply open your Terminal and run the following command to strip the quarantine flag:
+
+```bash
+xattr -cr /Applications/PaperCache.app
+```
 
 ---
 
