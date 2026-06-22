@@ -332,6 +332,39 @@ export default function Settings() {
 function ShortcutInput({ value, onChange }: { value: string; onChange: (val: string) => void }) {
   const [recording, setRecording] = useState(false)
 
+  const formatShortcutDisplay = (shortcut: string) => {
+    if (!shortcut) return 'Click to record'
+    return shortcut
+      .split('+')
+      .map((part) => {
+        switch (part) {
+          case 'CommandOrControl':
+          case 'Command':
+            return '⌘'
+          case 'Control':
+            return '⌃'
+          case 'Shift':
+            return '⇧'
+          case 'Alt':
+          case 'Option':
+            return '⌥'
+          case 'Up':
+            return '↑'
+          case 'Down':
+            return '↓'
+          case 'Left':
+            return '←'
+          case 'Right':
+            return '→'
+          case 'Space':
+            return '␣'
+          default:
+            return part
+        }
+      })
+      .join(' ')
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!recording) return
     e.preventDefault()
@@ -389,7 +422,7 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
         fontSize: '13px',
       }}
     >
-      {recording ? 'Recording... (Press Esc to cancel)' : value || 'Click to record'}
+      {recording ? 'Recording... (Press Esc to cancel)' : formatShortcutDisplay(value)}
     </button>
   )
 }
