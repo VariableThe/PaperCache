@@ -36,31 +36,34 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Install dependencies (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev
+
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          
       - run: npm ci
         
-      - run: npm run build
-      
-      - name: Build Electron app
-        run: npx electron-builder
+      - name: Build and Upload Tauri App
+        uses: tauri-apps/tauri-action@v0
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Upload Release Assets
-        uses: softprops/action-gh-release@v3
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tag_name: ${{ needs.create-tag.outputs.new_tag }}
-          fail_on_unmatched_files: false
-          files: |
-            release/*.zip
-            release/*.dmg
-            release/*.exe
-            release/*.AppImage
-            release/*.deb
-            release/*.yml
-            release/*.blockmap
+          tagName: ${{ needs.create-tag.outputs.new_tag }}
+          releaseName: 'PaperCache ${{ needs.create-tag.outputs.new_tag }}'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: false
+          prerelease: false
 
   update-homebrew:
     needs: [create-tag, build-and-release]
@@ -73,22 +76,23 @@ jobs:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
 
-      - name: Download macOS ZIP
+      - name: Download macOS DMG
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${{ needs.create-tag.outputs.new_version }}
-          gh release download v$VERSION --pattern "*.zip" --repo $GITHUB_REPOSITORY
+          gh release download v$VERSION --pattern "*.dmg" --repo $GITHUB_REPOSITORY
           
-          # Calculate SHA256 of the downloaded ZIP
-          ZIP_FILE=$(ls *.zip | head -n 1)
-          SHA256=$(shasum -a 256 "$ZIP_FILE" | awk '{ print $1 }')
+          # Calculate SHA256 of the downloaded DMG
+          DMG_FILE=$(ls *.dmg | head -n 1)
+          SHA256=$(shasum -a 256 "$DMG_FILE" | awk '{ print $1 }')
           
           # Update the rb file
           cd homebrew-tap
           sed -i '' "s/version \".*\"/version \"$VERSION\"/" Casks/papercache.rb
           sed -i '' "s/sha256 arm: * \".*\"/sha256 arm:   \"$SHA256\"/" Casks/papercache.rb
           sed -i '' "s/PaperCache-[0-9]*\.[0-9]*\.[0-9]*-/PaperCache-#{version}-/g" Casks/papercache.rb
+          sed -i '' "s/\.zip/\.dmg/g" Casks/papercache.rb
           
           # Commit and Push
           git config user.name "github-actions[bot]"

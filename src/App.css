@@ -25,7 +25,6 @@ body {
 }
 
 .drag-region {
-  -webkit-app-region: drag;
   height: var(--header-height, 32px);
   padding: 0 16px;
   box-sizing: border-box;
@@ -40,7 +39,6 @@ body {
 }
 
 .note-title {
-  -webkit-app-region: no-drag;
   cursor: pointer;
 }
 
@@ -49,7 +47,6 @@ body {
 }
 
 .rename-input {
-  -webkit-app-region: no-drag;
   background: rgba(255, 255, 255, 0.1);
   color: inherit;
   border: 1px solid rgba(128, 128, 128, 0.5);
@@ -62,7 +59,6 @@ body {
 }
 
 .settings-btn-container {
-  -webkit-app-region: no-drag;
 }
 
 .open-settings-btn {
@@ -78,7 +74,6 @@ body {
 }
 
 .theme-selector {
-  -webkit-app-region: no-drag;
 }
 
 .theme-selector button {
@@ -132,57 +127,119 @@ body {
   box-sizing: border-box !important;
 }
 
-/* Minimal Custom Search Panel */
+/* Premium Floating Search Panel */
+.cm-panels-top {
+  position: absolute !important;
+  top: 12px !important;
+  right: 12px !important;
+  z-index: 100 !important;
+  border: none !important;
+  background: transparent !important;
+}
+
 .cm-panel.cm-search {
-  background: var(--bg-color) !important;
-  color: var(--text-color) !important;
-  border-bottom: 1px solid rgba(128, 128, 128, 0.1) !important;
-  padding: 8px 16px !important;
+  background: rgba(128, 128, 128, 0.1) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1px solid rgba(128, 128, 128, 0.2) !important;
+  border-radius: 8px !important;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.05) !important;
+  padding: 6px 10px !important;
   font-family: inherit !important;
-  font-size: 12px;
+  font-size: 11px !important;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px !important;
   align-items: center;
+  color: var(--text-color) !important;
+  animation: slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  max-width: 400px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .cm-panel.cm-search input {
-  background: rgba(128, 128, 128, 0.1);
-  border: 1px solid rgba(128, 128, 128, 0.2);
+  background: rgba(128, 128, 128, 0.08);
+  border: 1px solid rgba(128, 128, 128, 0.15);
   color: inherit;
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: 4px;
   outline: none;
+  font-size: 11px;
+  transition: all 0.2s ease;
+  width: 120px;
+}
+
+.cm-panel.cm-search input:focus {
+  background: rgba(128, 128, 128, 0.15);
+  border-color: rgba(128, 128, 128, 0.3);
+  box-shadow: 0 0 0 2px rgba(128, 128, 128, 0.1);
 }
 
 .cm-panel.cm-search button {
   background: rgba(128, 128, 128, 0.1);
-  border: 1px solid rgba(128, 128, 128, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.15);
   color: inherit;
   padding: 4px 8px;
   border-radius: 4px;
   cursor: pointer;
-  text-transform: lowercase;
+  text-transform: capitalize;
+  font-size: 11px;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .cm-panel.cm-search button:hover {
   background: rgba(128, 128, 128, 0.2);
 }
 
+.cm-panel.cm-search button:active {
+  background: rgba(128, 128, 128, 0.25);
+}
+
 .cm-panel.cm-search label {
-  font-size: 11px;
-  opacity: 0.7;
+  font-size: 10px;
+  opacity: 0.8;
   display: flex;
   align-items: center;
   gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cm-panel.cm-search label input[type='checkbox'] {
+  accent-color: var(--text-color);
+  cursor: pointer;
+  margin: 0;
 }
 
 .cm-search-close {
   cursor: pointer;
-  opacity: 0.7;
+  opacity: 0.5;
+  padding: 2px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: 2px;
 }
+
 .cm-search-close:hover {
   opacity: 1;
+  background: rgba(128, 128, 128, 0.15);
 }
 
 .cm-copy-button {
@@ -283,7 +340,6 @@ body {
   justify-content: center;
   align-items: flex-start;
   padding-top: 20vh;
-  -webkit-app-region: no-drag;
 }
 
 .note-search-modal {

@@ -5,6 +5,7 @@ import { search } from '@codemirror/search'
 import { markdown } from '@codemirror/lang-markdown'
 import { syntaxHighlighting } from '@codemirror/language'
 import { insertTab, indentLess } from '@codemirror/commands'
+import { confirm } from '@tauri-apps/plugin-dialog'
 
 import { mdHighlighting } from './matchers'
 import { numberPlugin, symbolPlugin, aiPlugin, mathPlugin, decomposedPlugins } from './plugins'
@@ -22,12 +23,21 @@ export function useEditorExtensions() {
         alert('Files in the commands folder cannot be deleted.')
         return true
       }
-      if (confirm('Delete this note?')) {
-        window.electronAPI.deleteNote(note.id)
-        state.setNotes((prev: Note[]) => prev.filter((n: Note) => n.id !== note.id))
-        if (state.currentNoteIndex >= state.notes.length - 1)
-          state.setCurrentNoteIndex(Math.max(0, state.notes.length - 2))
+      const doDelete = async () => {
+        await window.electronAPI.setDialogOpen(true)
+        const confirmed = await confirm('Delete this note?', {
+          title: 'PaperCache',
+          kind: 'warning',
+        })
+        await window.electronAPI.setDialogOpen(false)
+        if (confirmed) {
+          window.electronAPI.deleteNote(note.id)
+          state.setNotes((prev: Note[]) => prev.filter((n: Note) => n.id !== note.id))
+          if (state.currentNoteIndex >= state.notes.length - 1)
+            state.setCurrentNoteIndex(Math.max(0, state.notes.length - 2))
+        }
       }
+      doDelete()
     }
     return true
   }
@@ -145,7 +155,7 @@ export function useEditorExtensions() {
                     const completion: any = await window.electronAPI.openAIChat({
                       model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
                       messages: messages,
-                      baseURL: finalBaseUrl || '',
+                      baseUrl: finalBaseUrl || '',
                     })
 
                     let response: string

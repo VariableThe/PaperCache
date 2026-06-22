@@ -26,3 +26,8 @@ dist-electron
 release
 *.env
 coverage/
+
+# Rust and Tauri build outputs
+target/
+src-tauri/target/
+src-tauri/gen/

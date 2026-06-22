@@ -65,10 +65,11 @@ xattr -cr /Applications/PaperCache.app
 git clone https://github.com/VariableThe/PaperCache.git
 cd PaperCache
 npm install
-npm run dev
+npm run tauri dev # for local development
+npm run tauri build # for production bundling
 ```
 
-Built with Electron, React, TypeScript, and Vite.
+Built with Tauri, Rust, React, TypeScript, and Vite.
 
 ---
 

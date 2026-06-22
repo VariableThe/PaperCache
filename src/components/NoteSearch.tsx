@@ -1,5 +1,6 @@
 import { useAppStore } from '../store/useAppStore'
 import { getFolderColor } from '../utils'
+import { confirm } from '@tauri-apps/plugin-dialog'
 
 export function NoteSearch() {
   const notes = useAppStore((state) => state.notes)
@@ -64,21 +65,30 @@ export function NoteSearch() {
                   setShowNoteActionMenu(false)
                   return
                 }
-                if (confirm('Delete this note?')) {
-                  window.electronAPI.deleteNote(selNote.id).then((success) => {
-                    if (success) {
-                      setNotes((prev) => prev.filter((note) => note.id !== selNote.id))
-                      const selIdx = notes.findIndex((n) => n.id === selNote.id)
-                      const newIdx =
-                        currentNoteIndex >= selIdx && currentNoteIndex > 0
-                          ? currentNoteIndex - 1
-                          : currentNoteIndex
-                      setCurrentNoteIndex(newIdx)
-                      setShowNoteSearch(false)
-                      setShowNoteActionMenu(false)
-                    }
+                const doDelete = async () => {
+                  await window.electronAPI.setDialogOpen(true)
+                  const confirmed = await confirm('Delete this note?', {
+                    title: 'PaperCache',
+                    kind: 'warning',
                   })
+                  await window.electronAPI.setDialogOpen(false)
+                  if (confirmed) {
+                    window.electronAPI.deleteNote(selNote.id).then((success) => {
+                      if (success) {
+                        setNotes((prev) => prev.filter((note) => note.id !== selNote.id))
+                        const selIdx = notes.findIndex((n) => n.id === selNote.id)
+                        const newIdx =
+                          currentNoteIndex >= selIdx && currentNoteIndex > 0
+                            ? currentNoteIndex - 1
+                            : currentNoteIndex
+                        setCurrentNoteIndex(newIdx)
+                        setShowNoteSearch(false)
+                        setShowNoteActionMenu(false)
+                      }
+                    })
+                  }
                 }
+                doDelete()
               } else if (actionMenuIndex === 1) {
                 const blob = new Blob([selNote.content], { type: 'text/markdown' })
                 const url = URL.createObjectURL(blob)
@@ -217,21 +227,30 @@ export function NoteSearch() {
                           setShowNoteActionMenu(false)
                           return
                         }
-                        if (confirm('Delete this note?')) {
-                          window.electronAPI.deleteNote(n.id).then((success) => {
-                            if (success) {
-                              setNotes((prev) => prev.filter((note) => note.id !== n.id))
-                              const selIdx = notes.findIndex((note) => note.id === n.id)
-                              const newIdx =
-                                currentNoteIndex >= selIdx && currentNoteIndex > 0
-                                  ? currentNoteIndex - 1
-                                  : currentNoteIndex
-                              setCurrentNoteIndex(newIdx)
-                              setShowNoteSearch(false)
-                              setShowNoteActionMenu(false)
-                            }
+                        const doDelete = async () => {
+                          await window.electronAPI.setDialogOpen(true)
+                          const confirmed = await confirm('Delete this note?', {
+                            title: 'PaperCache',
+                            kind: 'warning',
                           })
+                          await window.electronAPI.setDialogOpen(false)
+                          if (confirmed) {
+                            window.electronAPI.deleteNote(n.id).then((success) => {
+                              if (success) {
+                                setNotes((prev) => prev.filter((note) => note.id !== n.id))
+                                const selIdx = notes.findIndex((note) => note.id === n.id)
+                                const newIdx =
+                                  currentNoteIndex >= selIdx && currentNoteIndex > 0
+                                    ? currentNoteIndex - 1
+                                    : currentNoteIndex
+                                setCurrentNoteIndex(newIdx)
+                                setShowNoteSearch(false)
+                                setShowNoteActionMenu(false)
+                              }
+                            })
+                          }
                         }
+                        doDelete()
                       }}
                     >
                       Delete
