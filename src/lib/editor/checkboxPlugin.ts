@@ -66,6 +66,7 @@ export const checkboxPlugin = ViewPlugin.fromClass(
         const ranges = decos.map((d) => d.deco.range(d.from, d.to))
         return Decoration.set(ranges, true)
       } catch (e) {
+        // eslint-disable-next-line no-console
         console.error('checkboxPlugin error:', e)
         return Decoration.none
       }

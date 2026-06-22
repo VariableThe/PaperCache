@@ -152,11 +152,14 @@ export function useEditorExtensions() {
 
                     messages.push({ role: 'user', content: finalPrompt })
 
-                    const completion: any = await window.electronAPI.openAIChat({
+                    const completion = (await window.electronAPI.openAIChat({
                       model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
                       messages: messages,
                       baseUrl: finalBaseUrl || '',
-                    })
+                    })) as {
+                      choices?: Array<{ message?: { content?: string } }>
+                      error?: { message?: string }
+                    }
 
                     let response: string
                     if (completion.choices && completion.choices.length > 0) {

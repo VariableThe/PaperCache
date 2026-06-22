@@ -26,7 +26,7 @@ pub fn get_safe_path(id: &str) -> Result<PathBuf, String> {
     
     let parent = target.parent().ok_or("Invalid path parent")?;
     if !parent.exists() {
-        fs::create_dir_all(&parent).map_err(|e| e.to_string())?;
+        fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
     let canonical_parent = parent.canonicalize().map_err(|e| e.to_string())?;
     

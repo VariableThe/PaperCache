@@ -8,6 +8,7 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 import { tauriApi } from './api'
 window.electronAPI = tauriApi
 
+// eslint-disable-next-line react-refresh/only-export-components
 function Root() {
   const [hash, setHash] = useState(window.location.hash)
   const [migrated, setMigrated] = useState(false)
@@ -29,6 +30,7 @@ function Root() {
             localStorage.removeItem('papercache-apikey')
           }
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.error('Failed to migrate plain API key', e)
         }
       }
@@ -48,6 +50,7 @@ function Root() {
             }
           }
         } catch (e) {
+          // eslint-disable-next-line no-console
           console.error('Failed to migrate secure API key', e)
         }
       }
