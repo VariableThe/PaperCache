@@ -88,8 +88,7 @@ Built with Tauri, Rust, React, TypeScript, and Vite.
 | `Cmd+H`       | Highlight selected text                  |
 | `Cmd+E`       | Export note                              |
 | `Cmd+Click`   | Follow internal link                     |
-| `Cmd + / -`   | Zoom in / out                            |
-| `Cmd + 0`     | Reset zoom                               |
+
 | `Esc`         | Close menus or modals                    |
 
 ---
