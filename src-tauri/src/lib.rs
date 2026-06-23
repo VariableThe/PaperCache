@@ -52,7 +52,16 @@ pub fn run() {
             use tauri::Manager;
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(target_os = "macos")]
-                crate::macos::set_move_to_active_space(&window);
+                {
+                    crate::macos::set_move_to_active_space(&window);
+                    
+                    // Fix for macOS frameless window walking down on restart
+                    // tauri-plugin-window-state restores position with titlebar offset
+                    if let Ok(mut pos) = window.outer_position() {
+                        pos.y = pos.y.saturating_sub(28);
+                        let _ = window.set_position(tauri::Position::Physical(pos));
+                    }
+                }
 
                 let dialog_state = app.state::<crate::DialogState>();
                 let is_dialog_open = dialog_state.is_open.clone();
