@@ -350,7 +350,14 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
     if (!shortcut) return <span>Click to record</span>
     const parts = shortcut.split('+')
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '100%',
+          justifyContent: 'space-evenly',
+        }}
+      >
         {parts.map((part, index) => {
           let display = part
           switch (part) {
@@ -417,6 +424,8 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!recording) return
     e.preventDefault()
+    e.stopPropagation()
+    e.nativeEvent.stopImmediatePropagation()
 
     if (e.key === 'Escape') {
       setRecording(false)
@@ -465,6 +474,7 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
         borderRadius: '6px',
         cursor: 'pointer',
         minWidth: '220px',
+        margin: '0 auto',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
