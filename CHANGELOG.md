@@ -65,6 +65,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v0.3.0] - Skipped
+
+_This version was not released._
+
+---
+
 ## [v0.2.0] - 2026-06-20
 
 ### Highlights
