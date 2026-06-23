@@ -81,10 +81,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${{ needs.create-tag.outputs.new_version }}
-          gh release download v$VERSION --pattern "*aarch64.tar.gz" --repo $GITHUB_REPOSITORY
+          gh release download v$VERSION --pattern "*aarch64.app.tar.gz" --repo $GITHUB_REPOSITORY
           
           # Calculate SHA256 of the downloaded archive
-          APP_FILE=$(ls *aarch64.tar.gz | head -n 1)
+          APP_FILE=$(ls *aarch64.app.tar.gz | head -n 1)
           SHA256=$(shasum -a 256 "$APP_FILE" | awk '{ print $1 }')
           
           # Update the rb file
