@@ -55,6 +55,11 @@ fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) {
             } else if path.is_file() {
                 let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
                 if ext == "md" || ext == "json" {
+                    // Ignore legacy Electron window-state files
+                    if path.file_name().and_then(|n| n.to_str()) == Some("window-state.json") {
+                        continue;
+                    }
+
                     if let Ok(content) = fs::read_to_string(&path) {
                         let metadata = fs::metadata(&path).ok();
                         let mtime = metadata
