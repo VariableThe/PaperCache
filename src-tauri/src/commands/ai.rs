@@ -6,7 +6,11 @@ const SERVICE_NAME: &str = "com.variablethe.papercache";
 const DEFAULT_BASE_URL: &str = "https://api.openai.com/v1";
 
 #[tauri::command]
-pub async fn openai_chat(model: String, messages: Vec<serde_json::Value>, base_url: String) -> Result<serde_json::Value, String> {
+pub async fn openai_chat(
+    model: String,
+    messages: Vec<serde_json::Value>,
+    base_url: String,
+) -> Result<serde_json::Value, String> {
     if model.trim().is_empty() {
         return Err("Invalid model provided".into());
     }
@@ -16,7 +20,8 @@ pub async fn openai_chat(model: String, messages: Vec<serde_json::Value>, base_u
 
     let entry = Entry::new(SERVICE_NAME, "openai_api_key")
         .map_err(|e| format!("Failed to access keyring: {}", e))?;
-    let api_key = entry.get_password()
+    let api_key = entry
+        .get_password()
         .map_err(|_| "API key not found. Please set it in settings.".to_string())?;
 
     let client = Client::new();
@@ -35,7 +40,8 @@ pub async fn openai_chat(model: String, messages: Vec<serde_json::Value>, base_u
         "messages": messages
     });
 
-    let response = client.post(&base)
+    let response = client
+        .post(&base)
         .header("Authorization", format!("Bearer {}", api_key))
         .header("Content-Type", "application/json")
         .header("HTTP-Referer", "https://github.com/papercache/papercache")
@@ -47,9 +53,18 @@ pub async fn openai_chat(model: String, messages: Vec<serde_json::Value>, base_u
 
     if !response.status().is_success() {
         let status = response.status();
-        let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-        return Err(format!("API request failed with status {}: {}", status, error_text));
+        let error_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        return Err(format!(
+            "API request failed with status {}: {}",
+            status, error_text
+        ));
     }
 
-    response.json().await.map_err(|e| format!("Failed to parse API response: {}", e))
+    response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse API response: {}", e))
 }

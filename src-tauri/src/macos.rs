@@ -1,15 +1,4 @@
-#[cfg(target_os = "macos")]
-use cocoa::base::id;
-
-#[cfg(target_os = "macos")]
-pub fn set_shadow(window: &tauri::WebviewWindow, enable: bool) {
-    use cocoa::base::YES;
-    use cocoa::base::NO;
-    let ns_window = window.ns_window().unwrap() as id;
-    unsafe {
-        let _: () = msg_send![ns_window, setHasShadow: if enable { YES } else { NO }];
-    }
-}
+#![allow(unexpected_cfgs)]
 
 #[cfg(target_os = "macos")]
 use tauri::{AppHandle, Emitter};
@@ -46,7 +35,8 @@ pub fn setup_power_monitor(app_handle: AppHandle) {
             Some(cls) => cls,
             None => {
                 let superclass = class!(NSObject);
-                let mut decl = ClassDecl::new(class_name, superclass).expect("Failed to declare class");
+                let mut decl =
+                    ClassDecl::new(class_name, superclass).expect("Failed to declare class");
 
                 decl.add_ivar::<*mut c_void>("app_handle");
 

@@ -9,7 +9,7 @@ export interface Note {
 interface AppState {
   notes: Note[]
   currentNoteIndex: number
-  zoomLevel: number
+  themePreset: 'grid-light' | 'grid-dark' | 'blueprint' | 'glass'
 
   // UI state
   showGraphView: boolean
@@ -23,10 +23,11 @@ interface AppState {
   showMainActionMenu: boolean
   actionMenuIndex: number
   showSettingsModal: boolean
+  isRecordingShortcut: boolean
 
   setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void
   setCurrentNoteIndex: (index: number) => void
-  setZoomLevel: (zoom: number | ((prev: number) => number)) => void
+  setThemePreset: (preset: 'grid-light' | 'grid-dark' | 'blueprint' | 'glass') => void
 
   setShowGraphView: (show: boolean | ((prev: boolean) => boolean)) => void
   setShowRemindersView: (show: boolean | ((prev: boolean) => boolean)) => void
@@ -39,12 +40,14 @@ interface AppState {
   setShowMainActionMenu: (show: boolean | ((prev: boolean) => boolean)) => void
   setActionMenuIndex: (index: number | ((prev: number) => number)) => void
   setShowSettingsModal: (show: boolean) => void
+  setIsRecordingShortcut: (isRecording: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => ({
   notes: [],
   currentNoteIndex: 0,
-  zoomLevel: Number(localStorage.getItem('papercache-zoom')) || 1,
+  themePreset:
+    (localStorage.getItem('papercache-theme') as AppState['themePreset']) || 'grid-light',
 
   showGraphView: false,
   showRemindersView: false,
@@ -57,16 +60,14 @@ export const useAppStore = create<AppState>((set) => ({
   showMainActionMenu: false,
   actionMenuIndex: 0,
   showSettingsModal: false,
+  isRecordingShortcut: false,
 
   setNotes: (notes) =>
     set((state) => ({
       notes: typeof notes === 'function' ? notes(state.notes) : notes,
     })),
   setCurrentNoteIndex: (currentNoteIndex) => set({ currentNoteIndex }),
-  setZoomLevel: (zoomLevel) =>
-    set((state) => ({
-      zoomLevel: typeof zoomLevel === 'function' ? zoomLevel(state.zoomLevel) : zoomLevel,
-    })),
+  setThemePreset: (themePreset) => set({ themePreset }),
 
   setShowGraphView: (showGraphView) =>
     set((state) => ({
@@ -107,4 +108,5 @@ export const useAppStore = create<AppState>((set) => ({
           : actionMenuIndex,
     })),
   setShowSettingsModal: (showSettingsModal) => set({ showSettingsModal }),
+  setIsRecordingShortcut: (isRecordingShortcut) => set({ isRecordingShortcut }),
 }))

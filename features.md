@@ -11,7 +11,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Date & Time Formats**: Highlights standard date (`DD-MM-YYYY` or `YYYY-MM-DD`) and time (`HH:MM` or `HH:MM:SS`) formats into clean, distinct pills.
 - **Interactive Checkboxes**: Type `/check` to create an interactive checkbox widget. Clicking it changes it to `/checked` and visually strikes through the text on that line!
 - **Tasks & Reminders**: Type `/task` to create a task widget. Add a space followed by `@` and a time (like `1d2h`, `tmrw`, or a specific date `YYYY-MM-DD HH:MM`) to set a due date. Press `Cmd+T` (or `Ctrl+T`) to open the Tasks Page, which tracks all tasks, calculates due times, and highlights overdue tasks in red.
-- **Customizable Theming & Fonts**: Customize fonts, text colors, background colors, background images, and individual highlight colors for variables, AI, and math. Supports full dark mode (`grid-dark`, `blueprint`) and custom zoom scaling.
+- **Customizable Theming & Fonts**: Customize fonts, text colors, background colors, background images, and individual highlight colors for variables, AI, and math. Supports full dark mode (`grid-dark`, `blueprint`).
 
 ## Math, Variables, and Calculations
 

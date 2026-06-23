@@ -6,7 +6,6 @@ export function useGlobalHotkey() {
   const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
   const setShowGraphView = useAppStore((state) => state.setShowGraphView)
   const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
-  const setZoomLevel = useAppStore((state) => state.setZoomLevel)
   const setNotes = useAppStore((state) => state.setNotes)
   const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
   const setNoteSearchQuery = useAppStore((state) => state.setNoteSearchQuery)
@@ -17,6 +16,17 @@ export function useGlobalHotkey() {
       const state = useAppStore.getState()
 
       if (e.key === 'Escape') {
+        const isRenaming = useAppStore.getState().isRenaming
+        const actionMenuIndex = useAppStore.getState().actionMenuIndex
+        const isRecordingShortcut = useAppStore.getState().isRecordingShortcut
+
+        if (isRecordingShortcut) return // Do not close app while recording shortcut
+
+        // Close the app if nothing else was open
+        if (!state.showNoteSearch && !isRenaming && actionMenuIndex === 0) {
+          // @ts-expect-error - appWindow is globally injected by Tauri in older setups but we ignore it here
+          window.appWindow?.hide()
+        }
         if (state.showMainActionMenu) {
           e.preventDefault()
           e.stopPropagation()
@@ -89,22 +99,6 @@ export function useGlobalHotkey() {
         e.stopPropagation()
         setShowMainActionMenu((prev) => !prev)
       }
-
-      // Zoom Shortcuts
-      if ((e.metaKey || e.ctrlKey) && (e.key === '=' || e.key === '+' || e.key === '-')) {
-        e.preventDefault()
-        setZoomLevel((prev) => {
-          const newZoom = e.key === '-' ? Math.max(0.5, prev - 0.1) : Math.min(3, prev + 0.1)
-          localStorage.setItem('papercache-zoom', newZoom.toString())
-          return newZoom
-        })
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key === '0') {
-        e.preventDefault()
-        setZoomLevel(1)
-        localStorage.setItem('papercache-zoom', '1')
-      }
     }
 
     // Sync global shortcut on load
@@ -153,6 +147,5 @@ export function useGlobalHotkey() {
     setShowRemindersView,
     setNotes,
     setCurrentNoteIndex,
-    setZoomLevel,
   ])
 }
