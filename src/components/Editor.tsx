@@ -87,6 +87,12 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
     }
   }, [currentNoteIndex])
 
+  useEffect(() => {
+    if (editorRef.current?.view) {
+      MathEvaluator.triggerMathEvaluation(editorRef.current.view)
+    }
+  }, [activeNote.id])
+
   return (
     <div className="editor-container">
       <CodeMirror

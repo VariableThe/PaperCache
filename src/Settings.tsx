@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { SETTINGS_KEYS } from './lib/settingsKeys'
 import { useSettingsStore } from './store/useSettingsStore'
+import { useAppStore } from './store/useAppStore'
 import './Settings.css'
 
 export default function Settings({ onClose }: { onClose?: () => void }) {
@@ -13,7 +14,8 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     })
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !e.defaultPrevented) {
+      const isRecordingShortcut = useAppStore.getState().isRecordingShortcut
+      if (e.key === 'Escape' && !e.defaultPrevented && !isRecordingShortcut) {
         if (onClose) onClose()
         else window.electronAPI.closeWindow()
       }
@@ -336,7 +338,13 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
 }
 
 function ShortcutInput({ value, onChange }: { value: string; onChange: (val: string) => void }) {
-  const [recording, setRecording] = useState(false)
+  const [recording, setRecordingLocal] = useState(false)
+  const setIsRecordingShortcut = useAppStore((state) => state.setIsRecordingShortcut)
+
+  const setRecording = (val: boolean) => {
+    setRecordingLocal(val)
+    setIsRecordingShortcut(val)
+  }
 
   useEffect(() => {
     if (recording) {
@@ -464,7 +472,10 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
   return (
     <button
       className="shortcut-input-btn"
-      onClick={() => setRecording(true)}
+      onClick={(e) => {
+        setRecording(true)
+        e.currentTarget.focus()
+      }}
       onKeyDown={handleKeyDown}
       onBlur={() => setRecording(false)}
       style={{

@@ -18,11 +18,14 @@ export function MainActionMenu() {
     <div
       style={{
         position: 'absolute',
-        top: 16,
-        right: 16,
+        bottom: 32,
+        left: '50%',
+        transform: 'translateX(-50%)',
         display: 'flex',
-        gap: 12,
-        padding: 12,
+        justifyContent: 'space-evenly',
+        width: '60%',
+        minWidth: 400,
+        padding: '12px 24px',
         background: bgType === 'color' ? bgColor : 'rgba(255, 255, 255, 0.8)',
         border: '1px solid rgba(128, 128, 128, 0.2)',
         borderRadius: 8,

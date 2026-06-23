@@ -20,10 +20,7 @@ export const tauriApi: ElectronAPI = {
   openAIChat: (args) => invoke('openai_chat', args),
   setApiKey: (key) => invoke('set_api_key', { key }),
   getApiKeyStatus: () => invoke('get_api_key_status'),
-  checkForUpdates: () => {
-    // eslint-disable-next-line no-console
-    console.warn('Tauri: checkForUpdates disabled for initial build')
-  },
+  checkForUpdates: () => invoke('check_for_updates'),
   onSwipeGesture: () => {
     return () => {}
   },

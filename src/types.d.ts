@@ -11,7 +11,7 @@ export interface ElectronAPI {
   }) => Promise<unknown>
   setApiKey: (key: string) => Promise<boolean>
   getApiKeyStatus: () => Promise<boolean>
-  checkForUpdates: () => void
+  checkForUpdates: () => Promise<void>
   readNote: (id: string) => Promise<string>
   exportNote: (filename: string, content: string) => Promise<boolean>
   setDialogOpen: (open: boolean) => Promise<void>

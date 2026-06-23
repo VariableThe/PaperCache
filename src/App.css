@@ -116,6 +116,7 @@ body {
 .cm-editor {
   background: transparent !important;
   outline: none !important;
+  cursor: text !important;
 }
 
 .cm-scroller {
@@ -460,7 +461,7 @@ body {
 
 .cm-custom-clickable-link,
 .cm-custom-clickable-link * {
-  cursor: pointer;
+  cursor: pointer !important;
   color: #3b82f6 !important; /* Blue */
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -471,7 +472,7 @@ body {
 
 .cm-custom-file-link,
 .cm-custom-file-link * {
-  cursor: pointer;
+  cursor: pointer !important;
   color: #f59e0b !important; /* Amber/Orange */
   text-decoration: underline;
   text-underline-offset: 2px;

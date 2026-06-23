@@ -3,9 +3,9 @@
 extern crate objc;
 
 mod commands;
-mod tray;
 #[cfg(target_os = "macos")]
 mod macos;
+mod tray;
 
 use commands::shortcuts::GlobalShortcutState;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -30,7 +30,14 @@ pub fn run() {
         .manage(DialogState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_window_state::Builder::default().with_state_flags(tauri_plugin_window_state::StateFlags::SIZE).build())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .with_state_flags(
+                    tauri_plugin_window_state::StateFlags::POSITION
+                        | tauri_plugin_window_state::StateFlags::SIZE,
+                )
+                .build(),
+        )
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
@@ -40,15 +47,15 @@ pub fn run() {
         .setup(|app| {
             commands::fs::run_onboarding();
             tray::create_tray(app).expect("Failed to create tray");
-            
+
             use tauri::Manager;
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(target_os = "macos")]
                 crate::macos::set_move_to_active_space(&window);
-                
+
                 let dialog_state = app.state::<crate::DialogState>();
                 let is_dialog_open = dialog_state.is_open.clone();
-                
+
                 window.on_window_event({
                     let w = window.clone();
                     move |event| match event {
@@ -56,7 +63,9 @@ pub fn run() {
                             api.prevent_close();
                             let _ = w.hide();
                         }
-                        tauri::WindowEvent::Focused(focused) if !focused && !is_dialog_open.load(Ordering::SeqCst) => {
+                        tauri::WindowEvent::Focused(focused)
+                            if !focused && !is_dialog_open.load(Ordering::SeqCst) =>
+                        {
                             let _ = w.hide();
                         }
                         _ => {}
@@ -65,13 +74,13 @@ pub fn run() {
             } else {
                 eprintln!("WARNING: 'main' window not found during setup");
             }
-            
+
             #[cfg(target_os = "macos")]
             macos::hide_dock_icon();
-            
+
             #[cfg(target_os = "macos")]
             macos::setup_power_monitor(app.handle().clone());
-            
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -87,7 +96,7 @@ pub fn run() {
             commands::system::open_external,
             commands::system::open_file,
             commands::system::set_launch_at_startup,
-            // commands::system::check_for_updates,
+            commands::system::check_for_updates,
             commands::keychain::set_api_key,
             commands::keychain::get_api_key_status,
             commands::keychain::get_api_key,

@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_dialog::DialogExt;
 
@@ -23,17 +23,17 @@ pub fn get_papercache_dir() -> Result<PathBuf, String> {
 pub fn get_safe_path(id: &str) -> Result<PathBuf, String> {
     let base = get_papercache_dir()?;
     let target = base.join(id);
-    
+
     let parent = target.parent().ok_or("Invalid path parent")?;
     if !parent.exists() {
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
     }
     let canonical_parent = parent.canonicalize().map_err(|e| e.to_string())?;
-    
+
     if !canonical_parent.starts_with(&base) {
         return Err("Path traversal detected".to_string());
     }
-    
+
     if target.exists() {
         let canonical_target = target.canonicalize().map_err(|e| e.to_string())?;
         if !canonical_target.starts_with(&base) {
@@ -57,19 +57,17 @@ fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) {
                 if ext == "md" || ext == "json" {
                     if let Ok(content) = fs::read_to_string(&path) {
                         let metadata = fs::metadata(&path).ok();
-                        let mtime = metadata.and_then(|m| m.modified().ok())
+                        let mtime = metadata
+                            .and_then(|m| m.modified().ok())
                             .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
                             .map(|d| d.as_millis() as u64)
                             .unwrap_or(0);
-                        let id = path.strip_prefix(base_path)
+                        let id = path
+                            .strip_prefix(base_path)
                             .unwrap_or(&path)
                             .to_string_lossy()
                             .to_string();
-                        notes.push(Note {
-                            id,
-                            content,
-                            mtime,
-                        });
+                        notes.push(Note { id, content, mtime });
                     }
                 }
             }
@@ -83,7 +81,10 @@ fn clean_empty_parents(file_path: &Path, base: &Path) {
         if parent == base || !parent.starts_with(base) {
             break;
         }
-        if fs::read_dir(parent).map(|mut i| i.next().is_none()).unwrap_or(false) {
+        if fs::read_dir(parent)
+            .map(|mut i| i.next().is_none())
+            .unwrap_or(false)
+        {
             if fs::remove_dir(parent).is_err() {
                 break;
             }
@@ -122,11 +123,11 @@ pub fn delete_note(id: String) -> Result<bool, String> {
     }
     let path = get_safe_path(&id)?;
     fs::remove_file(&path).map_err(|e| e.to_string())?;
-    
+
     if let Ok(base) = get_papercache_dir() {
         clean_empty_parents(&path, &base);
     }
-    
+
     Ok(true)
 }
 
@@ -135,11 +136,11 @@ pub fn rename_note(old_id: String, new_id: String) -> Result<bool, String> {
     let old_path = get_safe_path(&old_id)?;
     let new_path = get_safe_path(&new_id)?;
     fs::rename(&old_path, &new_path).map_err(|e| e.to_string())?;
-    
+
     if let Ok(base) = get_papercache_dir() {
         clean_empty_parents(&old_path, &base);
     }
-    
+
     Ok(true)
 }
 
@@ -152,24 +153,31 @@ pub async fn export_note(
 ) -> Result<bool, String> {
     use std::sync::atomic::Ordering;
     state.is_open.store(true, Ordering::SeqCst);
-    
+
     let state_clone = state.is_open.clone();
     let (tx, rx) = tokio::sync::oneshot::channel();
-    
-    app.dialog().file().set_file_name(&filename).save_file(move |file_path| {
-        state_clone.store(false, Ordering::SeqCst);
-        let res = if let Some(path) = file_path {
-            let sys_path = path.into_path().map_err(|_| "Invalid path from dialog".to_string());
-            match sys_path {
-                Ok(p) => fs::write(p, content).map(|_| true).map_err(|e| e.to_string()),
-                Err(e) => Err(e),
-            }
-        } else {
-            Ok(false)
-        };
-        let _ = tx.send(res);
-    });
-    
+
+    app.dialog()
+        .file()
+        .set_file_name(&filename)
+        .save_file(move |file_path| {
+            state_clone.store(false, Ordering::SeqCst);
+            let res = if let Some(path) = file_path {
+                let sys_path = path
+                    .into_path()
+                    .map_err(|_| "Invalid path from dialog".to_string());
+                match sys_path {
+                    Ok(p) => fs::write(p, content)
+                        .map(|_| true)
+                        .map_err(|e| e.to_string()),
+                    Err(e) => Err(e),
+                }
+            } else {
+                Ok(false)
+            };
+            let _ = tx.send(res);
+        });
+
     rx.await.unwrap_or_else(|_| {
         state.is_open.store(false, Ordering::SeqCst);
         Err("Dialog was closed unexpectedly".to_string())
@@ -177,10 +185,7 @@ pub async fn export_note(
 }
 
 #[tauri::command]
-pub fn set_dialog_open(
-    state: tauri::State<'_, crate::DialogState>,
-    open: bool,
-) {
+pub fn set_dialog_open(state: tauri::State<'_, crate::DialogState>, open: bool) {
     use std::sync::atomic::Ordering;
     state.is_open.store(open, Ordering::SeqCst);
 }
@@ -197,11 +202,17 @@ pub fn run_onboarding() {
             let _ = fs::create_dir_all(&commands_dir);
             let summarize_path = commands_dir.join("summarize.md");
             if !summarize_path.exists() {
-                let _ = fs::write(&summarize_path, "# Summarize\n\nPlease summarize the selected text into 3 bullet points.");
+                let _ = fs::write(
+                    &summarize_path,
+                    "# Summarize\n\nPlease summarize the selected text into 3 bullet points.",
+                );
             }
             let translate_path = commands_dir.join("translate.md");
             if !translate_path.exists() {
-                let _ = fs::write(&translate_path, "# Translate\n\nPlease translate the following text into English.");
+                let _ = fs::write(
+                    &translate_path,
+                    "# Translate\n\nPlease translate the following text into English.",
+                );
             }
         }
     }
