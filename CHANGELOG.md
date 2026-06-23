@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Tauri Migration**: PaperCache has been fully migrated from Electron to Tauri, reducing memory usage, startup time, and application size while preserving existing workflows.
 - The macOS distribution format is now `.tar.gz` and `.app` to circumvent strict macOS 14 runner restrictions with `osascript`. The Homebrew Cask automation pulls the `.tar.gz` bundle.
+- **Keybindings**: Changed default global and internal keybindings from `Ctrl/Cmd` to `Alt` to prevent conflicts with terminal emulators and OS shortcuts.
+- **Window Behavior**: Disabled the "hide on focus loss" behavior so the application acts as a standard window, fixing global shortcut limitations on Wayland compositors (like Hyprland).
 
 ### Fixed
 - Addressed multiple edge-cases with `CodeMirror` state overwrites causing typed text to disappear or duplicate.

@@ -2,6 +2,13 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-23 - (Uncommitted)
+**Change:** fix: shift all keybinds to Alt and disable window auto-hide
+
+**Details/Why:**
+Changed default keybindings across the application from `Ctrl/Cmd` to `Alt` to prevent conflicts. Disabled auto-hide on focus loss in `lib.rs` to allow the app to be used as a persistent window, fixing Wayland shortcut issues.
+
+---
 
 ## 2026-06-23 - a250dce8a
 **Change:** feat: enable auto-updates on startup and add manual check button

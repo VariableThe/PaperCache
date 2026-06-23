@@ -11,10 +11,12 @@ export function useGlobalHotkey() {
   const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
   const setNoteSearchQuery = useAppStore((state) => state.setNoteSearchQuery)
   const setSearchSelectedIndex = useAppStore((state) => state.setSearchSelectedIndex)
+  const isHyprland = useAppStore((state) => state.isHyprland)
 
   useEffect(() => {
     const handleGlobalKeyDown = async (e: KeyboardEvent) => {
       const state = useAppStore.getState()
+      const isMod = isHyprland ? e.altKey : e.metaKey || e.ctrlKey
 
       if (e.key === 'Escape') {
         const isRenaming = useAppStore.getState().isRenaming
@@ -48,19 +50,19 @@ export function useGlobalHotkey() {
       }
 
       // Settings Shortcut
-      if (e.key.toLowerCase() === 's' && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 's' && e.shiftKey && isMod) {
         e.preventDefault()
         useAppStore.getState().setShowSettingsModal(true)
       }
 
       // Graph View Shortcut
-      if (e.key.toLowerCase() === 'g' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 'g' && isMod) {
         e.preventDefault()
         e.stopPropagation()
         setShowGraphView((prev) => !prev)
       }
 
-      if (e.key === 'n' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'n' && isMod) {
         e.preventDefault()
         const id = Date.now() + '.md'
         const newNote = { id, content: '', mtime: Date.now() }
@@ -69,7 +71,7 @@ export function useGlobalHotkey() {
         window.electronAPI.saveNote(id, '')
       }
 
-      if (e.key === 'e' && (e.metaKey || e.ctrlKey)) {
+      if (e.key === 'e' && isMod) {
         e.preventDefault()
         e.stopPropagation()
         const { notes, currentNoteIndex } = useAppStore.getState()
@@ -80,7 +82,7 @@ export function useGlobalHotkey() {
         }
       }
 
-      if (e.key.toLowerCase() === 'p' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 'p' && isMod) {
         e.preventDefault()
         e.stopPropagation()
         setShowNoteSearch(true)
@@ -88,13 +90,13 @@ export function useGlobalHotkey() {
         setSearchSelectedIndex(0)
       }
 
-      if (e.key.toLowerCase() === 't' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 't' && isMod) {
         e.preventDefault()
         e.stopPropagation()
         setShowRemindersView(true)
       }
 
-      if (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)) {
+      if (e.key.toLowerCase() === 'k' && isMod) {
         e.preventDefault()
         e.stopPropagation()
         setShowMainActionMenu((prev) => !prev)
@@ -102,13 +104,13 @@ export function useGlobalHotkey() {
     }
 
     // Sync global shortcut on load
-    const shortcut =
-      localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N'
+    const defaultMod = isHyprland ? 'Alt' : 'CommandOrControl'
+    const shortcut = localStorage.getItem('papercache-shortcut-newnote') || `${defaultMod}+Shift+N`
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('new-note', '', shortcut)
     }
     const toggleShortcut =
-      localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C'
+      localStorage.getItem('papercache-shortcut-toggle') || `${defaultMod}+Shift+C`
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('toggle', '', toggleShortcut)
     }
@@ -147,5 +149,6 @@ export function useGlobalHotkey() {
     setShowRemindersView,
     setNotes,
     setCurrentNoteIndex,
+    isHyprland,
   ])
 }

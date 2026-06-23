@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { SETTINGS_KEYS } from './lib/settingsKeys'
-import { useSettingsStore } from './store/useSettingsStore'
 import { useAppStore } from './store/useAppStore'
+import { useSettingsStore } from './store/useSettingsStore'
 import './Settings.css'
 
 export default function Settings({ onClose }: { onClose?: () => void }) {
@@ -35,11 +35,14 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   )
 
   // Shortcuts
-  const [globalShortcutNewNote, setGlobalShortcutNewNote] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE) || 'CommandOrControl+Shift+N'
+  const isHyprland = useAppStore((state) => state.isHyprland)
+  const defaultMod = isHyprland ? 'Alt' : 'CommandOrControl'
+
+  const [shortcutNewNote, setShortcutNewNote] = useState(
+    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE) || `${defaultMod}+Shift+N`
   )
-  const [globalShortcutToggle, setGlobalShortcutToggle] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TOGGLE) || 'CommandOrControl+Shift+C'
+  const [shortcutToggle, setShortcutToggle] = useState(
+    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TOGGLE) || `${defaultMod}+Shift+C`
   )
 
   // Startup
@@ -100,17 +103,16 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
 
     // Shortcuts
     const oldShortcut =
-      localStorage.getItem('papercache-shortcut-newnote') || 'CommandOrControl+Shift+N'
-    localStorage.setItem('papercache-shortcut-newnote', globalShortcutNewNote)
+      localStorage.getItem('papercache-shortcut-newnote') || `${defaultMod}+Shift+N`
     if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut('new-note', oldShortcut, globalShortcutNewNote)
+      window.electronAPI.updateGlobalShortcut('new-note', oldShortcut, shortcutNewNote)
     }
+    localStorage.setItem('papercache-shortcut-newnote', shortcutNewNote)
 
     const oldToggleShortcut =
-      localStorage.getItem('papercache-shortcut-toggle') || 'CommandOrControl+Shift+C'
-    localStorage.setItem('papercache-shortcut-toggle', globalShortcutToggle)
+      localStorage.getItem('papercache-shortcut-toggle') || `${defaultMod}+Shift+C`
     if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut('toggle', oldToggleShortcut, globalShortcutToggle)
+      window.electronAPI.updateGlobalShortcut('toggle', oldToggleShortcut, shortcutToggle)
     }
 
     // Dispatch storage event manually for the same window to pick it up immediately
@@ -203,11 +205,11 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           <h3>Global Shortcuts</h3>
           <div className="setting-group">
             <label>Toggle App Visibility</label>
-            <ShortcutInput value={globalShortcutToggle} onChange={setGlobalShortcutToggle} />
+            <ShortcutInput value={shortcutToggle} onChange={setShortcutToggle} />
           </div>
           <div className="setting-group">
             <label>New Note (Global)</label>
-            <ShortcutInput value={globalShortcutNewNote} onChange={setGlobalShortcutNewNote} />
+            <ShortcutInput value={shortcutNewNote} onChange={setShortcutNewNote} />
           </div>
         </section>
 

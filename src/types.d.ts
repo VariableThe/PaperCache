@@ -12,6 +12,7 @@ export interface ElectronAPI {
   setApiKey: (key: string) => Promise<boolean>
   getApiKeyStatus: () => Promise<boolean>
   checkForUpdates: () => Promise<void>
+  isHyprland: () => Promise<boolean>
   readNote: (id: string) => Promise<string>
   exportNote: (filename: string, content: string) => Promise<boolean>
   setDialogOpen: (open: boolean) => Promise<void>
