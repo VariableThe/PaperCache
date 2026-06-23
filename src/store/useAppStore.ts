@@ -9,7 +9,7 @@ export interface Note {
 interface AppState {
   notes: Note[]
   currentNoteIndex: number
-  themePreset: 'grid-light' | 'grid-dark' | 'blueprint' | 'glass'
+  themePreset: string
 
   // UI state
   showGraphView: boolean
@@ -27,7 +27,7 @@ interface AppState {
 
   setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void
   setCurrentNoteIndex: (index: number) => void
-  setThemePreset: (preset: 'grid-light' | 'grid-dark' | 'blueprint' | 'glass') => void
+  setThemePreset: (preset: string) => void
 
   setShowGraphView: (show: boolean | ((prev: boolean) => boolean)) => void
   setShowRemindersView: (show: boolean | ((prev: boolean) => boolean)) => void
@@ -46,8 +46,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set) => ({
   notes: [],
   currentNoteIndex: 0,
-  themePreset:
-    (localStorage.getItem('papercache-theme') as AppState['themePreset']) || 'grid-light',
+  themePreset: (localStorage.getItem('papercache-theme') as string) || 'grid-light',
 
   showGraphView: false,
   showRemindersView: false,

@@ -76,19 +76,20 @@ jobs:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: homebrew-tap
 
-      - name: Download macOS DMG
+      - name: Download macOS App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${{ needs.create-tag.outputs.new_version }}
-          gh release download v$VERSION --pattern "*.dmg" --repo $GITHUB_REPOSITORY
+          gh release download v$VERSION --pattern "*aarch64.tar.gz" --repo $GITHUB_REPOSITORY
           
-          # Calculate SHA256 of the downloaded DMG
-          DMG_FILE=$(ls *.dmg | head -n 1)
-          SHA256=$(shasum -a 256 "$DMG_FILE" | awk '{ print $1 }')
+          # Calculate SHA256 of the downloaded archive
+          APP_FILE=$(ls *aarch64.tar.gz | head -n 1)
+          SHA256=$(shasum -a 256 "$APP_FILE" | awk '{ print $1 }')
           
           # Update the rb file
           cd homebrew-tap
+          sed -i '' "s/url .*/url \"https:\/\/github.com\/VariableThe\/PaperCache\/releases\/download\/v$VERSION\/$APP_FILE\"/" Casks/papercache.rb
           sed -i '' "s/version \".*\"/version \"$VERSION\"/" Casks/papercache.rb
           sed -i '' "s/sha256 arm: * \".*\"/sha256 arm:   \"$SHA256\"/" Casks/papercache.rb
           
