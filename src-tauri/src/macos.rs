@@ -3,11 +3,19 @@ use cocoa::base::id;
 
 #[cfg(target_os = "macos")]
 pub fn set_shadow(window: &tauri::WebviewWindow, enable: bool) {
-    use cocoa::base::YES;
-    use cocoa::base::NO;
+    use cocoa::base::{YES, NO};
     let ns_window = window.ns_window().unwrap() as id;
     unsafe {
         let _: () = msg_send![ns_window, setHasShadow: if enable { YES } else { NO }];
+    }
+}
+
+#[cfg(target_os = "macos")]
+pub fn disable_window_cascading(window: &tauri::WebviewWindow) {
+    let ns_window = window.ns_window().unwrap() as id;
+    unsafe {
+        use cocoa::base::NO;
+        let _: () = msg_send![ns_window, setShouldCascadeWindows: NO];
     }
 }
 

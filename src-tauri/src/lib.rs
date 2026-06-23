@@ -46,7 +46,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             crate::macos::set_move_to_active_space(&window);
             #[cfg(target_os = "macos")]
-            crate::macos::set_shadow(&window, true);
+            crate::macos::disable_window_cascading(&window);
             
             let dialog_state = app.state::<crate::DialogState>();
             let is_dialog_open = dialog_state.is_open.clone();
