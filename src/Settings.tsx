@@ -222,6 +222,24 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
               style={{ width: 'auto', marginRight: 'auto' }}
             />
           </div>
+          <div className="setting-group">
+            <label>Auto-Updates</label>
+            <button
+              onClick={() => window.electronAPI.checkForUpdates()}
+              style={{
+                padding: '6px 12px',
+                background: 'rgba(128,128,128,0.1)',
+                border: '1px solid rgba(128,128,128,0.2)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                color: 'inherit',
+                fontFamily: 'inherit',
+                margin: '0 auto',
+              }}
+            >
+              Check for Updates Now
+            </button>
+          </div>
         </section>
 
         <section>
