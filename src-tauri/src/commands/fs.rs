@@ -55,24 +55,24 @@ fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) {
             } else if path.is_file() {
                 let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
                 if ext == "md" || ext == "json" {
-                    // Ignore legacy Electron window-state files
-                    if path.file_name().and_then(|n| n.to_str()) == Some("window-state.json") {
-                        continue;
-                    }
-
-                    if let Ok(content) = fs::read_to_string(&path) {
-                        let metadata = fs::metadata(&path).ok();
-                        let mtime = metadata
-                            .and_then(|m| m.modified().ok())
-                            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                            .map(|d| d.as_millis() as u64)
-                            .unwrap_or(0);
-                        let id = path
-                            .strip_prefix(base_path)
-                            .unwrap_or(&path)
-                            .to_string_lossy()
-                            .to_string();
-                        notes.push(Note { id, content, mtime });
+                    match fs::read_to_string(&path) {
+                        Ok(content) => {
+                            let metadata = fs::metadata(&path).ok();
+                            let mtime = metadata
+                                .and_then(|m| m.modified().ok())
+                                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                                .map(|d| d.as_millis() as u64)
+                                .unwrap_or(0);
+                            let id = path
+                                .strip_prefix(base_path)
+                                .unwrap_or(&path)
+                                .to_string_lossy()
+                                .to_string();
+                            notes.push(Note { id, content, mtime });
+                        }
+                        Err(e) => {
+                            eprintln!("Failed to read file {}: {}", path.display(), e);
+                        }
                     }
                 }
             }

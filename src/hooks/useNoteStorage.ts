@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
-import type { Note } from '../store/useAppStore'
 
 export function useNoteStorage() {
   const notes = useAppStore((state) => state.notes)
@@ -16,7 +15,7 @@ export function useNoteStorage() {
         setNotes(loaded)
         const lastOpenNoteId = localStorage.getItem('papercache-last-open-note')
         if (lastOpenNoteId) {
-          const idx = loaded.findIndex((n: Note) => n.id === lastOpenNoteId)
+          const idx = loaded.findIndex((n) => n.id === lastOpenNoteId)
           if (idx !== -1) {
             setCurrentNoteIndex(idx)
           }

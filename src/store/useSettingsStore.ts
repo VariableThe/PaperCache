@@ -26,23 +26,43 @@ export interface SettingsState {
   setAiColor: (color: string) => void
   setMathColor: (color: string) => void
   setSettings: (
-    settings: Partial<
-      Omit<
-        SettingsState,
-        | 'setSettings'
-        | 'setThemePreset'
-        | 'setFontFamily'
-        | 'setShowRulings'
-        | 'setBgType'
-        | 'setBgColor'
-        | 'setBgImage'
-        | 'setTextColor'
-        | 'setNumColor'
-        | 'setSymColor'
-        | 'setAiColor'
-        | 'setMathColor'
-      >
-    >
+    settings:
+      | Partial<
+          Omit<
+            SettingsState,
+            | 'setSettings'
+            | 'setThemePreset'
+            | 'setFontFamily'
+            | 'setShowRulings'
+            | 'setBgType'
+            | 'setBgColor'
+            | 'setBgImage'
+            | 'setTextColor'
+            | 'setNumColor'
+            | 'setSymColor'
+            | 'setAiColor'
+            | 'setMathColor'
+          >
+        >
+      | ((
+          state: SettingsState
+        ) => Partial<
+          Omit<
+            SettingsState,
+            | 'setSettings'
+            | 'setThemePreset'
+            | 'setFontFamily'
+            | 'setShowRulings'
+            | 'setBgType'
+            | 'setBgColor'
+            | 'setBgImage'
+            | 'setTextColor'
+            | 'setNumColor'
+            | 'setSymColor'
+            | 'setAiColor'
+            | 'setMathColor'
+          >
+        >)
   ) => void
 }
 
@@ -72,7 +92,11 @@ export const useSettingsStore = create<SettingsState>()(
       setSymColor: (symColor) => set({ symColor }),
       setAiColor: (aiColor) => set({ aiColor }),
       setMathColor: (mathColor) => set({ mathColor }),
-      setSettings: (settings) => set((state) => ({ ...state, ...settings })),
+      setSettings: (settings) =>
+        set((state) => ({
+          ...state,
+          ...(typeof settings === 'function' ? settings(state) : settings),
+        })),
     }),
     {
       name: 'papercache-settings-store',

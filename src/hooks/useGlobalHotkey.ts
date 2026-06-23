@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 export function useGlobalHotkey() {
   const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
@@ -24,8 +25,7 @@ export function useGlobalHotkey() {
 
         // Close the app if nothing else was open
         if (!state.showNoteSearch && !isRenaming && actionMenuIndex === 0) {
-          // @ts-expect-error - appWindow is globally injected by Tauri in older setups but we ignore it here
-          window.appWindow?.hide()
+          await getCurrentWindow().hide()
         }
         if (state.showMainActionMenu) {
           e.preventDefault()

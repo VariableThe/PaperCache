@@ -44,10 +44,7 @@ pub fn update_global_shortcut(
                         if is_visible {
                             let _ = window.hide();
                         } else {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                            #[cfg(target_os = "macos")]
-                            crate::macos::force_focus();
+                            crate::window_utils::show_and_focus_window(app);
                         }
                     }
                     let _ = app.emit(&format!("trigger-{}", action_clone), ());
@@ -88,10 +85,7 @@ pub fn resume_shortcuts(app: AppHandle) -> Result<(), String> {
                             if is_visible {
                                 let _ = window.hide();
                             } else {
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                                #[cfg(target_os = "macos")]
-                                crate::macos::force_focus();
+                                crate::window_utils::show_and_focus_window(app);
                             }
                         }
                         let _ = app.emit(&format!("trigger-{}", action_clone), ());

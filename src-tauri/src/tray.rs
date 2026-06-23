@@ -9,8 +9,14 @@ pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show_hide, &quit])?;
 
-    let icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"))
-        .expect("Failed to load tray icon");
+    let icon_result = tauri::image::Image::from_bytes(include_bytes!("../icons/tray.png"));
+    let icon = match icon_result {
+        Ok(icon) => icon,
+        Err(e) => {
+            eprintln!("Failed to load tray icon: {}", e);
+            return Ok(());
+        }
+    };
 
     TrayIconBuilder::new()
         .icon(icon)
@@ -25,10 +31,7 @@ pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                     if is_visible {
                         let _ = window.hide();
                     } else {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                        #[cfg(target_os = "macos")]
-                        crate::macos::force_focus();
+                        crate::window_utils::show_and_focus_window(app);
                     }
                 }
             } else if event.id == "quit" {
@@ -48,10 +51,7 @@ pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
                     if is_visible {
                         let _ = window.hide();
                     } else {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                        #[cfg(target_os = "macos")]
-                        crate::macos::force_focus();
+                        crate::window_utils::show_and_focus_window(&app);
                     }
                 }
             }

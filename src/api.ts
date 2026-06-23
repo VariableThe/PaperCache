@@ -4,7 +4,14 @@ import type { ElectronAPI } from './types'
 
 export const tauriApi: ElectronAPI = {
   // Implemented Phase 2 Commands
-  getNotes: () => invoke('get_notes'),
+  getNotes: async () => {
+    try {
+      return await invoke('get_notes')
+    } catch (e) {
+      console.error('Failed to get notes', e)
+      return []
+    }
+  },
   saveNote: (id, content) => invoke('save_note', { id, content }),
   readNote: (id) => invoke('read_note', { id }),
   deleteNote: (id) => invoke('delete_note', { id }),
