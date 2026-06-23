@@ -198,10 +198,26 @@ pub fn set_dialog_open(state: tauri::State<'_, crate::DialogState>, open: bool) 
 }
 
 pub fn run_onboarding() {
+    let is_hyprland = std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok();
+    let mod_key = if is_hyprland { "Alt" } else { "Command/Ctrl" };
+
     if let Ok(base) = get_papercache_dir() {
         let welcome_path = base.join("Welcome.md");
+        
+        let welcome_content = format!(
+            "# Welcome to PaperCache\n\nThis is your first note. Start typing to edit it, or use {} + Shift + N to create a new one!",
+            mod_key
+        );
+
         if !welcome_path.exists() {
-            let _ = fs::write(&welcome_path, "# Welcome to PaperCache\n\nThis is your first note. Start typing to edit it, or use shortcuts to create a new one!");
+            let _ = fs::write(&welcome_path, &welcome_content);
+        } else {
+            // Force update if the file contains the old generic shortcut text
+            if let Ok(content) = fs::read_to_string(&welcome_path) {
+                if content.contains("use shortcuts to create a new one!") || content.contains("Command/Ctrl + Shift + N") || content.contains("Alt + Shift + N") {
+                    let _ = fs::write(&welcome_path, &welcome_content);
+                }
+            }
         }
 
         let commands_dir = base.join("commands");

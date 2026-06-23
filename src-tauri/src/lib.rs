@@ -76,7 +76,10 @@ pub fn run() {
                         tauri::WindowEvent::Focused(focused)
                             if !focused && !is_dialog_open.load(Ordering::SeqCst) =>
                         {
-                            let _ = w.hide();
+                            let is_hyprland = std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok();
+                            if !is_hyprland {
+                                let _ = w.hide();
+                            }
                         }
                         _ => {}
                     }
@@ -107,6 +110,7 @@ pub fn run() {
             commands::system::open_file,
             commands::system::set_launch_at_startup,
             commands::system::check_for_updates,
+            commands::system::is_hyprland,
             commands::keychain::set_api_key,
             commands::keychain::get_api_key_status,
             commands::keychain::get_api_key,

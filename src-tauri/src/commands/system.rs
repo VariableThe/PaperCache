@@ -87,3 +87,8 @@ pub async fn check_for_updates(app: tauri::AppHandle) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[tauri::command]
+pub fn is_hyprland() -> Result<bool, String> {
+    Ok(std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok())
+}

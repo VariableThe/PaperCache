@@ -10,6 +10,7 @@ interface AppState {
   notes: Note[]
   currentNoteIndex: number
   themePreset: string
+  isHyprland: boolean
 
   // UI state
   showGraphView: boolean
@@ -28,6 +29,7 @@ interface AppState {
   setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void
   setCurrentNoteIndex: (index: number) => void
   setThemePreset: (preset: string) => void
+  setIsHyprland: (isHyprland: boolean) => void
 
   setShowGraphView: (show: boolean | ((prev: boolean) => boolean)) => void
   setShowRemindersView: (show: boolean | ((prev: boolean) => boolean)) => void
@@ -47,6 +49,7 @@ export const useAppStore = create<AppState>((set) => ({
   notes: [],
   currentNoteIndex: 0,
   themePreset: (localStorage.getItem('papercache-theme') as string) || 'grid-light',
+  isHyprland: false,
 
   showGraphView: false,
   showRemindersView: false,
@@ -67,6 +70,7 @@ export const useAppStore = create<AppState>((set) => ({
     })),
   setCurrentNoteIndex: (currentNoteIndex) => set({ currentNoteIndex }),
   setThemePreset: (themePreset) => set({ themePreset }),
+  setIsHyprland: (isHyprland) => set({ isHyprland }),
 
   setShowGraphView: (showGraphView) =>
     set((state) => ({

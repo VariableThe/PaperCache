@@ -47,6 +47,9 @@ function App() {
 
   useEffect(() => {
     window.electronAPI.checkForUpdates()
+    window.electronAPI.isHyprland().then((isHyp) => {
+      useAppStore.getState().setIsHyprland(isHyp)
+    })
   }, [])
 
   useEffect(() => {

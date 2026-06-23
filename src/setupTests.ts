@@ -19,6 +19,29 @@ if (typeof window !== 'undefined') {
   })
 }
 
+// Mock localStorage
+const localStorageMock = (function () {
+  let store: Record<string, string> = {}
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value.toString()
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key]
+    }),
+    clear: vi.fn(() => {
+      store = {}
+    }),
+  }
+})()
+
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'localStorage', {
+    value: localStorageMock,
+  })
+}
+
 // Mock electronAPI for testing environments
 if (typeof window !== 'undefined') {
   window.electronAPI = {
@@ -31,6 +54,7 @@ if (typeof window !== 'undefined') {
     setApiKey: vi.fn().mockResolvedValue(true),
     getApiKeyStatus: vi.fn().mockResolvedValue(true),
     checkForUpdates: vi.fn(),
+    isHyprland: vi.fn().mockResolvedValue(false),
     readNote: vi.fn().mockResolvedValue(''),
     exportNote: vi.fn().mockResolvedValue(true),
     setDialogOpen: vi.fn().mockResolvedValue(undefined),

@@ -17,6 +17,7 @@ export function NoteSearch() {
   const setShowNoteActionMenu = useAppStore((state) => state.setShowNoteActionMenu)
   const actionMenuIndex = useAppStore((state) => state.actionMenuIndex)
   const setActionMenuIndex = useAppStore((state) => state.setActionMenuIndex)
+  const isHyprland = useAppStore((state) => state.isHyprland)
 
   if (!showNoteSearch) return null
 
@@ -102,7 +103,7 @@ export function NoteSearch() {
             } else if (e.key === 'Escape') {
               e.preventDefault()
               setShowNoteActionMenu(false)
-            } else if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+            } else if (e.key === 'k' && (isHyprland ? e.altKey : e.metaKey || e.ctrlKey)) {
               e.preventDefault()
               setShowNoteActionMenu(false)
             }
@@ -124,7 +125,7 @@ export function NoteSearch() {
               if (idx !== -1) setCurrentNoteIndex(idx)
               setShowNoteSearch(false)
             }
-          } else if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
+          } else if (e.key === 'k' && (isHyprland ? e.altKey : e.metaKey || e.ctrlKey)) {
             e.preventDefault()
             if (filteredNotes.length > 0) {
               setShowNoteActionMenu(true)

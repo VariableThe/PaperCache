@@ -14,6 +14,7 @@ import { useAppStore, type Note } from '../../store/useAppStore'
 
 export function useEditorExtensions() {
   const { apiBaseUrl, apiModel, aiSystemPrompt } = useAIStore()
+  const isHyprland = useAppStore((state) => state.isHyprland)
 
   const handleDeleteNote = () => {
     const state = useAppStore.getState()
@@ -50,7 +51,7 @@ export function useEditorExtensions() {
           { key: 'Tab', preventDefault: true, run: insertTab },
           { key: 'Shift-Tab', preventDefault: true, run: indentLess },
           {
-            key: 'Mod-h',
+            key: isHyprland ? 'Alt-h' : 'Mod-h',
             run: (view) => {
               const selection = view.state.selection.main
               if (!selection.empty) {
@@ -69,7 +70,7 @@ export function useEditorExtensions() {
             },
           },
           {
-            key: 'Mod-e',
+            key: isHyprland ? 'Alt-e' : 'Mod-e',
             run: () => {
               const note = useAppStore.getState().notes[useAppStore.getState().currentNoteIndex]
               if (note) {
@@ -80,11 +81,11 @@ export function useEditorExtensions() {
             },
           },
           {
-            key: 'Mod-Backspace',
+            key: isHyprland ? 'Alt-Backspace' : 'Mod-Backspace',
             run: () => handleDeleteNote(),
           },
           {
-            key: 'Mod-Delete',
+            key: isHyprland ? 'Alt-Delete' : 'Mod-Delete',
             run: () => handleDeleteNote(),
           },
           {
@@ -212,7 +213,10 @@ export function useEditorExtensions() {
           const webLink = target?.closest('.cm-custom-clickable-link')
           const fileLink = target?.closest('.cm-custom-file-link')
 
-          if ((webLink || fileLink) && (event.metaKey || event.ctrlKey)) {
+          if (
+            (webLink || fileLink) &&
+            (isHyprland ? event.altKey : event.metaKey || event.ctrlKey)
+          ) {
             event.preventDefault()
             if (webLink) {
               const url = webLink.getAttribute('data-url')
@@ -235,6 +239,6 @@ export function useEditorExtensions() {
         },
       }),
     ],
-    [apiBaseUrl, apiModel, aiSystemPrompt]
+    [apiBaseUrl, apiModel, aiSystemPrompt, isHyprland]
   )
 }

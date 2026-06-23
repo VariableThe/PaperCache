@@ -29,6 +29,7 @@ export const tauriApi: ElectronAPI = {
   setApiKey: (key) => invoke('set_api_key', { key }),
   getApiKeyStatus: () => invoke('get_api_key_status'),
   checkForUpdates: () => invoke('check_for_updates'),
+  isHyprland: () => invoke('is_hyprland'),
   onSwipeGesture: () => {
     return () => {}
   },
