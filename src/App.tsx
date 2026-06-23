@@ -46,6 +46,10 @@ function App() {
   useGlobalHotkey()
 
   useEffect(() => {
+    window.electronAPI.checkForUpdates()
+  }, [])
+
+  useEffect(() => {
     if (showNoteSearch && searchInputRef.current) {
       setTimeout(() => {
         searchInputRef.current?.focus()

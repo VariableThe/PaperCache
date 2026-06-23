@@ -26,5 +26,6 @@ First of all, thank you for considering contributing to PaperCache!
 - **Pull Requests Required**: Never push new features directly to the `main` branch. Always create a new branch and push your changes as a Pull Request (PR) for review.
 - **Pre-PR Checks**: Run `npm run lint`, `npm run typecheck`, `npm run format:check`, and `npm run test` before opening any PR — don't open a PR with failing checks.
 - **Performance Reporting**: Performance changes require a before/after bundle size comparison in the PR description (just paste the Vite build output).
+- **Audit Logging**: Every change or significant update made must also be documented in `AUDIT_LOG.md`. Log what was done, when it was done, and why.
 
 Thank you for your contributions!
