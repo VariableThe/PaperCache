@@ -46,38 +46,36 @@ pub fn get_safe_path(id: &str) -> Result<PathBuf, String> {
     }
 }
 
-fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) {
-    if let Ok(entries) = fs::read_dir(dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.is_dir() {
-                walk_dir(&path, notes, base_path);
-            } else if path.is_file() {
-                let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
-                if ext == "md" || ext == "json" {
-                    match fs::read_to_string(&path) {
-                        Ok(content) => {
-                            let metadata = fs::metadata(&path).ok();
-                            let mtime = metadata
-                                .and_then(|m| m.modified().ok())
-                                .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
-                                .map(|d| d.as_millis() as u64)
-                                .unwrap_or(0);
-                            let id = path
-                                .strip_prefix(base_path)
-                                .unwrap_or(&path)
-                                .to_string_lossy()
-                                .to_string();
-                            notes.push(Note { id, content, mtime });
-                        }
-                        Err(e) => {
-                            eprintln!("Failed to read file {}: {}", path.display(), e);
-                        }
-                    }
-                }
+fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) -> Result<(), String> {
+    let entries = fs::read_dir(dir).map_err(|e| e.to_string())?;
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.is_dir() {
+            walk_dir(&path, notes, base_path)?;
+        } else if path.is_file() {
+            let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+            if ext == "md" || ext == "json" {
+                let content = fs::read_to_string(&path)
+                    .map_err(|e| format!("Failed to read {}: {}", path.display(), e))?;
+                
+                let metadata = fs::metadata(&path).ok();
+                let mtime = metadata
+                    .and_then(|m| m.modified().ok())
+                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                    .map(|d| d.as_millis() as u64)
+                    .unwrap_or_default();
+                    
+                let id = path
+                    .strip_prefix(base_path)
+                    .unwrap_or(&path)
+                    .to_string_lossy()
+                    .to_string();
+                notes.push(Note { id, content, mtime });
             }
         }
     }
+    Ok(())
 }
 
 fn clean_empty_parents(file_path: &Path, base: &Path) {
@@ -104,7 +102,7 @@ fn clean_empty_parents(file_path: &Path, base: &Path) {
 pub fn get_notes() -> Result<Vec<Note>, String> {
     let base = get_papercache_dir()?;
     let mut notes = Vec::new();
-    walk_dir(&base, &mut notes, &base);
+    walk_dir(&base, &mut notes, &base)?;
     Ok(notes)
 }
 

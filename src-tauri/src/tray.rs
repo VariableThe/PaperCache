@@ -26,14 +26,7 @@ pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
         .show_menu_on_left_click(false)
         .on_menu_event(|app, event| {
             if event.id == "show_hide" {
-                if let Some(window) = app.get_webview_window("main") {
-                    let is_visible = window.is_visible().unwrap_or(false);
-                    if is_visible {
-                        let _ = window.hide();
-                    } else {
-                        crate::window_utils::show_and_focus_window(app);
-                    }
-                }
+                crate::commands::system::toggle_window(app);
             } else if event.id == "quit" {
                 app.exit(0);
             }
@@ -46,14 +39,7 @@ pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
             } = event
             {
                 let app = tray.app_handle();
-                if let Some(window) = app.get_webview_window("main") {
-                    let is_visible = window.is_visible().unwrap_or(false);
-                    if is_visible {
-                        let _ = window.hide();
-                    } else {
-                        crate::window_utils::show_and_focus_window(&app);
-                    }
-                }
+                crate::commands::system::toggle_window(&app);
             }
         })
         .build(app)?;

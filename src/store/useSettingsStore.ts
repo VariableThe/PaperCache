@@ -5,7 +5,7 @@ export interface SettingsState {
   themePreset: string
   fontFamily: string
   showRulings: boolean
-  bgType: 'color' | 'image'
+  bgType: 'preset' | 'color' | 'image'
   bgColor: string
   bgImage: string
   textColor: string

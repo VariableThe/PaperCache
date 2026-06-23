@@ -39,14 +39,7 @@ pub fn update_global_shortcut(
         app.global_shortcut()
             .on_shortcut(shortcut, move |app, _shortcut, event| {
                 if event.state() == ShortcutState::Pressed {
-                    if let Some(window) = app.get_webview_window("main") {
-                        let is_visible = window.is_visible().unwrap_or(false);
-                        if is_visible {
-                            let _ = window.hide();
-                        } else {
-                            crate::window_utils::show_and_focus_window(app);
-                        }
-                    }
+                    crate::commands::system::toggle_window(app);
                     let _ = app.emit(&format!("trigger-{}", action_clone), ());
                 }
             })
@@ -80,14 +73,7 @@ pub fn resume_shortcuts(app: AppHandle) -> Result<(), String> {
                 .global_shortcut()
                 .on_shortcut(shortcut, move |app, _, event| {
                     if event.state() == ShortcutState::Pressed {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let is_visible = window.is_visible().unwrap_or(false);
-                            if is_visible {
-                                let _ = window.hide();
-                            } else {
-                                crate::window_utils::show_and_focus_window(app);
-                            }
-                        }
+                        crate::commands::system::toggle_window(app);
                         let _ = app.emit(&format!("trigger-{}", action_clone), ());
                     }
                 });
