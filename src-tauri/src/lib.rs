@@ -6,7 +6,7 @@ mod commands;
 #[cfg(target_os = "macos")]
 mod macos;
 mod tray;
-mod window_utils;
+
 
 use commands::shortcuts::GlobalShortcutState;
 use std::sync::atomic::{AtomicBool, Ordering};
