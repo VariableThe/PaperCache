@@ -54,6 +54,10 @@ fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) -> Result<(), S
         if path.is_dir() {
             walk_dir(&path, notes, base_path)?;
         } else if path.is_file() {
+            let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            if file_name == "window-state.json" || file_name == ".window-state" {
+                continue;
+            }
             let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
             if ext == "md" || ext == "json" {
                 let content = fs::read_to_string(&path)
