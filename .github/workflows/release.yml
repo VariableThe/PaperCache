@@ -91,8 +91,6 @@ jobs:
           cd homebrew-tap
           sed -i '' "s/version \".*\"/version \"$VERSION\"/" Casks/papercache.rb
           sed -i '' "s/sha256 arm: * \".*\"/sha256 arm:   \"$SHA256\"/" Casks/papercache.rb
-          sed -i '' "s/PaperCache-[0-9]*\.[0-9]*\.[0-9]*-/PaperCache-#{version}-/g" Casks/papercache.rb
-          sed -i '' "s/\.zip/\.dmg/g" Casks/papercache.rb
           
           # Commit and Push
           git config user.name "github-actions[bot]"
