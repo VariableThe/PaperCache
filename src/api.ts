@@ -8,6 +8,7 @@ export const tauriApi: ElectronAPI = {
     try {
       return await invoke('get_notes')
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error('Failed to get notes', e)
       return []
     }

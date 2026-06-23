@@ -1,7 +1,7 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    App, Manager,
+    App,
 };
 
 pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
@@ -39,7 +39,7 @@ pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
             } = event
             {
                 let app = tray.app_handle();
-                crate::commands::system::toggle_window(&app);
+                crate::commands::system::toggle_window(app);
             }
         })
         .build(app)?;
