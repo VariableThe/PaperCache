@@ -42,33 +42,36 @@ pub fn run() {
             tray::create_tray(app).expect("Failed to create tray");
             
             use tauri::Manager;
-            let window = app.get_webview_window("main").unwrap();
-            #[cfg(target_os = "macos")]
-            crate::macos::set_move_to_active_space(&window);
-            #[cfg(target_os = "macos")]
-            crate::macos::disable_window_cascading(&window);
-            
-            let dialog_state = app.state::<crate::DialogState>();
-            let is_dialog_open = dialog_state.is_open.clone();
-            
-            window.on_window_event({
-                let w = window.clone();
-                move |event| match event {
-                    tauri::WindowEvent::CloseRequested { api, .. } => {
-                        api.prevent_close();
-                        let _ = w.hide();
+            if let Some(window) = app.get_webview_window("main") {
+                #[cfg(target_os = "macos")]
+                crate::macos::set_move_to_active_space(&window);
+                
+                let dialog_state = app.state::<crate::DialogState>();
+                let is_dialog_open = dialog_state.is_open.clone();
+                
+                window.on_window_event({
+                    let w = window.clone();
+                    move |event| match event {
+                        tauri::WindowEvent::CloseRequested { api, .. } => {
+                            api.prevent_close();
+                            let _ = w.hide();
+                        }
+                        tauri::WindowEvent::Focused(focused) if !focused && !is_dialog_open.load(Ordering::SeqCst) => {
+                            let _ = w.hide();
+                        }
+                        _ => {}
                     }
-                    tauri::WindowEvent::Focused(focused) if !focused && !is_dialog_open.load(Ordering::SeqCst) => {
-                        let _ = w.hide();
-                    }
-                    _ => {}
-                }
-            });
+                });
+            } else {
+                eprintln!("WARNING: 'main' window not found during setup");
+            }
             
             #[cfg(target_os = "macos")]
             macos::hide_dock_icon();
+            
             #[cfg(target_os = "macos")]
             macos::setup_power_monitor(app.handle().clone());
+            
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

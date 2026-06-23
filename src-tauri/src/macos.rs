@@ -10,14 +10,6 @@ pub fn set_shadow(window: &tauri::WebviewWindow, enable: bool) {
     }
 }
 
-#[cfg(target_os = "macos")]
-pub fn disable_window_cascading(window: &tauri::WebviewWindow) {
-    let ns_window = window.ns_window().unwrap() as id;
-    unsafe {
-        use cocoa::base::NO;
-        let _: () = msg_send![ns_window, setShouldCascadeWindows: NO];
-    }
-}
 
 #[cfg(target_os = "macos")]
 use tauri::{AppHandle, Emitter};
