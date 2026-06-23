@@ -58,7 +58,6 @@ body {
   width: 150px;
 }
 
-
 .open-settings-btn {
   background: transparent;
   border: none;
@@ -70,7 +69,6 @@ body {
 .open-settings-btn:hover {
   opacity: 1;
 }
-
 
 .theme-selector button {
   margin-left: 8px;
@@ -174,7 +172,9 @@ body {
   border-radius: 4px;
   outline: none;
   font-size: 11px;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
   width: 120px;
 }
 
@@ -194,7 +194,9 @@ body {
   text-transform: capitalize;
   font-size: 11px;
   font-weight: 500;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
 }
 
 .cm-panel.cm-search button:hover {
@@ -230,7 +232,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
   margin-left: 2px;
 }
 
@@ -701,7 +705,9 @@ body {
   vertical-align: middle;
   color: transparent;
   background-color: transparent;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
   user-select: none;
   margin-top: -2px;
 }
@@ -742,7 +748,9 @@ body {
   vertical-align: middle;
   color: transparent;
   background-color: transparent;
-  transition: background-color 0.2s, opacity 0.2s;
+  transition:
+    background-color 0.2s,
+    opacity 0.2s;
   user-select: none;
   margin-top: -2px;
 }
