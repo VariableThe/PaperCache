@@ -131,6 +131,7 @@ Type \`/\` in the editor for inline suggestions:
 - \`/ai\` — AI prompt
 - \`/check\` — Checkbox
 - \`/task\` — Task with due date
+- \`/timer\` — Countdown timer
 - \`/var\` — Local variable
 - \`/globvar\` — Global variable
 - \`/ctx\` — Context note
