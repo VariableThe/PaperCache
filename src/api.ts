@@ -29,7 +29,7 @@ export const tauriApi: ElectronAPI = {
   scheduleTimer: (id, durationMs, label) => invoke('schedule_timer', { id, durationMs, label }),
   cancelTimer: (id) => invoke('cancel_timer', { id }),
 
-  // Phase 3+ Stubs
+  removeOnboardingFiles: () => invoke('remove_onboarding_files'),
   openAIChat: (args) => invoke('openai_chat', args),
   setApiKey: (key) => invoke('set_api_key', { key }),
   getApiKeyStatus: () => invoke('get_api_key_status'),

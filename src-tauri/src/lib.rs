@@ -127,6 +127,7 @@ pub fn run() {
             commands::fs::rename_note,
             commands::fs::export_note,
             commands::fs::set_dialog_open,
+            commands::fs::remove_onboarding_files,
             commands::system::close_window,
             commands::system::quit_app,
             commands::system::open_external,

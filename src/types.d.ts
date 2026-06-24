@@ -21,6 +21,7 @@ export interface ElectronAPI {
   scheduleTimer: (id: string, durationMs: number, label: string) => Promise<void>
   cancelTimer: (id: string) => Promise<void>
 
+  removeOnboardingFiles: () => Promise<void>
   quitApp: () => void
   openExternal: (url: string) => void
   openFile: (path: string) => void

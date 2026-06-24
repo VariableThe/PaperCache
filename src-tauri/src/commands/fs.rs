@@ -197,62 +197,233 @@ pub fn set_dialog_open(state: tauri::State<'_, crate::DialogState>, open: bool) 
     state.is_open.store(open, Ordering::SeqCst);
 }
 
+fn write_onboarding_file(base: &Path, rel_path: &str, content: &str, is_new_version: bool) {
+    let path = base.join(rel_path);
+    if let Some(parent) = path.parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    if !path.exists() || is_new_version {
+        let _ = fs::write(&path, content);
+    }
+}
+
+#[tauri::command]
+pub fn remove_onboarding_files() -> Result<(), String> {
+    if let Ok(base) = get_papercache_dir() {
+        let welcome = base.join("Welcome.md");
+        let _ = fs::remove_file(&welcome);
+
+        let onboarding_dir = base.join("onboarding");
+        let _ = fs::remove_dir_all(&onboarding_dir);
+
+        let commands_dir = base.join("commands");
+        let _ = fs::remove_dir_all(&commands_dir);
+
+        let marker = base.join(".onboarding_version");
+        let _ = fs::remove_file(&marker);
+    }
+    Ok(())
+}
+
 pub fn run_onboarding(app: &AppHandle) {
     let is_hyprland = std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok();
     let mod_key = if is_hyprland { "Alt" } else { "Command/Ctrl" };
 
     if let Ok(base) = get_papercache_dir() {
-        let welcome_path = base.join("Welcome.md");
-        
-        let welcome_content = format!(
-            "# Welcome to PaperCache\n\nThis is your first note. Here's what you can do:\n\n\
-            - **New note** — Press {} + N (or {} + Shift + N from anywhere)\n\
-            - **Search notes** — Press {} + P\n\
-            - **Graph view** — Press {} + G to see how your notes connect\n\
-            - **Tasks & timers** — Press {} + T\n\
-            - **Shortcuts** — Press {} + / for the full list\n\
-            - **Slash commands** — Type `/` in the editor for AI, checkboxes, tasks, variables, and more\n\
-            - **Settings** — Press {} + Shift + S\n\n\
-            Start typing to edit this note, or create a new one!",
-            mod_key, mod_key, mod_key, mod_key, mod_key, mod_key, mod_key
-        );
+        let version = app.package_info().version.to_string();
+        let version_marker = base.join(".onboarding_version");
+        let last_version = fs::read_to_string(&version_marker).ok();
+        let is_new_version = last_version.as_deref() != Some(&version);
 
-        if !welcome_path.exists() {
-            let _ = fs::write(&welcome_path, &welcome_content);
-        } else {
-            // Force update if the file contains the old generic shortcut text
-            if let Ok(content) = fs::read_to_string(&welcome_path) {
-                if content.contains("use shortcuts to create a new one!") || content.contains("Command/Ctrl + Shift + N") || content.contains("Alt + Shift + N") {
-                    let _ = fs::write(&welcome_path, &welcome_content);
+        if is_new_version {
+            let _ = fs::write(&version_marker, &version);
+        }
+
+        let mk = mod_key;
+
+        write_onboarding_file(&base, "Welcome.md", &format!(
+            "# Welcome to PaperCache\n\n\
+            This is your first note. Start typing to edit it, or use **{0} + N** to create a new one. \
+            PaperCache is a markdown-based knowledge manager with AI, graph visualization, tasks, timers, and more.\n\n\
+            ## Quick Start\n\n\
+            - **New note** — Press {0} + N (or {0} + Shift + N from anywhere)\n\
+            - **Search notes** — Press {0} + P\n\
+            - **Graph view** — Press {0} + G\n\
+            - **Tasks & timers** — Press {0} + T\n\
+            - **Settings** — Press {0} + Shift + S\n\n\
+            ## Explore by Topic\n\n\
+            - [Editor Features](/file onboarding/Editor.md) — Markdown, highlights, tags, pills, math, variables\n\
+            - [Slash Commands](/file onboarding/Commands.md) — AI, tasks, checkboxes, timers, variables\n\
+            - [Keyboard Shortcuts](/file Shortcuts.md) — Complete reference\n\
+            - [Graph View](/file onboarding/Graph.md) — Knowledge graph visualization\n\
+            - [AI Features](/file onboarding/AI.md) — Configuration and usage\n\
+            - [Tasks & Timers](/file onboarding/Tasks.md) — Task management and countdowns\n\
+            - [Customization & System](/file onboarding/Customization.md) — Themes, settings, system features\n\n\
+            Press **{0} + Click** on any link above to jump to that note. \
+            Or start typing to edit this one!",
+            mk
+        ), is_new_version);
+
+        write_onboarding_file(&base, "onboarding/Editor.md", &format!(
+            "# Editor Features\n\n\
+            PaperCache uses a full-featured markdown editor with these capabilities:\n\n\
+            ## Markdown\n\n\
+            Headings (H1-H6), bold, italic, strikethrough, lists, horizontal rules (`---`), \
+            and fenced code blocks with language labels and one-click copy.\n\n\
+            ## Highlights\n\n\
+            Select text and press **{0} + H** to wrap it in `==text==` which renders as a visual highlight.\n\n\
+            ## Tags\n\n\
+            Type `!tagname` anywhere in your note. Tags appear as clickable pills \
+            in the search view — right-click for bulk delete or export.\n\n\
+            ## Color Pills\n\n\
+            Hex colors like `#D97757` auto-render as a colored swatch. Click the circle to copy the hex code.\n\n\
+            ## Date & Time Pills\n\n\
+            `DD-MM-YYYY` and `HH:MM` formats auto-highlight for easy scanning.\n\n\
+            ## Currency Pills\n\n\
+            `$100`, `€50`, `£20`, `¥1000`, `₹500` auto-detect.\n\n\
+            ## Reactive Math\n\n\
+            Type an equation ending with `=` like `2+2=` and the result appears instantly. \
+            Supports any arithmetic expression via `expr-eval`.\n\n\
+            ## Variables\n\n\
+            - `/var name = value` defines a note-scoped variable. Refer to it elsewhere and it auto-updates.\n\
+            - `/globvar name = value` defines a cross-note global variable visible in all notes.\n\
+            - Changing any variable re-evaluates all dependent math expressions.\n\n\
+            ## Note Management\n\n\
+            - **Auto-title** — The first `# Header` in a note becomes its display title\n\
+            - **Rename** — Click the title bar to rename; changes the file ID\n\
+            - **Internal links** — `[text](/file NoteTitle.md)` — {0} + Click to jump\n\
+            - **External links** — `[text](url)` — {0} + Click to open in browser\n\
+            - **Folders** — Use `/` in note names (e.g. `projects/my-note.md`) for nested folders with distinct colors\n\
+            - **Delete** — {0} + Backspace with confirmation\n\n\
+            ---\n\
+            ↑ [Welcome](/file Welcome.md) → [Slash Commands](/file onboarding/Commands.md)",
+            mk
+        ), is_new_version);
+
+        write_onboarding_file(&base, "onboarding/Commands.md",
+            "# Slash Commands\n\n\
+            Type `/` in the editor to trigger autocomplete, then press Tab to accept. \
+            Press Enter to execute.\n\n\
+            ## Available Commands\n\n\
+            - `/ai <prompt>` — Inline AI completion. Makes an API call and inserts the response.\n\
+            - `/ctx <prompt>` — AI with full note context (up to 50,000 chars). Same as `/context`.\n\
+            - `/context <prompt>` — Alias for `/ctx`.\n\
+            - `/task <label> @ <due>` — Creates a task with optional due date. Due formats: `@ 1d2h`, `@ tmrw`, or `DD-MM-YYYY HH:MM`.\n\
+            - `/check` — Creates an interactive checkbox. Click to toggle.\n\
+            - `/timer` — Opens the countdown timer panel.\n\
+            - `/var name = value` — Defines a note-scoped variable.\n\
+            - `/globvar name = value` — Defines a cross-note global variable.\n\n\
+            ## Tutorial Command Files\n\n\
+            The `commands/` folder contains template files used by some slash commands:\n\
+            - [summarize.md](/file commands/summarize.md) — Summarization prompt template\n\
+            - [translate.md](/file commands/translate.md) — Translation prompt template\n\n\
+            These are safe to edit if you want to customize the prompts.\n\n\
+            ---\n\
+            ← [Editor Features](/file onboarding/Editor.md) ↑ [Welcome](/file Welcome.md) → [Graph View](/file onboarding/Graph.md)"
+        , is_new_version);
+
+        write_onboarding_file(&base, "onboarding/Graph.md", &format!(
+            "# Graph View\n\n\
+            Press **{0} + G** to open the interactive 2D knowledge graph.\n\n\
+            ## Features\n\n\
+            - Every note is a flat circle node; internal links become edges between nodes\n\
+            - Nodes cluster by folder with distinct HSL colors\n\
+            - Drag nodes to rearrange — positions persist across sessions\n\
+            - Press **{0} + F** inside the graph for fuzzy search — arrow keys to navigate, Enter to fly to the matched node\n\
+            - Scroll to zoom, drag to pan (rotation is locked)\n\
+            - Nodes physically occlude edges passing through them\n\
+            - All labels are always visible (no hover required)\n\n\
+            ---\n\
+            ← [Slash Commands](/file onboarding/Commands.md) ↑ [Welcome](/file Welcome.md) → [AI Features](/file onboarding/AI.md)",
+            mk
+        ), is_new_version);
+
+        write_onboarding_file(&base, "onboarding/AI.md", &format!(
+            "# AI Features\n\n\
+            PaperCache integrates with OpenAI-compatible APIs for inline AI assistance.\n\n\
+            ## Configuration\n\n\
+            Open **Settings ({0} + Shift + S)** to configure:\n\
+            - **API Base URL** — Defaults to OpenRouter's free tier\n\
+            - **Model** — Default: `nvidia/nemotron-3-super-120b-a12b:free`\n\
+            - **API Key** — Stored securely via OS keychain\n\
+            - **System Prompt** — Custom instructions sent with every AI request\n\n\
+            ## Usage\n\n\
+            - `/ai <prompt>` — Inline completion. Type your prompt and press Enter.\n\
+            - `/ctx <prompt>` — Same, but includes the entire current note as context.\n\n\
+            ## Providers\n\n\
+            Works with OpenAI, OpenRouter, Ollama, or any OpenAI-compatible endpoint.\n\n\
+            ---\n\
+            ← [Graph View](/file onboarding/Graph.md) ↑ [Welcome](/file Welcome.md) → [Tasks & Timers](/file onboarding/Tasks.md)",
+            mk
+        ), is_new_version);
+
+        write_onboarding_file(&base, "onboarding/Tasks.md", &format!(
+            "# Tasks & Timers\n\n\
+            ## Tasks\n\n\
+            Create a task by typing `/task Buy groceries @ tmrw` anywhere in a note.\n\n\
+            - Due date formats: `@ 1d2h` (relative), `@ tmrw`, or `DD-MM-YYYY HH:MM`\n\
+            - Tasks with due dates fire native OS notifications at the right time\n\
+            - Press **{0} + T** to open the unified tasks view\n\
+            - Overdue tasks appear in red, imminent ones in orange\n\
+            - Click the circle to toggle complete\n\n\
+            ## Timers\n\n\
+            - Type `/timer` or use the action menu ({0} + K) to open the timer panel\n\
+            - Quick presets: 5min, 10min, 25min, 1hr — or set custom hours/minutes/seconds\n\
+            - Live countdown with progress bar\n\
+            - Native OS notification + in-app toast on completion\n\
+            - Timer runs on the Rust backend so it fires even when minimized\n\n\
+            ---\n\
+            ← [AI Features](/file onboarding/AI.md) ↑ [Welcome](/file Welcome.md) → [Customization & System](/file onboarding/Customization.md)",
+            mk
+        ), is_new_version);
+
+        write_onboarding_file(&base, "onboarding/Customization.md", &format!(
+            "# Customization & System\n\n\
+            ## Themes\n\n\
+            Three built-in presets: `paper-light`, `grid-dark`, `blueprint`. \
+            Switch in Settings ({0} + Shift + S).\n\n\
+            ## Fonts\n\n\
+            JetBrains Mono (default), Monospace, Sans-serif, System Default, or Serif.\n\n\
+            ## Background\n\n\
+            Preset theme, solid color (pick any color), or custom image URL.\n\n\
+            ## Colors\n\n\
+            Individually customize: main text, numbers, math symbols, math results, and AI response colors.\n\n\
+            ## Shortcut Recording\n\n\
+            Record custom global shortcuts in Settings. \
+            To avoid conflicts, global shortcuts are paused during recording.\n\n\
+            ## System Features\n\n\
+            - **Background mode** — No dock icon on macOS; hotkey toggles window\n\
+            - **Auto-hide** — Window hides on focus loss (200ms debounce on Windows/Linux)\n\
+            - **Multi-monitor** — Opens on the monitor under your cursor\n\
+            - **Launch on startup** — Optional toggle in Settings\n\
+            - **Auto-updates** — Silent background check on startup; manual check in Settings\n\
+            - **Export** — {0} + E saves any note as `.md`; right-click a tag for bulk export of all tagged notes\n\
+            - **State persistence** — Window position, size, zoom, and last-opened note are all remembered\n\n\
+            ---\n\
+            ← [Tasks & Timers](/file onboarding/Tasks.md) ↑ [Welcome](/file Welcome.md)",
+            mk
+        ), is_new_version);
+
+        let commands_dir = base.join("commands");
+        if !commands_dir.exists() || is_new_version {
+            if !commands_dir.exists() {
+                let _ = fs::create_dir_all(&commands_dir);
+            }
+            for (name, body) in [
+                ("summarize.md", "# Summarize\n\nPlease summarize the selected text into 3 bullet points."),
+                ("translate.md", "# Translate\n\nPlease translate the following text into English."),
+            ] {
+                let path = commands_dir.join(name);
+                if !path.exists() || is_new_version {
+                    let _ = fs::write(&path, body);
                 }
             }
         }
 
-        let commands_dir = base.join("commands");
-        if !commands_dir.exists() {
-            let _ = fs::create_dir_all(&commands_dir);
-            let summarize_path = commands_dir.join("summarize.md");
-            if !summarize_path.exists() {
-                let _ = fs::write(
-                    &summarize_path,
-                    "# Summarize\n\nPlease summarize the selected text into 3 bullet points.",
-                );
-            }
-            let translate_path = commands_dir.join("translate.md");
-            if !translate_path.exists() {
-                let _ = fs::write(
-                    &translate_path,
-                    "# Translate\n\nPlease translate the following text into English.",
-                );
-            }
-        }
-
-        let version = app.package_info().version.to_string();
         let note_filename = format!("New Features in v{}.md", version);
         let note_target_path = base.join(&note_filename);
-        
+
         if !note_target_path.exists() {
-            // First, delete any old "New Features in vX.Y.Z.md" notes
             if let Ok(entries) = fs::read_dir(&base) {
                 for entry in entries.filter_map(Result::ok) {
                     let path = entry.path();
@@ -264,7 +435,6 @@ pub fn run_onboarding(app: &AppHandle) {
                 }
             }
 
-            // Now copy the new note if it exists in bundled resources
             if let Ok(resource_dir) = app.path().resource_dir() {
                 let bundled_note = resource_dir.join("notes").join(&note_filename);
                 let bundled_note_up = resource_dir.join("_up_").join("notes").join(&note_filename);
