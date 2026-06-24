@@ -1,7 +1,7 @@
 # Our Philosophy
 
 ### 1. **Your Thoughts Are Ephemeral**
-A scratchpad shouldn't feel like a database. PaperCache is designed for the temporary, the messy, and the in-between. It spawns when you need it, vanishes when you're done, and gets out of your way.
+A knowledge tool shouldn't feel like a database. PaperCache is designed for the temporary, the messy, and the in-between. It spawns when you need it, vanishes when you're done, and gets out of your way.
 
 ### 2. **Active > Passive**
 PaperCache is active. It evaluates your math in real-time, queries AI inline, links your notes automatically, and visualizes your knowledge graph. Your notes should work for you, not just store your words.
@@ -41,4 +41,4 @@ PaperCache makes specific, intentional choices:
 ---
 
 ### The Bottom Line
-PaperCache is a simple, polished tool built by a developer to solve a personal need. It's the floating scratchpad I always wanted but didn't want to pay a subscription for—so I built it myself, and now it's yours too.
+PaperCache is a simple, polished tool built by a developer to solve a personal need. It's the floating knowledge manager I always wanted but didn't want to pay a subscription for—so I built it myself, and now it's yours too.

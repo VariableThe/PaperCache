@@ -1,6 +1,6 @@
 # PaperCache
 
-> A floating markdown scratchpad for developers and power users.
+> A floating knowledge manager for developers and power users.
 
 PaperCache is a Tauri-based application built with an obsession for performance, privacy, and polish. It is designed to be a frictionless note-taking tool that lives in the background and is summoned via a global hotkey.
 
