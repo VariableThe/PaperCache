@@ -9,6 +9,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Code Snippets**: Supports triple backtick fenced code blocks with language-specific syntax highlighting, along with a built-in one-click "Copy Code" button that displays a checkmark upon success.
 - **Color Format Recognition**: Automatically detects hex colors (e.g., `#D97757` or `#fff`) and renders a small inline preview color pill. Clicking on the circle in the color pill copies the hex code to your clipboard.
 - **Date & Time Formats**: Highlights standard date (`DD-MM-YYYY` or `YYYY-MM-DD`) and time (`HH:MM` or `HH:MM:SS`) formats into clean, distinct pills.
+- **Slash Command Autosuggest**: Type `/` to trigger an inline ghost-text autosuggest for commands like `/check`, `/task`, `/ai`, or `/ctx`. Press `Tab` to instantly complete the command without breaking your typing flow.
 - **Interactive Checkboxes**: Type `/check` to create an interactive checkbox widget. Clicking it changes it to `/checked` and visually strikes through the text on that line!
 - **Tasks & Reminders**: Type `/task` to create a task widget. Add a space followed by `@` and a time (like `1d2h`, `tmrw`, or a specific date `YYYY-MM-DD HH:MM`) to set a due date. Press `Cmd+T` (or `Ctrl+T`) to open the Tasks Page, which tracks all tasks, calculates due times, and highlights overdue tasks in red.
 - **Customizable Theming & Fonts**: Customize fonts, text colors, background colors, background images, and individual highlight colors for variables, AI, and math. Supports full dark mode (`grid-dark`, `blueprint`).
@@ -26,7 +27,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Internal Note Linking**: Link to other notes using markdown links like `[link text](/file Note.md)` or simply `/file Note.md`. Click the link with `Cmd+Click` or `Ctrl+Click` to instantly navigate to it. URL links also open in the system browser.
 - **Interactive Graph View**: An interactive, visual 2D node graph (`Cmd+G`) showing all connected notes, color-coded automatically based on their implicit folder. Click a node to open it.
 - **Global Note Search**: Open an omnibar search (`Cmd+P`) to quickly fuzzy-search note contents and file names across the entire workspace.
-- **Tagging System**: Add inline tags using `!tagname`. The global search bar aggregates all unique tags as clickable filters to quickly isolate notes.
+- **Tagging System & Context Menu**: Add inline tags using `!tagname`. The global search bar aggregates all unique tags as clickable filters to quickly isolate notes. Right-click any tag pill to open an inline action menu, allowing you to bulk-delete or export all notes containing that tag into a single Markdown file.
 - **Auto-Renaming**: Notes are auto-created with a timestamp ID. The title is intelligently inferred from the first line of the file (e.g., `# Header`), but can also be manually renamed by clicking the title bar.
 
 ## Artificial Intelligence
@@ -50,3 +51,4 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Launch on Startup**: Optional setting to boot silently in the background when your computer starts.
 - **Exporting Options**: Export individual notes straight to a local `.md` file on your filesystem via the main menu or search list.
 - **Safe Tutorials**: Auto-generates fully functional Markdown tutorials in a `commands/` folder upon first launch. Prevents accidental deletion of these core tutorial files.
+- **Smart Version Updates**: Upon updating to a new release, PaperCache automatically opens a "New Features" summary note on your first launch and cleanly deletes older version notes behind the scenes to keep your workspace tidy.
