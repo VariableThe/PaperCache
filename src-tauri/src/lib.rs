@@ -81,7 +81,7 @@ pub fn run() {
                             let _ = w.hide();
                         }
                         tauri::WindowEvent::Focused(focused) => {
-                            if focused {
+                            if *focused {
                                 #[cfg(not(target_os = "macos"))]
                                 pending.store(false, Ordering::SeqCst);
                             } else if !is_dialog_open.load(Ordering::SeqCst) {
