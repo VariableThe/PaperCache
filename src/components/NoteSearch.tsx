@@ -1,6 +1,7 @@
-import { useAppStore } from '../store/useAppStore'
+import { useAppStore, type Note } from '../store/useAppStore'
 import { getFolderColor } from '../utils'
 import { confirm } from '@tauri-apps/plugin-dialog'
+import { useState } from 'react'
 
 export function NoteSearch() {
   const notes = useAppStore((state) => state.notes)
@@ -19,12 +20,22 @@ export function NoteSearch() {
   const setActionMenuIndex = useAppStore((state) => state.setActionMenuIndex)
   const isHyprland = useAppStore((state) => state.isHyprland)
 
+  const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [tagActionMenuIndex, setTagActionMenuIndex] = useState(0)
+
   if (!showNoteSearch) return null
+
+  const getNoteTitle = (n: Note) => {
+    const isAuto = /^\d+\.md$/.test(n.id)
+    const fileName = n.id.replace(/\.md$/, '').split('/').pop() || ''
+    return isAuto ? n.content.split('\n')[0].trim() || 'New Note' : fileName
+  }
 
   const filteredNotes = notes.filter(
     (n) =>
       n.content.toLowerCase().includes(noteSearchQuery.toLowerCase()) ||
-      n.id.toLowerCase().includes(noteSearchQuery.toLowerCase())
+      n.id.toLowerCase().includes(noteSearchQuery.toLowerCase()) ||
+      getNoteTitle(n).toLowerCase().includes(noteSearchQuery.toLowerCase())
   )
 
   const allTags = new Set<string>()
@@ -49,6 +60,68 @@ export function NoteSearch() {
         className="note-search-modal"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={(e) => {
+          if (activeTag) {
+            if (e.key === 'ArrowDown') {
+              e.preventDefault()
+              setTagActionMenuIndex((prev) => Math.min(prev + 1, 1))
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault()
+              setTagActionMenuIndex((prev) => Math.max(prev - 1, 0))
+            } else if (e.key === 'Enter') {
+              e.preventDefault()
+              const tag = activeTag
+              setActiveTag(null)
+              if (tagActionMenuIndex === 0) {
+                const doDelete = async () => {
+                  const notesToDelete = notes.filter((n) =>
+                    n.content.toLowerCase().includes(tag.toLowerCase())
+                  )
+                  await window.electronAPI.setDialogOpen(true)
+                  const confirmed = await confirm(
+                    `Delete ${notesToDelete.length} notes containing tag ${tag}?`,
+                    { title: 'PaperCache', kind: 'warning' }
+                  )
+                  await window.electronAPI.setDialogOpen(false)
+                  if (confirmed) {
+                    for (const n of notesToDelete) {
+                      if (!n.id.startsWith('commands/')) {
+                        await window.electronAPI.deleteNote(n.id)
+                      }
+                    }
+                    setNotes((prev) =>
+                      prev.filter(
+                        (n) =>
+                          !notesToDelete.some(
+                            (del) => del.id === n.id && !del.id.startsWith('commands/')
+                          )
+                      )
+                    )
+                  }
+                }
+                doDelete()
+              } else if (tagActionMenuIndex === 1) {
+                const doExport = async () => {
+                  const notesToExport = notes.filter((n) =>
+                    n.content.toLowerCase().includes(tag.toLowerCase())
+                  )
+                  const combinedContent = notesToExport
+                    .map((n) => {
+                      const title = getNoteTitle(n)
+                      return `# ${title}\n\n${n.content}`
+                    })
+                    .join('\n\n---\n\n')
+                  const safeTag = tag.replace(/[^a-zA-Z0-9]/g, '_')
+                  await window.electronAPI.exportNote(`export_${safeTag}.md`, combinedContent)
+                }
+                doExport()
+              }
+            } else if (e.key === 'Escape') {
+              e.preventDefault()
+              setActiveTag(null)
+            }
+            return
+          }
+
           if (showNoteActionMenu) {
             if (e.key === 'ArrowDown') {
               e.preventDefault()
@@ -137,6 +210,118 @@ export function NoteSearch() {
           }
         }}
       >
+        {activeTag && (
+          <div
+            className="tag-action-menu"
+            style={{
+              position: 'absolute',
+              top: 50,
+              left: 16,
+              zIndex: 1000,
+              background: 'var(--bg-color)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '6px',
+              padding: '6px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                borderBottom: '1px solid rgba(128,128,128,0.2)',
+                marginBottom: '4px',
+              }}
+            >
+              Tag: {activeTag}
+            </div>
+            <button
+              className={tagActionMenuIndex === 0 ? 'focused' : ''}
+              style={{
+                background: tagActionMenuIndex === 0 ? 'var(--border-color)' : 'transparent',
+                border: 'none',
+                color: 'var(--text-color)',
+                cursor: 'pointer',
+                fontSize: '12px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+                marginBottom: '4px',
+              }}
+              onClick={async (e) => {
+                e.stopPropagation()
+                const tag = activeTag
+                setActiveTag(null)
+                const notesToDelete = notes.filter((n) =>
+                  n.content.toLowerCase().includes(tag.toLowerCase())
+                )
+                await window.electronAPI.setDialogOpen(true)
+                const confirmed = await confirm(
+                  `Delete ${notesToDelete.length} notes containing tag ${tag}?`,
+                  { title: 'PaperCache', kind: 'warning' }
+                )
+                await window.electronAPI.setDialogOpen(false)
+                if (confirmed) {
+                  for (const n of notesToDelete) {
+                    if (!n.id.startsWith('commands/')) {
+                      await window.electronAPI.deleteNote(n.id)
+                    }
+                  }
+                  setNotes((prev) =>
+                    prev.filter(
+                      (n) =>
+                        !notesToDelete.some(
+                          (del) => del.id === n.id && !del.id.startsWith('commands/')
+                        )
+                    )
+                  )
+                  if (notesToDelete.some((n) => n.id === notes[currentNoteIndex]?.id)) {
+                    setCurrentNoteIndex(0)
+                  }
+                }
+              }}
+            >
+              Delete All
+            </button>
+            <button
+              className={tagActionMenuIndex === 1 ? 'focused' : ''}
+              style={{
+                background: tagActionMenuIndex === 1 ? 'var(--border-color)' : 'transparent',
+                border: 'none',
+                color: 'var(--text-color)',
+                cursor: 'pointer',
+                fontSize: '12px',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                display: 'block',
+                width: '100%',
+                textAlign: 'left',
+              }}
+              onClick={async (e) => {
+                e.stopPropagation()
+                const tag = activeTag
+                setActiveTag(null)
+                const notesToExport = notes.filter((n) =>
+                  n.content.toLowerCase().includes(tag.toLowerCase())
+                )
+                const combinedContent = notesToExport
+                  .map((n) => {
+                    const title = getNoteTitle(n)
+                    return `# ${title}\n\n${n.content}`
+                  })
+                  .join('\n\n---\n\n')
+                const safeTag = tag.replace(/[^a-zA-Z0-9]/g, '_')
+                await window.electronAPI.exportNote(`export_${safeTag}.md`, combinedContent)
+              }}
+            >
+              Export All
+            </button>
+          </div>
+        )}
         <input
           autoFocus
           className="note-search-input"
@@ -162,12 +347,21 @@ export function NoteSearch() {
               <span
                 key={tag}
                 className="cm-tag-pill"
+                title="Right-click to Delete or Export"
                 style={{ cursor: 'pointer', margin: 0, fontSize: '11px' }}
                 onClick={(e) => {
                   e.stopPropagation()
                   const newQ = noteSearchQuery ? noteSearchQuery + ' ' + tag : tag
                   setNoteSearchQuery(newQ)
                   setSearchSelectedIndex(0)
+                  setActiveTag(null)
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setActiveTag(tag)
+                  setTagActionMenuIndex(0)
+                  setShowNoteActionMenu(false)
                 }}
               >
                 {tag}
@@ -175,12 +369,11 @@ export function NoteSearch() {
             ))}
           </div>
         )}
-        <div className="note-search-list">
+        <div className="note-search-list" onClick={() => setActiveTag(null)}>
           {filteredNotes.map((n, index) => {
-            const isAuto = /^\d+\.md$/.test(n.id)
+            const title = getNoteTitle(n)
             const pathParts = n.id.replace(/\.md$/, '').split('/')
-            const fileName = pathParts.pop() || ''
-            const title = isAuto ? n.content.split('\n')[0].trim() || 'New Note' : fileName
+            pathParts.pop()
             const isSelected = index === searchSelectedIndex
             return (
               <div

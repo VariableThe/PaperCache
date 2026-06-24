@@ -1,4 +1,5 @@
 import { useRef, useEffect } from 'react'
+import { getVersion } from '@tauri-apps/api/app'
 
 import './App.css'
 import GraphView from './GraphView'
@@ -59,6 +60,26 @@ function App() {
       }, 50)
     }
   }, [showNoteSearch])
+
+  useEffect(() => {
+    async function checkVersion() {
+      if (notes.length === 0) return
+      const currentVersion = await getVersion()
+      const lastSeenVersion = localStorage.getItem('papercache-last-seen-version')
+      if (lastSeenVersion !== currentVersion) {
+        localStorage.setItem('papercache-last-seen-version', currentVersion)
+        const targetId = `New Features in v${currentVersion}.md`
+        const targetIndex = notes.findIndex((n) => {
+          const filename = n.id.split('/').pop() || ''
+          return filename === targetId
+        })
+        if (targetIndex !== -1) {
+          setCurrentNoteIndex(targetIndex)
+        }
+      }
+    }
+    checkVersion()
+  }, [notes, setCurrentNoteIndex])
 
   const containerStyle: React.CSSProperties = {
     fontFamily: fontFamily,

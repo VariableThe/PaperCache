@@ -2,6 +2,14 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-24 - (Uncommitted)
+**Change:** feat: add slash command autosuggest, auto-open new features note, and tag action menu for v0.5.2
+
+**Details/Why:**
+Implemented a ghost-text inline autosuggest widget for slash commands to reduce friction. Added logic to auto-open `New Features in v[version].md` once per update, and automatically cleanup older version notes in the base directory via `fs.rs`. Replaced `/task-done` with `/check` to streamline UX. Added a right-click inline Tag Action Menu to allow bulk deletion and native Tauri-based export of notes containing specific tags. Fixed UI collision issues where the tag menu was inheriting `.note-action-menu` CSS class and spawning off-screen.
+
+---
+
 ## 2026-06-23 - (Uncommitted)
 **Change:** fix: shift all keybinds to Alt and disable window auto-hide
 

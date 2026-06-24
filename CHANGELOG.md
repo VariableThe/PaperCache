@@ -5,6 +5,19 @@ All notable, user-facing changes to PaperCache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.5.2] - 2026-06-24
+
+### Added
+- **Slash Command Autosuggest**: Added an inline ghost text autosuggest widget for slash commands (e.g., `/check`, `/ai`). Pressing `Tab` instantly completes the command without interrupting typing flow.
+- **Auto-Open Version Notes**: Upon updating, PaperCache now automatically opens a summary note detailing the new features in the latest release and silently cleans up previous version notes from the workspace.
+- **Tag Context Menu**: Right-clicking a tag pill now reveals a beautifully styled inline action menu allowing users to easily delete all notes under that tag, or export them concatenated together into a single Markdown file directly via native system dialogs.
+
+### Fixed
+- Fixed an issue where the unified search view layout could overlap with the context menu or hide important tag management options.
+- The `/task-done` command has been streamlined down to `/check` for clarity and better UX alignment.
+
+---
+
 ## [v0.5.0-beta] - 2026-06-23
 
 ### Highlights
