@@ -20,3 +20,4 @@
 - **Focused PRs**: Don't refactor and add features in the same PR.
 - **Performance Reporting**: Performance changes require a before/after bundle size comparison in the PR description (just paste the Vite build output).
 - **Audit Logging**: Every change or significant update made must also be documented in `AUDIT_LOG.md`. Log what was done, when it was done, and why. Additionally, any user-facing changes (Added, Changed, Fixed, Performance, Security) must be documented in `CHANGELOG.md` under the appropriate release section.
+- **Version Bumps**: Any Pull Request which bumps the application version must include a corresponding pre-written markdown note named `New Features in v{new_version}.md` in the `notes/` directory.

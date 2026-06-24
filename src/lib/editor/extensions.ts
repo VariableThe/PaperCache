@@ -9,6 +9,7 @@ import { confirm } from '@tauri-apps/plugin-dialog'
 
 import { mdHighlighting } from './matchers'
 import { numberPlugin, symbolPlugin, aiPlugin, mathPlugin, decomposedPlugins } from './plugins'
+import { ghostTextPlugin, acceptGhostTextCommand } from './inlineSuggestion'
 import { useAIStore } from '../../store/useAIStore'
 import { useAppStore, type Note } from '../../store/useAppStore'
 
@@ -48,7 +49,14 @@ export function useEditorExtensions() {
       EditorView.lineWrapping,
       Prec.highest(
         keymap.of([
-          { key: 'Tab', preventDefault: true, run: insertTab },
+          {
+            key: 'Tab',
+            preventDefault: true,
+            run: (view) => {
+              if (acceptGhostTextCommand(view)) return true
+              return insertTab(view)
+            },
+          },
           { key: 'Shift-Tab', preventDefault: true, run: indentLess },
           {
             key: isHyprland ? 'Alt-h' : 'Mod-h',
@@ -207,6 +215,7 @@ export function useEditorExtensions() {
       aiPlugin,
       mathPlugin,
       ...decomposedPlugins,
+      ghostTextPlugin,
       EditorView.domEventHandlers({
         mousedown: (event) => {
           const target = event.target as HTMLElement

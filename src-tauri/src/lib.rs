@@ -46,7 +46,7 @@ pub fn run() {
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
-            commands::fs::run_onboarding();
+            commands::fs::run_onboarding(app.handle());
             tray::create_tray(app).expect("Failed to create tray");
 
             use tauri::Manager;

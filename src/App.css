@@ -801,3 +801,87 @@ body {
   color: #8b5cf6;
   background-color: rgba(139, 92, 246, 0.1);
 }
+
+/* Beautiful Autocomplete Tooltip overrides */
+.cm-tooltip.cm-tooltip-autocomplete {
+  background-color: rgba(30, 30, 30, 0.85); /* Dark translucent background */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  padding: 4px;
+  font-family: 'Inter', 'Outfit', var(--font-family), sans-serif;
+  overflow: hidden;
+}
+
+.cm-tooltip-autocomplete > ul {
+  max-height: 250px;
+}
+
+.cm-tooltip-autocomplete > ul > li {
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  margin-bottom: 2px;
+}
+
+.cm-tooltip-autocomplete > ul > li:last-child {
+  margin-bottom: 0;
+}
+
+.cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background-color: rgba(139, 92, 246, 0.3); /* Purple accent */
+  color: #fff;
+  font-weight: 500;
+}
+
+.cm-completionIcon {
+  margin-right: 8px;
+  opacity: 0.8;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.cm-completionLabel {
+  flex: 1;
+}
+
+.cm-completionDetail {
+  margin-left: 12px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: normal;
+}
+
+.cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Light mode overrides for autocomplete */
+@media (prefers-color-scheme: light) {
+  .cm-tooltip.cm-tooltip-autocomplete {
+    background-color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  .cm-tooltip-autocomplete > ul > li {
+    color: rgba(0, 0, 0, 0.8);
+  }
+  .cm-tooltip-autocomplete > ul > li[aria-selected] {
+    background-color: rgba(139, 92, 246, 0.15); /* Light purple accent */
+    color: #4c1d95;
+  }
+  .cm-completionDetail {
+    color: rgba(0, 0, 0, 0.4);
+  }
+  .cm-tooltip-autocomplete > ul > li[aria-selected] .cm-completionDetail {
+    color: rgba(76, 29, 149, 0.7);
+  }
+}

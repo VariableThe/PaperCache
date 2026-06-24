@@ -43,6 +43,7 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
   notes.forEach((note) => {
     const tasks = parseAllTasks(note.content)
     for (const task of tasks) {
+      if (task.isDone) continue
       reminders.push({
         noteId: note.id,
         done: task.isDone,

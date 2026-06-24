@@ -22,3 +22,19 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run test
+      - name: Check version bump and new features note
+        if: matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request'
+        run: |
+          git fetch origin main
+          MAIN_VERSION=$(git show origin/main:package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+          CURR_VERSION=$(grep '"version"' package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+          MAIN_TAURI_VERSION=$(git show origin/main:src-tauri/tauri.conf.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+          CURR_TAURI_VERSION=$(grep '"version"' src-tauri/tauri.conf.json | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
+          
+          if [ "$MAIN_VERSION" != "$CURR_VERSION" ] || [ "$MAIN_TAURI_VERSION" != "$CURR_TAURI_VERSION" ]; then
+            echo "Version bumped. Checking for New Features note..."
+            if [ ! -f "notes/New Features in v${CURR_VERSION}.md" ]; then
+              echo "Error: Missing notes/New Features in v${CURR_VERSION}.md"
+              exit 1
+            fi
+          fi

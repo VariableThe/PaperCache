@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_dialog::DialogExt;
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -197,7 +197,7 @@ pub fn set_dialog_open(state: tauri::State<'_, crate::DialogState>, open: bool) 
     state.is_open.store(open, Ordering::SeqCst);
 }
 
-pub fn run_onboarding() {
+pub fn run_onboarding(app: &AppHandle) {
     let is_hyprland = std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok();
     let mod_key = if is_hyprland { "Alt" } else { "Command/Ctrl" };
 
@@ -236,6 +236,35 @@ pub fn run_onboarding() {
                     &translate_path,
                     "# Translate\n\nPlease translate the following text into English.",
                 );
+            }
+        }
+
+        let version = app.package_info().version.to_string();
+        let note_filename = format!("New Features in v{}.md", version);
+        let note_target_path = base.join(&note_filename);
+        
+        if !note_target_path.exists() {
+            // First, delete any old "New Features in vX.Y.Z.md" notes
+            if let Ok(entries) = fs::read_dir(&base) {
+                for entry in entries.filter_map(Result::ok) {
+                    let path = entry.path();
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if name.starts_with("New Features in v") && name.ends_with(".md") && name != note_filename.as_str() {
+                            let _ = fs::remove_file(&path);
+                        }
+                    }
+                }
+            }
+
+            // Now copy the new note if it exists in bundled resources
+            if let Ok(resource_dir) = app.path().resource_dir() {
+                let bundled_note = resource_dir.join("notes").join(&note_filename);
+                let bundled_note_up = resource_dir.join("_up_").join("notes").join(&note_filename);
+                if bundled_note.exists() {
+                    let _ = fs::copy(&bundled_note, &note_target_path);
+                } else if bundled_note_up.exists() {
+                    let _ = fs::copy(&bundled_note_up, &note_target_path);
+                }
             }
         }
     }
