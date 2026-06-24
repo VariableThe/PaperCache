@@ -22,6 +22,7 @@ export function NoteSearch() {
 
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [tagActionMenuIndex, setTagActionMenuIndex] = useState(0)
+  const [tagMenuPos, setTagMenuPos] = useState({ x: 0, y: 0 })
 
   if (!showNoteSearch) return null
 
@@ -30,6 +31,14 @@ export function NoteSearch() {
     const fileName = n.id.replace(/\.md$/, '').split('/').pop() || ''
     return isAuto ? n.content.split('\n')[0].trim() || 'New Note' : fileName
   }
+
+  const getNoteTags = (n: Note): string[] => {
+    const matches = n.content.match(/![a-zA-Z0-9_-]+/g)
+    return matches || []
+  }
+
+  const tagMatch = (tag: string) => (n: Note) =>
+    getNoteTags(n).some((t) => t.toLowerCase() === tag.toLowerCase())
 
   const filteredNotes = notes.filter(
     (n) =>
@@ -40,10 +49,7 @@ export function NoteSearch() {
 
   const allTags = new Set<string>()
   notes.forEach((n) => {
-    const matches = n.content.match(/![a-zA-Z0-9_-]+/g)
-    if (matches) {
-      matches.forEach((m) => allTags.add(m.toLowerCase()))
-    }
+    getNoteTags(n).forEach((m) => allTags.add(m.toLowerCase()))
   })
   const tagArray = Array.from(allTags).sort()
 
@@ -71,11 +77,11 @@ export function NoteSearch() {
               e.preventDefault()
               const tag = activeTag
               setActiveTag(null)
+              if (!tag) return
+              const matchNotes = notes.filter(tagMatch(tag))
               if (tagActionMenuIndex === 0) {
                 const doDelete = async () => {
-                  const notesToDelete = notes.filter((n) =>
-                    n.content.toLowerCase().includes(tag.toLowerCase())
-                  )
+                  const notesToDelete = matchNotes
                   await window.electronAPI.setDialogOpen(true)
                   const confirmed = await confirm(
                     `Delete ${notesToDelete.length} notes containing tag ${tag}?`,
@@ -101,9 +107,7 @@ export function NoteSearch() {
                 doDelete()
               } else if (tagActionMenuIndex === 1) {
                 const doExport = async () => {
-                  const notesToExport = notes.filter((n) =>
-                    n.content.toLowerCase().includes(tag.toLowerCase())
-                  )
+                  const notesToExport = matchNotes
                   const combinedContent = notesToExport
                     .map((n) => {
                       const title = getNoteTitle(n)
@@ -214,9 +218,9 @@ export function NoteSearch() {
           <div
             className="tag-action-menu"
             style={{
-              position: 'absolute',
-              top: 50,
-              left: 16,
+              position: 'fixed',
+              top: tagMenuPos.y,
+              left: tagMenuPos.x,
               zIndex: 1000,
               background: 'var(--bg-color)',
               border: '1px solid var(--border-color)',
@@ -256,9 +260,8 @@ export function NoteSearch() {
                 e.stopPropagation()
                 const tag = activeTag
                 setActiveTag(null)
-                const notesToDelete = notes.filter((n) =>
-                  n.content.toLowerCase().includes(tag.toLowerCase())
-                )
+                if (!tag) return
+                const notesToDelete = notes.filter(tagMatch(tag))
                 await window.electronAPI.setDialogOpen(true)
                 const confirmed = await confirm(
                   `Delete ${notesToDelete.length} notes containing tag ${tag}?`,
@@ -305,9 +308,8 @@ export function NoteSearch() {
                 e.stopPropagation()
                 const tag = activeTag
                 setActiveTag(null)
-                const notesToExport = notes.filter((n) =>
-                  n.content.toLowerCase().includes(tag.toLowerCase())
-                )
+                if (!tag) return
+                const notesToExport = notes.filter(tagMatch(tag))
                 const combinedContent = notesToExport
                   .map((n) => {
                     const title = getNoteTitle(n)
@@ -361,6 +363,7 @@ export function NoteSearch() {
                   e.stopPropagation()
                   setActiveTag(tag)
                   setTagActionMenuIndex(0)
+                  setTagMenuPos({ x: e.clientX, y: e.clientY })
                   setShowNoteActionMenu(false)
                 }}
               >
