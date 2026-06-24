@@ -2,7 +2,7 @@
   <img src="public/icon.png" width="128" height="128" alt="PaperCache Logo">
   
   # PaperCache
-  **A floating markdown scratchpad for developers and power users.**
+  **A floating knowledge manager for developers and power users.**
 </div>
 
 > **Why PaperCache?** I saw a cool tool called Antinote, but it was locked behind a paywall. I wanted something similar that was open source and fit my own workflow perfectly, so I built PaperCache to match it. It solved my problem, and I figured other people might have the exact same needs, so I made it completely free and open for everyone. Read the full story in our [Core Philosophy](PHILOSOPHY.md).
