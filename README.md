@@ -20,7 +20,7 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 - **Interactive Checkboxes & Slash Commands** — Type `/` to see inline autosuggestions (like `/check`, `/task`, or `/ai`). Press `Tab` to instantly complete them. Checkboxes strike through text when clicked.
 - **Tasks & Reminders** — Type `/task` followed by `@ 1d2h` to set a due date. Press `Cmd+T` to open a unified Tasks view that tracks all your pending items and due times.
 - **Tags & folders** — `!tagname` for tags, `/` in note titles for folders. Right-click any tag pill to export or delete all tagged notes at once.
-- **Graph view** — see how your notes connect (`Cmd+G`).
+- **Graph view** — press `Cmd+G` to open a 2D knowledge graph with flat circle nodes, always-visible labels, and folder-based clustering. Press `Cmd+F` to fuzzy-search nodes and fly directly to the match.
 
 > **Deep Dive:** For a comprehensive list of every single feature in PaperCache, check out [features.md](features.md).
 > **Performance:** We take speed and battery life seriously. Check out our [Performance Audit](PERFORMANCE_AUDIT.md).
@@ -81,14 +81,16 @@ Built with Tauri, Rust, React, TypeScript, and Vite.
 | `Cmd+Shift+N` | New note (global, configurable)          |
 | `Cmd+Shift+S` | Open settings panel                      |
 | `Cmd+N`       | New note (in-app)                        |
+| `Cmd+/`       | Open shortcuts reference                 |
 | `Cmd+T`       | Open Tasks page                          |
 | `Cmd+K`       | Main action menu                         |
 | `Cmd+P`       | Search notes                             |
 | `Cmd+G`       | Graph view                               |
+| `Cmd+F`       | Search in graph (while graph is open)    |
 | `Cmd+H`       | Highlight selected text                  |
 | `Cmd+E`       | Export note                              |
 | `Cmd+Click`   | Follow internal link                     |
-| `Esc`         | Close menus or modals                    |
+| `Esc`         | Close menus / modals                     |
 
 ---
 

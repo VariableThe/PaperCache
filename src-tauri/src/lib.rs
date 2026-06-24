@@ -9,7 +9,8 @@ mod tray;
 
 
 use commands::shortcuts::GlobalShortcutState;
-use std::sync::atomic::{AtomicBool, Ordering};
+use commands::notifications::NotificationState;
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 
 pub struct DialogState {
@@ -29,8 +30,10 @@ pub fn run() {
     tauri::Builder::default()
         .manage(GlobalShortcutState::default())
         .manage(DialogState::default())
+        .manage(NotificationState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(
@@ -65,20 +68,43 @@ pub fn run() {
 
                 let dialog_state = app.state::<crate::DialogState>();
                 let is_dialog_open = dialog_state.is_open.clone();
+                #[cfg(not(target_os = "macos"))]
+                let focus_gen = Arc::new(AtomicU64::new(0));
 
                 window.on_window_event({
                     let w = window.clone();
+                    #[cfg(not(target_os = "macos"))]
+                    let gen = focus_gen.clone();
                     move |event| match event {
                         tauri::WindowEvent::CloseRequested { api, .. } => {
                             api.prevent_close();
                             let _ = w.hide();
                         }
-                        tauri::WindowEvent::Focused(focused)
-                            if !focused && !is_dialog_open.load(Ordering::SeqCst) =>
-                        {
-                            let is_hyprland = std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok();
-                            if !is_hyprland {
+                        tauri::WindowEvent::Focused(focused) => {
+                            if *focused {
+                                #[cfg(not(target_os = "macos"))]
+                                { gen.fetch_add(1, Ordering::SeqCst); }
+                            } else if !is_dialog_open.load(Ordering::SeqCst) {
+                                #[cfg(target_os = "macos")]
                                 let _ = w.hide();
+
+                                #[cfg(not(target_os = "macos"))]
+                                {
+                                    let gen_at_spawn = gen.fetch_add(1, Ordering::SeqCst) + 1;
+                                    let w2 = w.clone();
+                                    let g2 = gen.clone();
+                                    let dialog_open = is_dialog_open.clone();
+                                    std::thread::spawn(move || {
+                                        std::thread::sleep(
+                                            std::time::Duration::from_millis(200),
+                                        );
+                                        if g2.load(Ordering::SeqCst) == gen_at_spawn
+                                            && !dialog_open.load(Ordering::SeqCst)
+                                        {
+                                            let _ = w2.hide();
+                                        }
+                                    });
+                                }
                             }
                         }
                         _ => {}
@@ -104,6 +130,7 @@ pub fn run() {
             commands::fs::rename_note,
             commands::fs::export_note,
             commands::fs::set_dialog_open,
+            commands::fs::remove_onboarding_files,
             commands::system::close_window,
             commands::system::quit_app,
             commands::system::open_external,
@@ -120,6 +147,10 @@ pub fn run() {
             commands::shortcuts::update_global_shortcut,
             commands::shortcuts::pause_shortcuts,
             commands::shortcuts::resume_shortcuts,
+            commands::notifications::schedule_reminders,
+            commands::notifications::cancel_all_reminders,
+            commands::notifications::schedule_timer,
+            commands::notifications::cancel_timer,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

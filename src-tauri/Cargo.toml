@@ -1,6 +1,6 @@
 [package]
 name = "papercache"
-version = "0.4.0"
+version = "0.5.3"
 description = "A PaperCache Tauri App"
 authors = ["Aditya Sharma"]
 edition = "2021"
@@ -27,6 +27,7 @@ dirs = "5.0"
 aes-gcm = "0.10"
 rand = "0.8"
 base64 = "0.22"
+tauri-plugin-notification = "2.0.0-rc.5"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.25"

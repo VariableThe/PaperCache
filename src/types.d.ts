@@ -1,3 +1,9 @@
+export interface ReminderPayload {
+  key: string
+  label: string
+  dueAt: number
+}
+
 export interface ElectronAPI {
   closeWindow: () => Promise<void>
   getNotes: () => Promise<import('./store/useAppStore').Note[]>
@@ -16,7 +22,12 @@ export interface ElectronAPI {
   readNote: (id: string) => Promise<string>
   exportNote: (filename: string, content: string) => Promise<boolean>
   setDialogOpen: (open: boolean) => Promise<void>
+  scheduleReminders: (reminders: ReminderPayload[]) => Promise<void>
+  cancelReminders: () => Promise<void>
+  scheduleTimer: (id: string, durationMs: number, label: string) => Promise<void>
+  cancelTimer: (id: string) => Promise<void>
 
+  removeOnboardingFiles: () => Promise<void>
   quitApp: () => void
   openExternal: (url: string) => void
   openFile: (path: string) => void

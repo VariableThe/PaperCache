@@ -8,6 +8,7 @@ export function MainActionMenu() {
   const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
   const setShowGraphView = useAppStore((state) => state.setShowGraphView)
   const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
+  const setShowTimersView = useAppStore((state) => state.setShowTimersView)
   const setShowSettingsModal = useAppStore((state) => state.setShowSettingsModal)
 
   const { bgType, bgColor, textColor, fontFamily } = useSettingsStore()
@@ -81,6 +82,18 @@ export function MainActionMenu() {
         }}
       >
         Tasks
+      </button>
+      <button
+        onClick={() => setShowTimersView(true)}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          color: textColor,
+          cursor: 'pointer',
+          fontSize: 14,
+        }}
+      >
+        Timers
       </button>
       <button
         onClick={() => {

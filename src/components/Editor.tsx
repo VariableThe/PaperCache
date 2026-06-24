@@ -93,6 +93,11 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
     }
   }, [activeNote.id])
 
+  useEffect(() => {
+    document.querySelector('.editor-container')?.scrollTo(0, 0)
+    document.querySelector('.cm-scroller')?.scrollTo(0, 0)
+  }, [activeNote.id])
+
   return (
     <div className="editor-container">
       <CodeMirror

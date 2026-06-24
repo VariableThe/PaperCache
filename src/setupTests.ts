@@ -72,6 +72,10 @@ if (typeof window !== 'undefined') {
     onPowerResume: vi.fn().mockReturnValue(() => {}),
     pauseShortcuts: vi.fn(),
     resumeShortcuts: vi.fn(),
+    scheduleReminders: vi.fn().mockResolvedValue(undefined),
+    cancelReminders: vi.fn().mockResolvedValue(undefined),
+    scheduleTimer: vi.fn().mockResolvedValue(undefined),
+    cancelTimer: vi.fn().mockResolvedValue(undefined),
   } as ElectronAPI
 }
 
