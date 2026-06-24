@@ -19,7 +19,6 @@ interface TimerItemProps {
   timer: Timer
   onRemove: (id: string) => void
   onPause: (id: string) => void
-  onResume: (id: string) => void
 }
 
 function formatTime(ms: number): string {
@@ -33,7 +32,7 @@ function formatTime(ms: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-function TimerItem({ timer, onRemove, onPause, onResume }: TimerItemProps) {
+function TimerItem({ timer, onRemove, onPause }: TimerItemProps) {
   const tickTimer = useTimerStore((s) => s.tickTimer)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -76,13 +75,9 @@ function TimerItem({ timer, onRemove, onPause, onResume }: TimerItemProps) {
       <div className="timer-header">
         <span className="timer-label">{timer.label || 'Timer'}</span>
         <div className="timer-controls">
-          {!isCompleted && (
-            <button
-              className="timer-btn"
-              onClick={() => (isPaused ? onResume(timer.id) : onPause(timer.id))}
-              title={isPaused ? 'Resume' : 'Pause'}
-            >
-              {isPaused ? '▶' : '⏸'}
+          {timer.status === 'running' && (
+            <button className="timer-btn" onClick={() => onPause(timer.id)} title="Pause">
+              ⏸
             </button>
           )}
           <button
@@ -125,7 +120,6 @@ export function TimersPage({ onClose }: TimersPageProps) {
   const addTimer = useTimerStore((s) => s.addTimer)
   const removeTimer = useTimerStore((s) => s.removeTimer)
   const pauseTimer = useTimerStore((s) => s.pauseTimer)
-  const resumeTimer = useTimerStore((s) => s.resumeTimer)
   const completeTimer = useTimerStore((s) => s.completeTimer)
   const addToast = useAppStore((s) => s.addToast)
 
@@ -291,13 +285,7 @@ export function TimersPage({ onClose }: TimersPageProps) {
             </div>
           ) : (
             timers.map((t) => (
-              <TimerItem
-                key={t.id}
-                timer={t}
-                onRemove={handleRemove}
-                onPause={pauseTimer}
-                onResume={resumeTimer}
-              />
+              <TimerItem key={t.id} timer={t} onRemove={handleRemove} onPause={pauseTimer} />
             ))
           )}
         </div>

@@ -3,12 +3,7 @@ import { listen } from '@tauri-apps/api/event'
 import { useAppStore, type Note } from '../store/useAppStore'
 import { SETTINGS_KEYS } from '../lib/settingsKeys'
 import { parseAllTasks } from '../lib/taskUtils'
-
-interface ReminderPayload {
-  key: string
-  label: string
-  dueAt: number // Unix ms
-}
+import type { ReminderPayload } from '../types'
 
 // Monotonically increasing token to prevent stale scheduleReminders calls
 let scheduleToken = 0

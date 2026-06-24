@@ -93,11 +93,14 @@ pub fn run() {
                                     let gen_at_spawn = gen.fetch_add(1, Ordering::SeqCst) + 1;
                                     let w2 = w.clone();
                                     let g2 = gen.clone();
+                                    let dialog_open = is_dialog_open.clone();
                                     std::thread::spawn(move || {
                                         std::thread::sleep(
                                             std::time::Duration::from_millis(200),
                                         );
-                                        if g2.load(Ordering::SeqCst) == gen_at_spawn {
+                                        if g2.load(Ordering::SeqCst) == gen_at_spawn
+                                            && !dialog_open.load(Ordering::SeqCst)
+                                        {
                                             let _ = w2.hide();
                                         }
                                     });

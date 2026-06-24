@@ -53,7 +53,9 @@ pub async fn schedule_reminders(
             let _ = app_clone.emit("reminder-fired", &key);
         });
 
-        new_handles.insert(reminder.key, handle);
+        if let Some(old) = new_handles.insert(reminder.key, handle) {
+            old.abort();
+        }
     }
 
     {

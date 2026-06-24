@@ -77,10 +77,7 @@ export const useTimerStore = create<TimerState>((set) => ({
     }))
   },
 
-  resumeTimer: (id) => {
-    // Backend does not support pause/resume yet; resume via a fresh schedule
-    set((state) => ({
-      timers: state.timers.map((t) => (t.id === id ? { ...t, status: 'completed' } : t)),
-    }))
+  resumeTimer: () => {
+    // Backend does not support pause/resume yet; resume action is gated in the UI
   },
 }))

@@ -197,12 +197,13 @@ pub fn set_dialog_open(state: tauri::State<'_, crate::DialogState>, open: bool) 
     state.is_open.store(open, Ordering::SeqCst);
 }
 
-fn write_onboarding_file(base: &Path, rel_path: &str, content: &str, is_new_version: bool) {
+fn write_onboarding_file(base: &Path, rel_path: &str, content: &str, _is_new_version: bool) {
     let path = base.join(rel_path);
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
-    if !path.exists() || is_new_version {
+    // Only write if file doesn't exist — preserve user edits across version changes
+    if !path.exists() {
         let _ = fs::write(&path, content);
     }
 }
@@ -210,14 +211,9 @@ fn write_onboarding_file(base: &Path, rel_path: &str, content: &str, is_new_vers
 #[tauri::command]
 pub fn remove_onboarding_files() -> Result<(), String> {
     if let Ok(base) = get_papercache_dir() {
-        let welcome = base.join("Welcome.md");
-        let _ = fs::remove_file(&welcome);
-
+        // Only remove generated onboarding content — preserve Welcome.md and commands/
         let onboarding_dir = base.join("onboarding");
         let _ = fs::remove_dir_all(&onboarding_dir);
-
-        let commands_dir = base.join("commands");
-        let _ = fs::remove_dir_all(&commands_dir);
 
         let marker = base.join(".onboarding_version");
         let _ = fs::remove_file(&marker);
@@ -324,7 +320,7 @@ pub fn run_onboarding(app: &AppHandle) {
 
         write_onboarding_file(&base, "onboarding/Graph.md", &format!(
             "# Graph View\n\n\
-            Press **{0} + G** to open the interactive 2D knowledge graph.\n\n\
+            Press **{0} + G** to open the interactive 3D knowledge graph.\n\n\
             ## Features\n\n\
             - Every note is a flat circle node; internal links become edges between nodes\n\
             - Nodes cluster by folder with distinct HSL colors\n\
