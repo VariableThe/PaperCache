@@ -189,9 +189,13 @@ export default function GraphView({
   // Search
   const [showSearch, setShowSearch] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<GraphNode[]>([])
   const [searchIndex, setSearchIndex] = useState(0)
   const searchRef = useRef<HTMLInputElement>(null)
+
+  const searchResults = useMemo(() => {
+    if (!showSearch) return []
+    return graphData.nodes.filter((n) => fuzzyMatch(n.name, searchQuery))
+  }, [searchQuery, showSearch, graphData.nodes])
 
   const focusOnNode = useCallback((nodeId: string) => {
     const fg = fgRef.current
@@ -261,13 +265,6 @@ export default function GraphView({
     }
     return false
   }
-
-  useEffect(() => {
-    if (!showSearch) return
-    const filtered = graphData.nodes.filter((n) => fuzzyMatch(n.name, searchQuery))
-    setSearchResults(filtered)
-    setSearchIndex(0)
-  }, [searchQuery, showSearch, graphData.nodes])
 
   const handleSearchKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -342,7 +339,10 @@ export default function GraphView({
               <input
                 ref={searchRef}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  setSearchIndex(0)
+                }}
                 onKeyDown={handleSearchKeyDown}
                 placeholder="Search notes…"
                 style={{
