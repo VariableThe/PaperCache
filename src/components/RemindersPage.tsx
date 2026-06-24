@@ -56,9 +56,8 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
     }
   })
 
-  // Sort: Overdue first, then soonest, then no target, then done
+  // Sort: Overdue first, then soonest, then no target
   reminders.sort((a, b) => {
-    if (a.done !== b.done) return a.done ? 1 : -1
     if (a.targetMs && b.targetMs) return a.targetMs - b.targetMs
     if (a.targetMs) return -1
     if (b.targetMs) return 1
