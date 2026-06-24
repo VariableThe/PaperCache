@@ -32,3 +32,5 @@ target/
 src-tauri/target/
 src-tauri/gen/
 window-state.json
+*.tar.gz
+*.tar.xz

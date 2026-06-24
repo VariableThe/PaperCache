@@ -101,6 +101,48 @@ export function useGlobalHotkey() {
         e.stopPropagation()
         setShowMainActionMenu((prev) => !prev)
       }
+
+      // Shortcuts reference
+      if ((e.key === '/' || e.key === '?') && isMod) {
+        e.preventDefault()
+        e.stopPropagation()
+        const { notes } = useAppStore.getState()
+        const existingIndex = notes.findIndex((n) => n.id === 'Shortcuts.md')
+        if (existingIndex !== -1) {
+          setCurrentNoteIndex(existingIndex)
+        } else {
+          const shortcutsContent = `# Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| \`Cmd+Shift+C\` | Toggle visibility (global, configurable) |
+| \`Cmd+Shift+N\` | New note (global, configurable) |
+| \`Cmd+Shift+S\` | Open settings |
+| \`Cmd+N\` | New note |
+| \`Cmd+T\` | Tasks / Reminders |
+| \`Cmd+K\` | Main action menu |
+| \`Cmd+P\` | Search notes |
+| \`Cmd+G\` | Graph view |
+| \`Cmd+F\` | Search in graph |
+| \`Cmd+E\` | Export note |
+| \`Cmd+/\` | Show this shortcuts reference |
+| \`Esc\` | Close menus / modals |
+
+### Slash Commands
+Type \`/\` in the editor for inline suggestions:
+- \`/ai\` — AI prompt
+- \`/check\` — Checkbox
+- \`/task\` — Task with due date
+- \`/var\` — Local variable
+- \`/globvar\` — Global variable
+- \`/ctx\` — Context note
+`
+          const newNote = { id: 'Shortcuts.md', content: shortcutsContent, mtime: Date.now() }
+          setNotes((prev) => [newNote, ...prev])
+          setCurrentNoteIndex(0)
+          window.electronAPI.saveNote('Shortcuts.md', shortcutsContent)
+        }
+      }
     }
 
     // Sync global shortcut on load

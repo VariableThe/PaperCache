@@ -9,6 +9,7 @@ mod tray;
 
 
 use commands::shortcuts::GlobalShortcutState;
+use commands::notifications::NotificationState;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 
@@ -29,8 +30,10 @@ pub fn run() {
     tauri::Builder::default()
         .manage(GlobalShortcutState::default())
         .manage(DialogState::default())
+        .manage(NotificationState::default())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_notification::init())
         .plugin(
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(
@@ -65,20 +68,40 @@ pub fn run() {
 
                 let dialog_state = app.state::<crate::DialogState>();
                 let is_dialog_open = dialog_state.is_open.clone();
+                #[cfg(not(target_os = "macos"))]
+                let pending_hide = Arc::new(AtomicBool::new(false));
 
                 window.on_window_event({
                     let w = window.clone();
+                    #[cfg(not(target_os = "macos"))]
+                    let pending = pending_hide.clone();
                     move |event| match event {
                         tauri::WindowEvent::CloseRequested { api, .. } => {
                             api.prevent_close();
                             let _ = w.hide();
                         }
-                        tauri::WindowEvent::Focused(focused)
-                            if !focused && !is_dialog_open.load(Ordering::SeqCst) =>
-                        {
-                            let is_hyprland = std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok();
-                            if !is_hyprland {
+                        tauri::WindowEvent::Focused(focused) => {
+                            if focused {
+                                #[cfg(not(target_os = "macos"))]
+                                pending.store(false, Ordering::SeqCst);
+                            } else if !is_dialog_open.load(Ordering::SeqCst) {
+                                #[cfg(target_os = "macos")]
                                 let _ = w.hide();
+
+                                #[cfg(not(target_os = "macos"))]
+                                {
+                                    pending.store(true, Ordering::SeqCst);
+                                    let w2 = w.clone();
+                                    let p2 = pending.clone();
+                                    std::thread::spawn(move || {
+                                        std::thread::sleep(
+                                            std::time::Duration::from_millis(200),
+                                        );
+                                        if p2.swap(false, Ordering::SeqCst) {
+                                            let _ = w2.hide();
+                                        }
+                                    });
+                                }
                             }
                         }
                         _ => {}
@@ -120,6 +143,10 @@ pub fn run() {
             commands::shortcuts::update_global_shortcut,
             commands::shortcuts::pause_shortcuts,
             commands::shortcuts::resume_shortcuts,
+            commands::notifications::schedule_reminders,
+            commands::notifications::cancel_all_reminders,
+            commands::notifications::schedule_timer,
+            commands::notifications::cancel_timer,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

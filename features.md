@@ -25,10 +25,16 @@ This document outlines every feature available in the PaperCache codebase, organ
 
 - **Note Folders**: Implicitly organize notes into folders by adding a `/` in the title (e.g., `projects/PaperCache.md`). Folders are auto-detected, color-coded, and cleanly removed from disk if they become empty.
 - **Internal Note Linking**: Link to other notes using markdown links like `[link text](/file Note.md)` or simply `/file Note.md`. Click the link with `Cmd+Click` or `Ctrl+Click` to instantly navigate to it. URL links also open in the system browser.
-- **Interactive Graph View**: An interactive, visual 2D node graph (`Cmd+G`) showing all connected notes, color-coded automatically based on their implicit folder. Click a node to open it.
+- **Interactive Graph View** (`Cmd+G`): An interactive 2D knowledge graph rendered with Three.js WebGL. Nodes are clean flat circles with always-visible labels, edges are colored by opacity. Features:
+  - **Folder Clustering**: Notes in the same folder are gently attracted toward a shared centroid, creating subtle visual groupings.
+  - **Cmd+F Fuzzy Search**: Press `Cmd+F` inside graph view to fuzzy-search note names. Navigate with arrow keys, press Enter to fly the camera directly to the matched node.
+  - **Drag to Rearrange**: Nodes can be dragged freely; positions are cached and restored across graph sessions.
+  - **Smooth Fade-in**: The graph overlay animates in with a 250ms fade.
+  - **Lazy-Loaded**: The Three.js bundle (~1.3 MB) loads only when the graph is first opened, keeping startup fast.
 - **Global Note Search**: Open an omnibar search (`Cmd+P`) to quickly fuzzy-search note contents and file names across the entire workspace.
 - **Tagging System & Context Menu**: Add inline tags using `!tagname`. The global search bar aggregates all unique tags as clickable filters to quickly isolate notes. Right-click any tag pill to open an inline action menu, allowing you to bulk-delete or export all notes containing that tag into a single Markdown file.
 - **Auto-Renaming**: Notes are auto-created with a timestamp ID. The title is intelligently inferred from the first line of the file (e.g., `# Header`), but can also be manually renamed by clicking the title bar.
+- **Shortcuts Reference** (`Cmd+/` or `Cmd+?`): Press this anywhere in the app to open or create a `Shortcuts.md` note listing every keyboard shortcut and slash command.
 
 ## Artificial Intelligence
 
@@ -40,11 +46,11 @@ This document outlines every feature available in the PaperCache codebase, organ
 
 ## Desktop System Integration
 
-- **Stealth / Background Mode**: Click away or lose focus, and the app instantly hides itself. On macOS, it runs as an "accessory" and hides its dock icon completely, acting like a true floating utility.
+- **Stealth / Background Mode**: Click away or lose focus, and the app instantly hides itself (macOS) or after a brief debounce (Windows/Linux — prevents accidental hide when dragging the title bar). On macOS, it runs as an "accessory" and hides its dock icon completely, acting like a true floating utility.
 - **Intelligent Multi-Monitor Support**: When summoning the app via its global hotkey, it detects the active screen your mouse is currently on and brings the window instantly to that specific screen's workspace.
 - **System Tray Icon**: A minimal system tray icon for toggling visibility or quitting the app cleanly, adapting to the user's OS theme (light/dark).
 - **Global Hotkeys**:
-  - `Cmd+Shift+N` (configurable): Instantly spawn a new floating note from anywhere on your OS.
+  - `Cmd+Shift+N` (configurable): Spawn a new note from anywhere. If the app is already open, creates the note without hiding.
   - `Cmd+Shift+C` (configurable): Toggle PaperCache visibility from anywhere on your OS.
 - **State Memory**: Memorizes precise window coordinates, dimensions, and zoom levels across launches to persist workspace state.
 - **Fluid Settings**: Opening the Settings menu dynamically inherits the exact dimensions and on-screen coordinates of your current notepad for a native, seamless transition.
@@ -52,3 +58,5 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Exporting Options**: Export individual notes straight to a local `.md` file on your filesystem via the main menu or search list.
 - **Safe Tutorials**: Auto-generates fully functional Markdown tutorials in a `commands/` folder upon first launch. Prevents accidental deletion of these core tutorial files.
 - **Smart Version Updates**: Upon updating to a new release, PaperCache automatically opens a "New Features" summary note on your first launch and cleanly deletes older version notes behind the scenes to keep your workspace tidy.
+- **Fresh Install Welcome**: First-time users automatically open to a revamped `Welcome.md` note with a complete feature overview instead of an empty editor.
+- **Node Positions Persist**: After closing the graph view, node positions are cached and restored on next open, preserving manual arrangement.

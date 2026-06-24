@@ -23,6 +23,11 @@ export const tauriApi: ElectronAPI = {
   quitApp: () => invoke('quit_app'),
   openExternal: (url) => invoke('open_external', { url }),
   openFile: (path) => invoke('open_file', { path }),
+  scheduleReminders: (reminders) =>
+    invoke('schedule_reminders', { reminders: reminders as unknown[] }),
+  cancelReminders: () => invoke('cancel_all_reminders'),
+  scheduleTimer: (id, durationMs, label) => invoke('schedule_timer', { id, durationMs, label }),
+  cancelTimer: (id) => invoke('cancel_timer', { id }),
 
   // Phase 3+ Stubs
   openAIChat: (args) => invoke('openai_chat', args),

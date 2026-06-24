@@ -6,6 +6,12 @@ export interface Note {
   mtime: number
 }
 
+export interface Toast {
+  id: string
+  message: string
+  type: 'info' | 'success' | 'warning' | 'error'
+}
+
 interface AppState {
   notes: Note[]
   currentNoteIndex: number
@@ -15,6 +21,8 @@ interface AppState {
   // UI state
   showGraphView: boolean
   showRemindersView: boolean
+  showTimersView: boolean
+  toasts: Toast[]
   isRenaming: boolean
   renameValue: string
   showNoteSearch: boolean
@@ -33,6 +41,9 @@ interface AppState {
 
   setShowGraphView: (show: boolean | ((prev: boolean) => boolean)) => void
   setShowRemindersView: (show: boolean | ((prev: boolean) => boolean)) => void
+  setShowTimersView: (show: boolean | ((prev: boolean) => boolean)) => void
+  addToast: (toast: Omit<Toast, 'id'>) => void
+  removeToast: (id: string) => void
   setIsRenaming: (isRenaming: boolean) => void
   setRenameValue: (renameValue: string) => void
   setShowNoteSearch: (show: boolean) => void
@@ -53,6 +64,8 @@ export const useAppStore = create<AppState>((set) => ({
 
   showGraphView: false,
   showRemindersView: false,
+  showTimersView: false,
+  toasts: [],
   isRenaming: false,
   renameValue: '',
   showNoteSearch: false,
@@ -84,6 +97,18 @@ export const useAppStore = create<AppState>((set) => ({
           ? showRemindersView(state.showRemindersView)
           : showRemindersView,
     })),
+  setShowTimersView: (showTimersView) =>
+    set((state) => ({
+      showTimersView:
+        typeof showTimersView === 'function'
+          ? showTimersView(state.showTimersView)
+          : showTimersView,
+    })),
+  addToast: (toast) =>
+    set((state) => ({
+      toasts: [...state.toasts, { ...toast, id: `toast-${Date.now()}-${Math.random()}` }],
+    })),
+  removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
   setIsRenaming: (isRenaming) => set({ isRenaming }),
   setRenameValue: (renameValue) => set({ renameValue }),
   setShowNoteSearch: (showNoteSearch) => set({ showNoteSearch }),

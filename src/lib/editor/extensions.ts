@@ -103,6 +103,16 @@ export function useEditorExtensions() {
               const line = view.state.doc.lineAt(pos)
               const lineText = line.text.trim()
               const lowerLine = lineText.toLowerCase()
+
+              // /timer — open the timers panel and erase the command line
+              if (lowerLine === '/timer' || lowerLine.startsWith('/timer ')) {
+                const from = line.from
+                const to = Math.min(line.to + 1, view.state.doc.length)
+                view.dispatch({ changes: { from, to, insert: '' } })
+                useAppStore.getState().setShowTimersView(true)
+                return true
+              }
+
               if (
                 lowerLine.startsWith('/ai') ||
                 lowerLine.startsWith('/ctx') ||

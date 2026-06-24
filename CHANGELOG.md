@@ -5,12 +5,42 @@ All notable, user-facing changes to PaperCache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.5.3] - 2026-06-24
+
+### Added
+- **Redesigned Graph View**: Nodes are now flat `CircleGeometry` with `depthWrite: true` and `renderOrder: 1` in the transparent pass, cleanly occluding edges behind them. Always-visible canvas-based text labels positioned below each node.
+- **Cmd+F Fuzzy Search in Graph**: Press `Cmd+F` in graph view to search note names by fuzzy character matching. Navigate with arrow keys, confirm with Enter to fly the camera to the matching node.
+- **Folder Clustering**: Notes sharing a folder are weakly attracted to a shared centroid via forceX/forceY at 0.008 strength, producing subtle visual grouping without breaking the unified cluster.
+- **Cmd+/ Shortcuts Reference**: Press `Cmd+/` (or `Cmd+?`) to open or create a `Shortcuts.md` note listing all keyboard shortcuts and slash commands.
+- **Fresh Install Welcome**: First-time launch now opens `Welcome.md` instead of looking for a new-features note. The welcome note has been revamped with a full feature overview.
+- **Lazy-Loaded Graph**: `GraphView` is dynamically imported with `React.lazy()` so the Three.js bundle (~1.3 MB) loads only when the graph is opened.
+- **Smooth Graph Fade-in**: The graph overlay animates in with a 250ms CSS keyframe fade.
+- **Persistent Node Positions**: After closing the graph view, node positions are cached and restored on next open, preserving manual arrangement.
+
+### Changed
+- **Cmd+Shift+N Behavior**: The global new-note shortcut no longer hides the app if it's already visible. It only shows the window when hidden. The shortcut always creates a new note regardless.
+- **Node Circle Size**: Increased from radius 8 to 12, with labels shifted and scaled accordingly.
+- **Windows Focus-Loss Debounce**: Hiding on focus loss now uses a 200ms debounce to prevent accidental hide when clicking the title bar for drag or resize.
+- **Node Positions Cache**: Force simulation no longer pushes dragged nodes back — the strength accessor skips nodes in the dragged set.
+- **Graph Controls**: OrbitControls configured with `enableRotate = false`, `LEFT = PAN`, `MIDDLE = DOLLY` for a pure 2D navigation experience.
+
+### Fixed
+- Fixed edges/lines showing through circle nodes by making circle meshes render in the transparent pass after links.
+- Fixed graph view opening inside the shortcut handler (removed stale `showGraphView` setter call from version check effect).
+- Fixed blank graph issue on re-open by caching node positions at component unmount.
+
+---
+
 ## [v0.5.2] - 2026-06-24
 
 ### Added
 - **Slash Command Autosuggest**: Added an inline ghost text autosuggest widget for slash commands (e.g., `/check`, `/ai`). Pressing `Tab` instantly completes the command without interrupting typing flow.
 - **Auto-Open Version Notes**: Upon updating, PaperCache now automatically opens a summary note detailing the new features in the latest release and silently cleans up previous version notes from the workspace.
 - **Tag Context Menu**: Right-clicking a tag pill now reveals a beautifully styled inline action menu allowing users to easily delete all notes under that tag, or export them concatenated together into a single Markdown file directly via native system dialogs.
+- **Native OS Reminder Notifications**: Task reminders (`/task`) now fire native OS notifications via the Rust backend using `tokio::time::sleep` + `tauri_plugin_notification`. Notifications fire reliably even when the app is minimized or out of focus, and gracefully handle OS-level permission denials.
+- **Countdown Timers**: New timer panel (accessible via the action menu or `/timer` command) lets you create, view, pause/resume, and cancel countdown timers. Timers display a live countdown using drift-corrected `setTimeout` chains and trigger both a native OS notification and an in-app alert on completion — even if you're viewing a different note.
+- **DSL Regex Parsing Engine**: New `createRegexPlugin()` factory in `dslPlugin.ts` enables flexible, regex-based Domain Specific Language parsing in the editor. Scans only visible ranges for O(visible lines) performance — lag-free at any document size. Supports custom mark decorations, widget injections, and match callbacks.
+- **WebGL Graph View**: The Graph View has been rewritten using Three.js WebGL via `react-force-graph-3d`. Notes in the same folder are attracted to shared centroid positions via custom `d3-force` simulation rules, causing them to cluster together naturally. The graph is lazy-loaded to avoid impacting editor startup time.
 
 ### Fixed
 - Fixed an issue where the unified search view layout could overlap with the context menu or hide important tag management options.

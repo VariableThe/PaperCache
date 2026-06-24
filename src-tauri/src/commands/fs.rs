@@ -205,8 +205,16 @@ pub fn run_onboarding(app: &AppHandle) {
         let welcome_path = base.join("Welcome.md");
         
         let welcome_content = format!(
-            "# Welcome to PaperCache\n\nThis is your first note. Start typing to edit it, or use {} + Shift + N to create a new one!",
-            mod_key
+            "# Welcome to PaperCache\n\nThis is your first note. Here's what you can do:\n\n\
+            - **New note** — Press {} + N (or {} + Shift + N from anywhere)\n\
+            - **Search notes** — Press {} + P\n\
+            - **Graph view** — Press {} + G to see how your notes connect\n\
+            - **Tasks & timers** — Press {} + T\n\
+            - **Shortcuts** — Press {} + / for the full list\n\
+            - **Slash commands** — Type `/` in the editor for AI, checkboxes, tasks, variables, and more\n\
+            - **Settings** — Press {} + Shift + S\n\n\
+            Start typing to edit this note, or create a new one!",
+            mod_key, mod_key, mod_key, mod_key, mod_key, mod_key, mod_key
         );
 
         if !welcome_path.exists() {

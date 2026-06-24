@@ -1,9 +1,10 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, lazy, Suspense } from 'react'
 import { getVersion } from '@tauri-apps/api/app'
 
 import './App.css'
-import GraphView from './GraphView'
+const GraphView = lazy(() => import('./GraphView'))
 import { RemindersPage } from './components/RemindersPage'
+import { TimersPage } from './components/TimersPage'
 
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
@@ -28,6 +29,10 @@ function App() {
   const setShowGraphView = useAppStore((state) => state.setShowGraphView)
   const showRemindersView = useAppStore((state) => state.showRemindersView)
   const setShowRemindersView = useAppStore((state) => state.setShowRemindersView)
+  const showTimersView = useAppStore((state) => state.showTimersView)
+  const setShowTimersView = useAppStore((state) => state.setShowTimersView)
+  const toasts = useAppStore((state) => state.toasts)
+  const removeToast = useAppStore((state) => state.removeToast)
   const showNoteSearch = useAppStore((state) => state.showNoteSearch)
   const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
   const showSettingsModal = useAppStore((state) => state.showSettingsModal)
@@ -53,6 +58,14 @@ function App() {
     })
   }, [])
 
+  // Auto-dismiss toasts after 5 seconds
+  useEffect(() => {
+    if (toasts.length === 0) return undefined
+    const ids = toasts.map((t) => t.id)
+    const timers = ids.map((id) => setTimeout(() => removeToast(id), 5000))
+    return () => timers.forEach(clearTimeout)
+  }, [toasts, removeToast])
+
   useEffect(() => {
     if (showNoteSearch && searchInputRef.current) {
       setTimeout(() => {
@@ -66,7 +79,17 @@ function App() {
       if (notes.length === 0) return
       const currentVersion = await getVersion()
       const lastSeenVersion = localStorage.getItem('papercache-last-seen-version')
-      if (lastSeenVersion !== currentVersion) {
+
+      if (lastSeenVersion === null) {
+        localStorage.setItem('papercache-last-seen-version', currentVersion)
+        const welcomeIndex = notes.findIndex((n) => {
+          const filename = n.id.split('/').pop() || ''
+          return filename === 'Welcome.md'
+        })
+        if (welcomeIndex !== -1) {
+          setCurrentNoteIndex(welcomeIndex)
+        }
+      } else if (lastSeenVersion !== currentVersion) {
         localStorage.setItem('papercache-last-seen-version', currentVersion)
         const targetId = `New Features in v${currentVersion}.md`
         const targetIndex = notes.findIndex((n) => {
@@ -146,21 +169,25 @@ function App() {
 
       <MainActionMenu />
 
+      {showTimersView && <TimersPage onClose={() => setShowTimersView(false)} />}
+
       {showGraphView && (
-        <GraphView
-          notes={notes}
-          onClose={() => setShowGraphView(false)}
-          textColor={textColor}
-          bgColor={bgColor}
-          accentColor={numColor}
-          onNodeClick={(nodeId) => {
-            const index = notes.findIndex((n) => n.id === nodeId)
-            if (index !== -1) {
-              setCurrentNoteIndex(index)
-              setShowGraphView(false)
-            }
-          }}
-        />
+        <Suspense fallback={null}>
+          <GraphView
+            notes={notes}
+            onClose={() => setShowGraphView(false)}
+            textColor={textColor}
+            bgColor={bgColor}
+            accentColor={numColor}
+            onNodeClick={(nodeId) => {
+              const index = notes.findIndex((n) => n.id === nodeId)
+              if (index !== -1) {
+                setCurrentNoteIndex(index)
+                setShowGraphView(false)
+              }
+            }}
+          />
+        </Suspense>
       )}
 
       <Editor ref={editorRef} />
@@ -180,6 +207,49 @@ function App() {
           }}
         >
           <Settings onClose={() => setShowSettingsModal(false)} />
+        </div>
+      )}
+
+      {/* In-app toast notifications */}
+      {toasts.length > 0 && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8,
+            zIndex: 99999,
+          }}
+        >
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              onClick={() => removeToast(toast.id)}
+              style={{
+                padding: '10px 16px',
+                borderRadius: 8,
+                background:
+                  toast.type === 'success'
+                    ? 'rgba(16, 185, 129, 0.95)'
+                    : toast.type === 'error'
+                      ? 'rgba(239, 68, 68, 0.95)'
+                      : toast.type === 'warning'
+                        ? 'rgba(245, 158, 11, 0.95)'
+                        : 'rgba(59, 130, 246, 0.95)',
+                color: '#fff',
+                fontSize: 13,
+                fontFamily: fontFamily,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                cursor: 'pointer',
+                maxWidth: 320,
+                animation: 'toast-in 0.25s ease',
+              }}
+            >
+              {toast.message}
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -3,6 +3,52 @@
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
 ## 2026-06-24 - (Uncommitted)
+**Change:** feat: graph view rebuilt, Windows focus-loss fix, Cmd+/ shortcuts, welcome revamp (v0.5.3)
+
+**Details/Why:**
+Major graph view overhaul and cross-platform fixes:
+
+1. **Flat Circle Nodes with Occlusion**: Replaced default 3D spheres with `CircleGeometry` meshes. Circles render in the transparent pass at `renderOrder: 1` (after edges), with `depthWrite: true` — edges passing through nodes are now cleanly occluded.
+
+2. **Always-Visible Labels**: Each node returns a `THREE.Group` containing the circle mesh plus a canvas-based `THREE.Sprite` label. Labels are positioned below each circle and always visible (never fade on zoom).
+
+3. **Cmd+F Fuzzy Search in Graph**: Search bar with character-order fuzzy matching, arrow-key navigation, and Enter to fly the camera to the matched node.
+
+4. **Folder Clustering**: `d3-force` `forceX`/`forceY` at 0.008 strength weakly attract same-folder nodes toward shared centroids on a 60-unit radius, creating subtle visual groupings.
+
+5. **Cmd+Shift+N No Longer Hides Open App**: Changed the Rust global shortcut handler in `shortcuts.rs` — for `new-note` action, window only shows if hidden; never hides when already visible. All other shortcuts (toggle, etc.) retain `toggle_window` behavior.
+
+6. **Windows Focus-Loss Debounce**: `lib.rs` focus-loss handler now uses a 200ms debounce via `AtomicBool` + `std::thread::spawn`. Clicking the title bar on Windows 10 briefly triggers `Focused(false)` — the debounce waits 200ms for a matching `Focused(true)` before hiding. On macOS, hide remains immediate.
+
+7. **Cmd+/ Shortcuts Reference**: New shortcut opens or auto-creates `Shortcuts.md` with all keyboard shortcuts and slash commands listed.
+
+8. **Fresh Install Welcome**: Version check in `App.tsx` detects `null` last-seen-version (fresh install) and opens `Welcome.md` instead of looking for a new-features note. The Rust onboarding template (`fs.rs`) was revamped with a bullet-list feature overview.
+
+9. **Lazy-Loaded Graph**: `GraphView` dynamically imported via `React.lazy()` — Three.js bundle (~1.3 MB) loads only on first graph open.
+
+10. **Doc Updates**: Version bumped to 0.5.3 across all manifest files. `CHANGELOG.md`, `features.md`, `README.md`, `notes/New Features in v0.5.3.md` all updated.
+
+---
+
+## 2026-06-24 - (Uncommitted)
+**Change:** feat: native notifications, timers, DSL regex engine, WebGL graph with folder attraction
+
+**Details/Why:**
+Implemented four major platform features as requested:
+
+1. **Native Reminder Notifications (Rust Backend):** Removed the old Web Notification API + `setTimeout` polling loop from the JS renderer. All reminder scheduling is now delegated to a new `commands/notifications.rs` Rust module. Uses `tokio::spawn` + `tokio::time::sleep` to wait for exact due times and fires native OS notifications via `tauri_plugin_notification`. This ensures reminders are reliable when the app is minimized, handles OS notification permission gracefully, and eliminates renderer-side timer drift. A `reminder-fired` Tauri event is emitted to the frontend to show an in-app toast and update localStorage.
+
+2. **Timers:** Added a new `useTimerStore.ts` Zustand store and `TimersPage.tsx` component with a glassmorphic panel UI. Countdowns use a chained `setTimeout` pattern (no `setInterval`) for drift-corrected display. The Rust backend (`schedule_timer` / `cancel_timer` commands) fires the native OS notification and emits `timer-complete` on completion — ensuring timers complete even when minimized. A "Timers" button was added to `MainActionMenu`, and the `/timer` slash command was added to the editor.
+
+3. **DSL Regex Parsing Engine:** Created `src/lib/editor/dslPlugin.ts` — a factory `createRegexPlugin(rules: DSLRule[])` that generates CodeMirror ViewPlugins. Scans only `view.visibleRanges` per update tick (O(visible lines)), guaranteeing lag-free typing at any document size. Supports `className` mark decorations, `widget` factories, and `onMatch` callbacks per rule.
+
+4. **WebGL Graph with Folder Attraction:** Replaced `react-force-graph-2d` (Canvas 2D) with `react-force-graph-3d` (Three.js / WebGL) lazy-loaded via `React.Suspense`. The graph is configured in 2D mode (z-axis locked). Added custom `d3-force` `forceX` and `forceY` forces that pull nodes toward per-folder centroid positions, creating organic cluster layouts where notes from the same folder attract each other.
+
+**Files changed:** `src-tauri/src/commands/notifications.rs` [NEW], `src-tauri/src/commands/mod.rs`, `src-tauri/src/lib.rs`, `src-tauri/Cargo.toml`, `src-tauri/capabilities/default.json`, `package.json`, `src/types.d.ts`, `src/api.ts`, `src/hooks/useReminders.ts`, `src/hooks/useReminders.test.ts`, `src/store/useAppStore.ts`, `src/store/useTimerStore.ts` [NEW], `src/components/TimersPage.tsx` [NEW], `src/components/MainActionMenu.tsx`, `src/lib/editor/slashCommands.ts`, `src/lib/editor/dslPlugin.ts` [NEW], `src/GraphView.tsx`, `src/App.tsx`, `src/App.css`.
+
+---
+
+## 2026-06-24 - (Uncommitted)
 **Change:** feat: add slash command autosuggest, auto-open new features note, and tag action menu for v0.5.2
 
 **Details/Why:**
