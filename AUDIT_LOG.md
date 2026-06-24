@@ -30,7 +30,7 @@ Major graph view overhaul and cross-platform fixes:
 
 ---
 
-## 2026-06-24 - (Uncommitted)
+## 2026-06-24 - Native Notifications, Timers, DSL Engine, WebGL Graph
 **Change:** feat: native notifications, timers, DSL regex engine, WebGL graph with folder attraction
 
 **Details/Why:**

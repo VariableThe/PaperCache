@@ -1,6 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
-import type { ElectronAPI } from './types'
+import type { ElectronAPI, ReminderPayload } from './types'
 
 export const tauriApi: ElectronAPI = {
   // Implemented Phase 2 Commands
@@ -23,8 +23,7 @@ export const tauriApi: ElectronAPI = {
   quitApp: () => invoke('quit_app'),
   openExternal: (url) => invoke('open_external', { url }),
   openFile: (path) => invoke('open_file', { path }),
-  scheduleReminders: (reminders) =>
-    invoke('schedule_reminders', { reminders: reminders as unknown[] }),
+  scheduleReminders: (reminders: ReminderPayload[]) => invoke('schedule_reminders', { reminders }),
   cancelReminders: () => invoke('cancel_all_reminders'),
   scheduleTimer: (id, durationMs, label) => invoke('schedule_timer', { id, durationMs, label }),
   cancelTimer: (id) => invoke('cancel_timer', { id }),

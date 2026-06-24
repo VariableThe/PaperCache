@@ -142,41 +142,44 @@ export default function GraphView({
   }, [notes])
 
   useEffect(() => {
-    const fg = fgRef.current
-    if (!fg) return
+    let attempts = 0
+    const id = setInterval(() => {
+      const fg = fgRef.current
+      if (!fg) {
+        attempts++
+        if (attempts > 20) clearInterval(id)
+        return
+      }
+      clearInterval(id)
 
-    const folders = Array.from(new Set(graphData.nodes.map((n) => n.folder).filter(Boolean)))
-    const centroids = buildFolderCentroids(folders)
+      const folders = Array.from(new Set(graphData.nodes.map((n) => n.folder).filter(Boolean)))
+      const centroids = buildFolderCentroids(folders)
 
-    fg.d3Force('centerX', d3.forceX<GraphNode>(0).strength(0.008))
-
-    fg.d3Force('centerY', d3.forceY<GraphNode>(0).strength(0.008))
-
-    fg.d3Force(
-      'folderX',
-      d3
-        .forceX<GraphNode>((node) => {
-          const c = centroids.get(node.folder)
-          return c ? c.cx : 0
-        })
-        .strength((node) => (node.folder && !draggedNodesRef.current.has(node.id) ? 0.008 : 0))
-    )
-
-    fg.d3Force(
-      'folderY',
-      d3
-        .forceY<GraphNode>((node) => {
-          const c = centroids.get(node.folder)
-          return c ? c.cy : 0
-        })
-        .strength((node) => (node.folder && !draggedNodesRef.current.has(node.id) ? 0.008 : 0))
-    )
-
-    fg.d3Force('charge')?.strength(-120)
-
-    fg.d3Force('collision', d3.forceCollide<GraphNode>(22))
-
-    fg.d3ReheatSimulation()
+      fg.d3Force('centerX', d3.forceX<GraphNode>(0).strength(0.008))
+      fg.d3Force('centerY', d3.forceY<GraphNode>(0).strength(0.008))
+      fg.d3Force(
+        'folderX',
+        d3
+          .forceX<GraphNode>((node) => {
+            const c = centroids.get(node.folder)
+            return c ? c.cx : 0
+          })
+          .strength((node) => (node.folder && !draggedNodesRef.current.has(node.id) ? 0.008 : 0))
+      )
+      fg.d3Force(
+        'folderY',
+        d3
+          .forceY<GraphNode>((node) => {
+            const c = centroids.get(node.folder)
+            return c ? c.cy : 0
+          })
+          .strength((node) => (node.folder && !draggedNodesRef.current.has(node.id) ? 0.008 : 0))
+      )
+      fg.d3Force('charge')?.strength(-120)
+      fg.d3Force('collision', d3.forceCollide<GraphNode>(22))
+      fg.d3ReheatSimulation()
+    }, 50)
+    return () => clearInterval(id)
   }, [graphData])
 
   const handleNodeClick = useCallback(
@@ -202,10 +205,7 @@ export default function GraphView({
     if (!fg) return
     const node = fg.graphData().nodes.find((n: GraphNode) => n.id === nodeId)
     if (!node || node.x == null || node.y == null) return
-    fg.centerAt(node.x, node.y, 400)
-    setTimeout(() => {
-      fg.cameraPosition({ x: node.x, y: node.y, z: 120 }, { x: node.x, y: node.y, z: 0 }, 400)
-    }, 200)
+    fg.cameraPosition({ x: node.x, y: node.y, z: 120 }, { x: node.x, y: node.y, z: 0 }, 400)
   }, [])
 
   const nodeThreeObject = useCallback(
@@ -376,7 +376,14 @@ export default function GraphView({
             </h2>
           )}
           <button
-            onClick={onClose}
+            onClick={() => {
+              if (showSearch) {
+                setShowSearch(false)
+                setSearchQuery('')
+              } else {
+                onClose()
+              }
+            }}
             style={{
               background: 'transparent',
               border: 'none',

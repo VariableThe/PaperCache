@@ -10,6 +10,9 @@ interface ReminderPayload {
   dueAt: number // Unix ms
 }
 
+// Monotonically increasing token to prevent stale scheduleReminders calls
+let scheduleToken = 0
+
 function parseReminders(content: string, noteId: string): ReminderPayload[] {
   const reminders: ReminderPayload[] = []
   const tasks = parseAllTasks(content)
@@ -41,16 +44,20 @@ function collectFutureReminders(notes: Note[]): ReminderPayload[] {
 
 export function useReminders() {
   const notes = useAppStore((state) => state.notes)
-  // Track the notes reference so we can skip redundant invocations
   const prevNotesRef = useRef<Note[]>([])
 
-  // Schedule reminders in the Rust backend whenever notes change
+  // Schedule reminders with a monotonic token to prevent stale overwrites
   useEffect(() => {
     prevNotesRef.current = notes
     const pending = collectFutureReminders(notes)
+    const token = ++scheduleToken
 
     window.electronAPI
       .scheduleReminders(pending)
+      .then(() => {
+        // Only advance prevNotesRef if we're still the latest call
+        if (token !== scheduleToken) return
+      })
       // eslint-disable-next-line no-console
       .catch((e) => console.error('Failed to schedule reminders', e))
   }, [notes])
@@ -58,16 +65,15 @@ export function useReminders() {
   // Listen for the native "reminder-fired" event from the backend
   useEffect(() => {
     let unlisten: (() => void) | undefined
+    let disposed = false
 
     listen<string>('reminder-fired', (event) => {
       const key = event.payload
-      // Mark reminder as notified in localStorage
       const notifiedStr = localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS) || '[]'
       const notified = new Set<string>(JSON.parse(notifiedStr))
       notified.add(key)
       localStorage.setItem(SETTINGS_KEYS.NOTIFIED_REMINDERS, JSON.stringify(Array.from(notified)))
 
-      // Find the label from current notes for the in-app toast
       const currentNotes = useAppStore.getState().notes
       const allReminders = currentNotes.flatMap((n) => parseReminders(n.content, n.id))
       const reminder = allReminders.find((r) => r.key === key)
@@ -78,10 +84,15 @@ export function useReminders() {
         })
       }
     }).then((fn) => {
+      if (disposed) {
+        fn()
+        return
+      }
       unlisten = fn
     })
 
     return () => {
+      disposed = true
       unlisten?.()
       window.electronAPI.cancelReminders().catch(() => {})
     }

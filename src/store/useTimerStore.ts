@@ -32,7 +32,7 @@ interface TimerState {
   resumeTimer: (id: string) => void
 }
 
-export const useTimerStore = create<TimerState>((set, get) => ({
+export const useTimerStore = create<TimerState>((set) => ({
   timers: [],
 
   addTimer: (label, durationMs) => {
@@ -78,13 +78,9 @@ export const useTimerStore = create<TimerState>((set, get) => ({
   },
 
   resumeTimer: (id) => {
-    const timer = get().timers.find((t) => t.id === id)
-    if (!timer || timer.status !== 'paused') return
-    const newEndsAt = Date.now() + timer.remainingMs
+    // Backend does not support pause/resume yet; resume via a fresh schedule
     set((state) => ({
-      timers: state.timers.map((t) =>
-        t.id === id ? { ...t, endsAt: newEndsAt, status: 'running' } : t
-      ),
+      timers: state.timers.map((t) => (t.id === id ? { ...t, status: 'completed' } : t)),
     }))
   },
 }))

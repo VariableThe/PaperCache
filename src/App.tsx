@@ -59,11 +59,28 @@ function App() {
   }, [])
 
   // Auto-dismiss toasts after 5 seconds
+  const toastTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   useEffect(() => {
-    if (toasts.length === 0) return undefined
-    const ids = toasts.map((t) => t.id)
-    const timers = ids.map((id) => setTimeout(() => removeToast(id), 5000))
-    return () => timers.forEach(clearTimeout)
+    const timers = toastTimersRef.current
+    const currentIds = new Set(toasts.map((t) => t.id))
+
+    // Clear timers for removed toasts
+    for (const [id, timer] of timers) {
+      if (!currentIds.has(id)) {
+        clearTimeout(timer)
+        timers.delete(id)
+      }
+    }
+
+    // Set timers for new toasts
+    for (const toast of toasts) {
+      if (!timers.has(toast.id)) {
+        timers.set(
+          toast.id,
+          setTimeout(() => removeToast(toast.id), 5000)
+        )
+      }
+    }
   }, [toasts, removeToast])
 
   useEffect(() => {

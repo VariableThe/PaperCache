@@ -64,6 +64,10 @@ function buildDecorations(view: EditorView, rules: DSLRule[]) {
       let match: RegExpExecArray | null
 
       while ((match = gre.exec(text)) !== null) {
+        if (match[0].length === 0) {
+          gre.lastIndex++
+          continue
+        }
         const matchFrom = from + match.index
         const matchTo = matchFrom + match[0].length
 

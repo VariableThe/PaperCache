@@ -10,7 +10,7 @@ mod tray;
 
 use commands::shortcuts::GlobalShortcutState;
 use commands::notifications::NotificationState;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
 
 pub struct DialogState {
@@ -69,12 +69,12 @@ pub fn run() {
                 let dialog_state = app.state::<crate::DialogState>();
                 let is_dialog_open = dialog_state.is_open.clone();
                 #[cfg(not(target_os = "macos"))]
-                let pending_hide = Arc::new(AtomicBool::new(false));
+                let focus_gen = Arc::new(AtomicU64::new(0));
 
                 window.on_window_event({
                     let w = window.clone();
                     #[cfg(not(target_os = "macos"))]
-                    let pending = pending_hide.clone();
+                    let gen = focus_gen.clone();
                     move |event| match event {
                         tauri::WindowEvent::CloseRequested { api, .. } => {
                             api.prevent_close();
@@ -83,21 +83,21 @@ pub fn run() {
                         tauri::WindowEvent::Focused(focused) => {
                             if *focused {
                                 #[cfg(not(target_os = "macos"))]
-                                pending.store(false, Ordering::SeqCst);
+                                { gen.fetch_add(1, Ordering::SeqCst); }
                             } else if !is_dialog_open.load(Ordering::SeqCst) {
                                 #[cfg(target_os = "macos")]
                                 let _ = w.hide();
 
                                 #[cfg(not(target_os = "macos"))]
                                 {
-                                    pending.store(true, Ordering::SeqCst);
+                                    let gen_at_spawn = gen.fetch_add(1, Ordering::SeqCst) + 1;
                                     let w2 = w.clone();
-                                    let p2 = pending.clone();
+                                    let g2 = gen.clone();
                                     std::thread::spawn(move || {
                                         std::thread::sleep(
                                             std::time::Duration::from_millis(200),
                                         );
-                                        if p2.swap(false, Ordering::SeqCst) {
+                                        if g2.load(Ordering::SeqCst) == gen_at_spawn {
                                             let _ = w2.hide();
                                         }
                                     });

@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Lazy-Loaded Graph**: `GraphView` is dynamically imported with `React.lazy()` so the Three.js bundle (~1.3 MB) loads only when the graph is opened.
 - **Smooth Graph Fade-in**: The graph overlay animates in with a 250ms CSS keyframe fade.
 - **Persistent Node Positions**: After closing the graph view, node positions are cached and restored on next open, preserving manual arrangement.
+- **Native OS Reminder Notifications**: Task reminders (`/task`) now fire native OS notifications via the Rust backend using `tokio::time::sleep` + `tauri_plugin_notification`. Notifications fire reliably even when the app is minimized or out of focus, and gracefully handle OS-level permission denials.
+- **Countdown Timers**: New timer panel (accessible via the action menu or `/timer` command) lets you create, view, pause/resume, and cancel countdown timers. Timers display a live countdown using drift-corrected `setTimeout` chains and trigger both a native OS notification and an in-app alert on completion — even if you're viewing a different note.
+- **DSL Regex Parsing Engine**: New `createRegexPlugin()` factory in `dslPlugin.ts` enables flexible, regex-based Domain Specific Language parsing in the editor. Scans only visible ranges for O(visible lines) performance — lag-free at any document size. Supports custom mark decorations, widget injections, and match callbacks.
+- **WebGL Graph View**: The Graph View has been rewritten using Three.js WebGL via `react-force-graph-3d`. Notes in the same folder are attracted to shared centroid positions via custom `d3-force` simulation rules, causing them to cluster together naturally. The graph is lazy-loaded to avoid impacting editor startup time.
 
 ### Changed
 - **Cmd+Shift+N Behavior**: The global new-note shortcut no longer hides the app if it's already visible. It only shows the window when hidden. The shortcut always creates a new note regardless.
@@ -37,10 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Slash Command Autosuggest**: Added an inline ghost text autosuggest widget for slash commands (e.g., `/check`, `/ai`). Pressing `Tab` instantly completes the command without interrupting typing flow.
 - **Auto-Open Version Notes**: Upon updating, PaperCache now automatically opens a summary note detailing the new features in the latest release and silently cleans up previous version notes from the workspace.
 - **Tag Context Menu**: Right-clicking a tag pill now reveals a beautifully styled inline action menu allowing users to easily delete all notes under that tag, or export them concatenated together into a single Markdown file directly via native system dialogs.
-- **Native OS Reminder Notifications**: Task reminders (`/task`) now fire native OS notifications via the Rust backend using `tokio::time::sleep` + `tauri_plugin_notification`. Notifications fire reliably even when the app is minimized or out of focus, and gracefully handle OS-level permission denials.
-- **Countdown Timers**: New timer panel (accessible via the action menu or `/timer` command) lets you create, view, pause/resume, and cancel countdown timers. Timers display a live countdown using drift-corrected `setTimeout` chains and trigger both a native OS notification and an in-app alert on completion — even if you're viewing a different note.
-- **DSL Regex Parsing Engine**: New `createRegexPlugin()` factory in `dslPlugin.ts` enables flexible, regex-based Domain Specific Language parsing in the editor. Scans only visible ranges for O(visible lines) performance — lag-free at any document size. Supports custom mark decorations, widget injections, and match callbacks.
-- **WebGL Graph View**: The Graph View has been rewritten using Three.js WebGL via `react-force-graph-3d`. Notes in the same folder are attracted to shared centroid positions via custom `d3-force` simulation rules, causing them to cluster together naturally. The graph is lazy-loaded to avoid impacting editor startup time.
 
 ### Fixed
 - Fixed an issue where the unified search view layout could overlap with the context menu or hide important tag management options.

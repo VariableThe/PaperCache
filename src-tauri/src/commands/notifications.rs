@@ -30,22 +30,11 @@ pub async fn schedule_reminders(
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0);
 
-    // Cancel all existing reminder handles
-    {
-        let mut handles = state
-            .reminder_handles
-            .write()
-            .map_err(|e| e.to_string())?;
-        for (_, handle) in handles.drain() {
-            handle.abort();
-        }
-    }
+    let mut new_handles: HashMap<String, JoinHandle<()>> = HashMap::new();
 
-    // Schedule new reminders
     for reminder in reminders {
         let delay_ms = reminder.due_at - now_ms;
         if delay_ms < 0 {
-            // Already past – skip (already notified logic is on frontend)
             continue;
         }
 
@@ -55,22 +44,27 @@ pub async fn schedule_reminders(
 
         let handle = tokio::spawn(async move {
             sleep(Duration::from_millis(delay_ms as u64)).await;
-
             let _ = app_clone
                 .notification()
                 .builder()
                 .title("PaperCache Reminder")
                 .body(&label)
                 .show();
-
             let _ = app_clone.emit("reminder-fired", &key);
         });
 
-        state
+        new_handles.insert(reminder.key, handle);
+    }
+
+    {
+        let mut handles = state
             .reminder_handles
             .write()
-            .map_err(|e| e.to_string())?
-            .insert(reminder.key, handle);
+            .map_err(|e| e.to_string())?;
+        for (_, handle) in handles.drain() {
+            handle.abort();
+        }
+        handles.extend(new_handles);
     }
 
     Ok(())
@@ -98,7 +92,20 @@ pub async fn schedule_timer(
     label: String,
     state: tauri::State<'_, NotificationState>,
 ) -> Result<(), String> {
-    // Cancel any existing timer with the same id
+    let app_clone = app.clone();
+    let id_clone = id.clone();
+
+    let handle = tokio::spawn(async move {
+        sleep(Duration::from_millis(duration_ms)).await;
+        let _ = app_clone
+            .notification()
+            .builder()
+            .title("PaperCache Timer")
+            .body(&format!("⏱ Timer finished: {}", label))
+            .show();
+        let _ = app_clone.emit("timer-complete", &id_clone);
+    });
+
     {
         let mut handles = state
             .timer_handles
@@ -107,29 +114,8 @@ pub async fn schedule_timer(
         if let Some(existing) = handles.remove(&id) {
             existing.abort();
         }
+        handles.insert(id, handle);
     }
-
-    let app_clone = app.clone();
-    let id_clone = id.clone();
-
-    let handle = tokio::spawn(async move {
-        sleep(Duration::from_millis(duration_ms)).await;
-
-        let _ = app_clone
-            .notification()
-            .builder()
-            .title("PaperCache Timer")
-            .body(&format!("⏱ Timer finished: {}", label))
-            .show();
-
-        let _ = app_clone.emit("timer-complete", &id_clone);
-    });
-
-    state
-        .timer_handles
-        .write()
-        .map_err(|e| e.to_string())?
-        .insert(id, handle);
 
     Ok(())
 }

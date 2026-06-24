@@ -157,7 +157,7 @@ export function TimersPage({ onClose }: TimersPageProps) {
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     const h = parseInt(hInput) || 0
     const m = parseInt(mInput) || 0
     const s = parseInt(sInput) || 0
@@ -168,8 +168,12 @@ export function TimersPage({ onClose }: TimersPageProps) {
       labelInput.trim() ||
       `${h > 0 ? `${h}h ` : ''}${m > 0 ? `${m}m ` : ''}${s > 0 ? `${s}s` : ''}`.trim()
     const id = addTimer(label, durationMs)
-    window.electronAPI.scheduleTimer(id, durationMs, label)
-    setLabelInput('')
+    try {
+      await window.electronAPI.scheduleTimer(id, durationMs, label)
+      setLabelInput('')
+    } catch {
+      removeTimer(id)
+    }
   }
 
   const handleRemove = (id: string) => {
@@ -177,9 +181,13 @@ export function TimersPage({ onClose }: TimersPageProps) {
     removeTimer(id)
   }
 
-  const handlePreset = (ms: number, presetLabel: string) => {
+  const handlePreset = async (ms: number, presetLabel: string) => {
     const id = addTimer(presetLabel, ms)
-    window.electronAPI.scheduleTimer(id, ms, presetLabel)
+    try {
+      await window.electronAPI.scheduleTimer(id, ms, presetLabel)
+    } catch {
+      removeTimer(id)
+    }
   }
 
   return (
