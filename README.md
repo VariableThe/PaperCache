@@ -17,9 +17,9 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 - **Reactive math & variables** — define `/var x = 10`, write `x * 3 =`, get `30`. Change the variable, everything updates. Works across notes with `/globvar`.
 - **Inline AI** — type `/ai <prompt>`, press enter, get the answer inserted directly into your note. No sidebar, no context switch.
 - **Auto-highlights hex colors, dates, and times** — `#D97757` renders as a color pill. Clicking on the circle copies the hex code. `31-05-2024` gets highlighted. Useful at a glance.
-- **Interactive Checkboxes** — Type `/check` to create an interactive checkbox that strikes through text when clicked.
+- **Interactive Checkboxes & Slash Commands** — Type `/` to see inline autosuggestions (like `/check`, `/task`, or `/ai`). Press `Tab` to instantly complete them. Checkboxes strike through text when clicked.
 - **Tasks & Reminders** — Type `/task` followed by `@ 1d2h` to set a due date. Press `Cmd+T` to open a unified Tasks view that tracks all your pending items and due times.
-- **Tags & folders** — `!tagname` for tags, `/` in note titles for folders. Simple conventions, no UI overhead.
+- **Tags & folders** — `!tagname` for tags, `/` in note titles for folders. Right-click any tag pill to export or delete all tagged notes at once.
 - **Graph view** — see how your notes connect (`Cmd+G`).
 
 > **Deep Dive:** For a comprehensive list of every single feature in PaperCache, check out [features.md](features.md).
