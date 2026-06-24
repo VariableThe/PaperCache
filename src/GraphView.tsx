@@ -214,15 +214,9 @@ export default function GraphView({
       const group = new THREE.Group()
 
       const geometry = new THREE.CircleGeometry(12, 32)
-      const material = new THREE.MeshBasicMaterial({
-        color,
-        side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 0.99,
-        depthWrite: true,
-      })
+      const material = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
       const circle = new THREE.Mesh(geometry, material)
-      circle.renderOrder = 1
+      circle.position.z = 1
       group.add(circle)
 
       const canvas = document.createElement('canvas')

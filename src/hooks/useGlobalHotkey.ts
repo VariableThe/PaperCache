@@ -113,20 +113,18 @@ export function useGlobalHotkey() {
         } else {
           const shortcutsContent = `# Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| \`Cmd+Shift+C\` | Toggle visibility (global, configurable) |
-| \`Cmd+Shift+N\` | New note (global, configurable) |
-| \`Cmd+Shift+S\` | Open settings |
-| \`Cmd+N\` | New note |
-| \`Cmd+T\` | Tasks / Reminders |
-| \`Cmd+K\` | Main action menu |
-| \`Cmd+P\` | Search notes |
-| \`Cmd+G\` | Graph view |
-| \`Cmd+F\` | Search in graph |
-| \`Cmd+E\` | Export note |
-| \`Cmd+/\` | Show this shortcuts reference |
-| \`Esc\` | Close menus / modals |
+- \`Cmd+Shift+C\` — Toggle visibility (global, configurable)
+- \`Cmd+Shift+N\` — New note (global, configurable)
+- \`Cmd+Shift+S\` — Open settings
+- \`Cmd+N\` — New note
+- \`Cmd+T\` — Tasks / Reminders
+- \`Cmd+K\` — Main action menu
+- \`Cmd+P\` — Search notes
+- \`Cmd+G\` — Graph view
+- \`Cmd+F\` — Search in graph
+- \`Cmd+E\` — Export note
+- \`Cmd+/\` — Show this shortcuts reference
+- \`Esc\` — Close menus / modals
 
 ### Slash Commands
 Type \`/\` in the editor for inline suggestions:
