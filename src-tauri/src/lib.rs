@@ -12,6 +12,7 @@ use commands::shortcuts::GlobalShortcutState;
 use commands::notifications::NotificationState;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
+use tauri_plugin_window_state::{StateFlags, WindowExt};
 
 pub struct DialogState {
     pub is_open: Arc<AtomicBool>,
@@ -54,18 +55,6 @@ pub fn run() {
 
             use tauri::Manager;
             if let Some(window) = app.get_webview_window("main") {
-                #[cfg(target_os = "macos")]
-                {
-                    crate::macos::set_move_to_active_space(&window);
-                    
-                    // Fix for macOS frameless window walking down on restart
-                    // tauri-plugin-window-state restores position with titlebar offset
-                    if let Ok(mut pos) = window.outer_position() {
-                        pos.y = pos.y.saturating_sub(28);
-                        let _ = window.set_position(tauri::Position::Physical(pos));
-                    }
-                }
-
                 let dialog_state = app.state::<crate::DialogState>();
                 let is_dialog_open = dialog_state.is_open.clone();
                 #[cfg(not(target_os = "macos"))]
@@ -110,6 +99,45 @@ pub fn run() {
                         _ => {}
                     }
                 });
+
+                #[cfg(target_os = "macos")]
+                crate::macos::set_move_to_active_space(&window);
+
+                // Restore window state after event loop is running and display server is ready.
+                // Plugin's on_window_ready fires too early for available_monitors() on macOS.
+                let win = window.clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_millis(300));
+                    let _ = win.clone().run_on_main_thread(move || {
+                        let _ = win.restore_state(StateFlags::POSITION | StateFlags::SIZE);
+                        if let Ok(app_dir) = win.app_handle().path().app_config_dir() {
+                            let state_path = app_dir.join(".window-state.json");
+                            if let Ok(content) = std::fs::read_to_string(&state_path) {
+                                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                                    if let Some(main) = val.get("main") {
+                                        if let (Some(x), Some(y)) = (
+                                            main.get("x").and_then(|v| v.as_i64()),
+                                            main.get("y").and_then(|v| v.as_i64()),
+                                        ) {
+                                            let _ = win.set_position(tauri::PhysicalPosition::new(x as i32, y as i32));
+                                        }
+                                        if let (Some(w), Some(h)) = (
+                                            main.get("width").and_then(|v| v.as_i64()),
+                                            main.get("height").and_then(|v| v.as_i64()),
+                                        ) {
+                                            let _ = win.set_size(tauri::PhysicalSize::new(w as u32, h as u32));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        #[cfg(target_os = "macos")]
+                        if let Ok(mut pos) = win.outer_position() {
+                            pos.y = pos.y.saturating_sub(28);
+                            let _ = win.set_position(tauri::Position::Physical(pos));
+                        }
+                    });
+                });
             } else {
                 eprintln!("WARNING: 'main' window not found during setup");
             }
@@ -132,9 +160,11 @@ pub fn run() {
             commands::fs::set_dialog_open,
             commands::fs::remove_onboarding_files,
             commands::system::close_window,
+            commands::system::restore_window_state,
             commands::system::quit_app,
             commands::system::open_external,
             commands::system::open_file,
+            commands::system::get_launch_at_startup,
             commands::system::set_launch_at_startup,
             commands::system::check_for_updates,
             commands::system::is_hyprland,

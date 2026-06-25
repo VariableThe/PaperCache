@@ -2,6 +2,20 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-25 - (Uncommitted)
+**Change:** fix: window state persistence and login-item toggle desync (v0.5.4)
+
+**Details/Why:**
+Two bug fixes for window state and settings reliability:
+
+1. **Window position/size not persisting across restarts**: The `tauri-plugin-window-state` v2.4.1's `on_window_ready` fires before the macOS display server is ready, causing `available_monitors()` to return empty and the saved position to be silently discarded. Fixed with a two-pronged approach: (a) `lib.rs:107-140` spawns a background thread that sleeps 300ms then dispatches `restore_state` + direct file read via `run_on_main_thread` — ensures display server is ready; (b) `commands/system.rs:33-73` new `restore_window_state` command reads `.window-state.json` directly and calls `set_position`/`set_size`, bypassing the plugin's intersection check as a fallback. Both tray "Quit" and Settings "Quit" now call `app.save_window_state()` explicitly before `app.exit(0)`.
+
+2. **Launch-at-startup toggle desync with macOS System Settings**: The toggle only read from `localStorage`, so removing PaperCache from System Settings left it permanently stuck on. Fixed by adding `get_launch_at_startup` Tauri command (`system.rs:96-98`) that queries `app.autolaunch().is_enabled()`, bridged to frontend via `api.ts`/`types.d.ts`. `Settings.tsx:52-59` runs `getLaunchAtStartup()` on mount to sync toggle and `localStorage` with real OS state.
+
+**Files changed:** `src-tauri/src/commands/system.rs`, `src-tauri/src/tray.rs`, `src-tauri/src/lib.rs`, `src/App.tsx:56`, `src/Settings.tsx:48-61`, `src/Settings.test.tsx`, `src/types.d.ts`, `src/api.ts`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-24 - (Uncommitted)
 **Change:** feat: graph view rebuilt, Windows focus-loss fix, Cmd+/ shortcuts, welcome revamp (v0.5.3)
 

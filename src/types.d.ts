@@ -18,6 +18,7 @@ export interface ElectronAPI {
   setApiKey: (key: string) => Promise<boolean>
   getApiKeyStatus: () => Promise<boolean>
   checkForUpdates: () => Promise<void>
+  restoreWindowState: () => Promise<void>
   isHyprland: () => Promise<boolean>
   readNote: (id: string) => Promise<string>
   exportNote: (filename: string, content: string) => Promise<boolean>
@@ -32,6 +33,7 @@ export interface ElectronAPI {
   openExternal: (url: string) => void
   openFile: (path: string) => void
   onSwipeGesture: (callback: (direction: string) => void) => () => void
+  getLaunchAtStartup: () => Promise<boolean>
   setLaunchAtStartup: (value: boolean) => void
   updateGlobalShortcut: (action: string, oldShortcut: string, newShortcut: string) => void
   onTriggerNewNote: (callback: () => void) => () => void
