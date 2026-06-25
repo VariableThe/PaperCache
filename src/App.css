@@ -93,6 +93,12 @@ body {
   width: 100%;
   overflow: auto;
   padding: 0; /* Let codemirror handle padding */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.editor-container::-webkit-scrollbar {
+  display: none;
 }
 
 /* CodeMirror overrides */
