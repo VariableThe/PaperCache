@@ -45,7 +45,7 @@ pub fn run() {
         )
         .plugin(tauri_plugin_global_shortcut::Builder::default().build())
         .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            tauri_plugin_autostart::MacosLauncher::AppleScript,
             Some(vec!["--silently"]),
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
