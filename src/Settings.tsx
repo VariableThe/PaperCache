@@ -50,6 +50,14 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     localStorage.getItem(SETTINGS_KEYS.LAUNCH_STARTUP) === 'true'
   )
 
+  // Sync launch-at-startup toggle with actual OS state on mount
+  useEffect(() => {
+    window.electronAPI.getLaunchAtStartup().then((enabled) => {
+      setLaunchAtStartup(enabled)
+      localStorage.setItem(SETTINGS_KEYS.LAUNCH_STARTUP, enabled.toString())
+    })
+  }, [])
+
   // Appearance State
   const initialSettings = useSettingsStore.getState()
   const [fontFamily, setFontFamily] = useState(initialSettings.fontFamily)

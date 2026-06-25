@@ -1,5 +1,6 @@
 use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri_plugin_opener::OpenerExt;
+use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 #[tauri::command]
 pub fn close_window(window: WebviewWindow) -> Result<(), String> {
@@ -29,7 +30,43 @@ pub fn toggle_window(app: &AppHandle) {
 }
 
 #[tauri::command]
+pub fn restore_window_state(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        if let Ok(app_dir) = app.path().app_config_dir() {
+            let state_path = app_dir.join(".window-state.json");
+            if let Ok(content) = std::fs::read_to_string(&state_path) {
+                if let Ok(val) = serde_json::from_str::<serde_json::Value>(&content) {
+                    if let Some(main) = val.get("main") {
+                        if let (Some(x), Some(y)) = (
+                            main.get("x").and_then(|v| v.as_i64()),
+                            main.get("y").and_then(|v| v.as_i64()),
+                        ) {
+                            let _ = window.set_position(tauri::PhysicalPosition::new(x as i32, y as i32));
+                        }
+                        if let (Some(w), Some(h)) = (
+                            main.get("width").and_then(|v| v.as_i64()),
+                            main.get("height").and_then(|v| v.as_i64()),
+                        ) {
+                            let _ = window.set_size(tauri::PhysicalSize::new(w as u32, h as u32));
+                        }
+                    }
+                }
+            }
+        }
+        #[cfg(target_os = "macos")]
+        {
+            if let Ok(mut pos) = window.outer_position() {
+                pos.y = pos.y.saturating_sub(28);
+                let _ = window.set_position(tauri::Position::Physical(pos));
+            }
+        }
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn quit_app(app: AppHandle) {
+    let _ = app.save_window_state(StateFlags::POSITION | StateFlags::SIZE);
     app.exit(0);
 }
 
@@ -63,6 +100,11 @@ pub fn open_file(app: AppHandle, path: String) -> Result<(), String> {
 }
 
 use tauri_plugin_autostart::ManagerExt;
+
+#[tauri::command]
+pub fn get_launch_at_startup(app: AppHandle) -> Result<bool, String> {
+    app.autolaunch().is_enabled().map_err(|e| e.to_string())
+}
 
 #[tauri::command]
 pub fn set_launch_at_startup(app: AppHandle, enabled: bool) -> Result<(), String> {

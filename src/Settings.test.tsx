@@ -8,6 +8,7 @@ describe('Settings Component', () => {
     // Mock the electronAPI
     window.electronAPI = {
       ...window.electronAPI,
+      getLaunchAtStartup: vi.fn().mockResolvedValue(false),
       setLaunchAtStartup: vi.fn(),
       updateGlobalShortcut: vi.fn(),
       closeWindow: vi.fn(),

@@ -28,7 +28,7 @@ pub fn create_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
             if event.id == "show_hide" {
                 crate::commands::system::toggle_window(app);
             } else if event.id == "quit" {
-                app.exit(0);
+                crate::commands::system::quit_app(app.clone());
             }
         })
         .on_tray_icon_event(|tray, event| {

@@ -33,10 +33,12 @@ export const tauriApi: ElectronAPI = {
   setApiKey: (key) => invoke('set_api_key', { key }),
   getApiKeyStatus: () => invoke('get_api_key_status'),
   checkForUpdates: () => invoke('check_for_updates'),
+  restoreWindowState: () => invoke('restore_window_state'),
   isHyprland: () => invoke('is_hyprland'),
   onSwipeGesture: () => {
     return () => {}
   },
+  getLaunchAtStartup: () => invoke('get_launch_at_startup'),
   setLaunchAtStartup: (value) => {
     invoke('set_launch_at_startup', { enabled: value })
   },
