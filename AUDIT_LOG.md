@@ -30,12 +30,12 @@ In the Settings global shortcuts section, the `renderShortcutDisplay` function g
 
 ---
 
-### 2026-06-25 - fix: hide Settings scrollbar on Windows/Linux
+### 2026-06-25 - fix: hide scrollbars on Windows/Linux in Settings and editor
 
 **Details/Why:**
-`.settings-content` used `overflow-y: auto` without scrollbar-hiding rules. macOS overlay scrollbars auto-hide, but Windows/Linux show persistent scrollbars. Added `scrollbar-width: none` (Firefox), `-ms-overflow-style: none` (IE/Edge), and `::-webkit-scrollbar { display: none }` (Chrome/Edge/Safari) to `.settings-content`.
+`.settings-content` and `.editor-container` used `overflow-y: auto`/`overflow: auto` without scrollbar-hiding rules. macOS overlay scrollbars auto-hide, but Windows/Linux show persistent scrollbars. Added `scrollbar-width: none` (Firefox), `-ms-overflow-style: none` (IE/Edge), and `::-webkit-scrollbar { display: none }` (Chrome/Edge/Safari) to both containers.
 
-**Files changed:** `src/Settings.css`, `CHANGELOG.md`.
+**Files changed:** `src/Settings.css`, `src/App.css`, `CHANGELOG.md`.
 
 ---
 
