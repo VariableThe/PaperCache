@@ -2,6 +2,16 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-25
+**Change:** fix: switch autostart from LaunchAgent to LoginItem (AppleScript)
+
+**Details/Why:**
+The app was registered via `MacosLauncher::LaunchAgent`, creating a hidden `.plist` in `~/Library/LaunchAgents/` invisible to the user. Changed to `MacosLauncher::AppleScript`, which uses AppleScript to register via System Events — the app now appears in System Settings > General > Login Items as a user-manageable entry. The `--silently` flag and `hide_dock_icon()` still work as before.
+
+**Files changed:** `src-tauri/src/lib.rs`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-25 - (Uncommitted)
 **Change:** fix: window state persistence and login-item toggle desync (v0.5.4)
 
