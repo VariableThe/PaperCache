@@ -22,8 +22,7 @@ In the Settings global shortcuts section, the `renderShortcutDisplay` function g
 
 ---
 
-## 2026-06-25 - (Uncommitted)
-**Change:** fix: window state persistence and login-item toggle desync (v0.5.4)
+### 2026-06-25 - fix: window state persistence and login-item toggle desync (v0.5.4)
 
 **Details/Why:**
 Two bug fixes for window state and settings reliability:
