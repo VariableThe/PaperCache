@@ -10,7 +10,9 @@ mod tray;
 
 use commands::shortcuts::GlobalShortcutState;
 use commands::notifications::NotificationState;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+#[cfg(not(target_os = "macos"))]
+use std::sync::atomic::AtomicU64;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tauri_plugin_window_state::{StateFlags, WindowExt};
 
