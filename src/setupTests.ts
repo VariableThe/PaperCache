@@ -76,6 +76,8 @@ if (typeof window !== 'undefined') {
     cancelReminders: vi.fn().mockResolvedValue(undefined),
     scheduleTimer: vi.fn().mockResolvedValue(undefined),
     cancelTimer: vi.fn().mockResolvedValue(undefined),
+    restoreWindowState: vi.fn().mockResolvedValue(undefined),
+    getLaunchAtStartup: vi.fn().mockResolvedValue(false),
     removeOnboardingFiles: vi.fn().mockResolvedValue(undefined),
   } as ElectronAPI
 }
