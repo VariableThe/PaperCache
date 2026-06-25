@@ -53,13 +53,6 @@ pub fn restore_window_state(app: AppHandle) -> Result<(), String> {
                 }
             }
         }
-        #[cfg(target_os = "macos")]
-        {
-            if let Ok(mut pos) = window.outer_position() {
-                pos.y = pos.y.saturating_sub(28);
-                let _ = window.set_position(tauri::Position::Physical(pos));
-            }
-        }
     }
     Ok(())
 }

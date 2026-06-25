@@ -131,11 +131,6 @@ pub fn run() {
                                 }
                             }
                         }
-                        #[cfg(target_os = "macos")]
-                        if let Ok(mut pos) = win.outer_position() {
-                            pos.y = pos.y.saturating_sub(28);
-                            let _ = win.set_position(tauri::Position::Physical(pos));
-                        }
                     });
                 });
             } else {
