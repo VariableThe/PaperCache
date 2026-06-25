@@ -2,6 +2,25 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-25
+**Change:** fix: remove macOS frameless window 28px shift compensation (PR #62)
+
+**Details/Why:**
+The previous v0.5.4 window-state fix added +/-28px compensation to counteract a supposed macOS frameless window titlebar offset in `tauri-plugin-window-state`. After tracing through the full stack (`tauri-plugin-window-state` v2.4.1 → `tauri-runtime-wry` → `tao` 0.35.3), no such offset was found. For frameless windows (`decorations: false`) on macOS:
+
+- `outer_position()` returns the window frame origin via `NSWindow::frame()`
+- `set_position()` maps to `set_outer_position()` which calls `NSWindow::setFrameTopLeftPoint()`
+- `inner_position()` uses `NSWindow::contentRectForFrameRect()` — for frameless windows this returns the same rect as the frame since there's no titlebar
+- The plugin has no macOS-specific compensation code
+
+The +28 in `quit_app` shifted the window down before saving, and the -28 on restore was supposed to cancel it. The net effect was correct only when both ran reliably, but timing races with the plugin's auto-restore on `on_window_ready` and auto-save on `RunEvent::Exit` could leave the saved position 28px too low.
+
+**Fix:** Removed all +/-28 compensation from `quit_app`, `restore_window_state`, and `lib.rs` setup thread. The plugin now saves and restores the natural window position.
+
+**Files changed:** `src-tauri/src/commands/system.rs`, `src-tauri/src/lib.rs`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-25 - (Uncommitted)
 **Change:** fix: window state persistence and login-item toggle desync (v0.5.4)
 

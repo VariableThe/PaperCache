@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Window position/size now persists across restarts**: The window-state plugin's `on_window_ready` fires before the macOS display server is ready, causing `available_monitors()` to return empty and the saved position to be silently discarded. Fixed by deferring window-state restoration via a background thread + `run_on_main_thread` 300ms after `setup()` completes, bypassing the plugin's monitor-intersection check with a direct file read. Both the tray "Quit" and Settings "Quit" buttons now explicitly save window state before exit.
+- **Window no longer shifts down on restart on macOS**: The previous fix incorrectly added a +/-28px compensation for a macOS frameless window offset that does not exist in `tauri-plugin-window-state` v2.4.1. Removed all compensation from save and restore paths — the plugin correctly saves `outer_position()` and restores via `set_position()` with no titlebar offset for frameless (`decorations: false`) windows.
 - **Login-item toggle stays in sync with macOS System Settings**: The launch-at-startup toggle only read from `localStorage`, so removing PaperCache from System Settings left the toggle permanently stuck in the checked state. Fixed by adding a `get_launch_at_startup` Tauri command that queries the actual OS login-item state via `app.autolaunch().is_enabled()`, and syncing the toggle with the real OS state on every Settings mount.
 
 ## [v0.5.3] - 2026-06-24
