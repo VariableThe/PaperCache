@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { SETTINGS_KEYS } from './lib/settingsKeys'
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
@@ -390,8 +390,9 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
         style={{
           display: 'flex',
           alignItems: 'center',
+          gap: '4px',
           width: '100%',
-          justifyContent: 'space-evenly',
+          justifyContent: 'center',
         }}
       >
         {parts.map((part, index) => {
@@ -428,7 +429,7 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
               break
           }
           return (
-            <span key={index} style={{ display: 'flex', alignItems: 'center' }}>
+            <Fragment key={index}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -448,9 +449,9 @@ function ShortcutInput({ value, onChange }: { value: string; onChange: (val: str
                 {display}
               </span>
               {index < parts.length - 1 && (
-                <span style={{ margin: '0 4px', opacity: 0.5, fontSize: '14px' }}>+</span>
+                <span style={{ opacity: 0.5, fontSize: '14px' }}>+</span>
               )}
-            </span>
+            </Fragment>
           )
         })}
       </div>

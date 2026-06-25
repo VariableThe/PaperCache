@@ -12,8 +12,25 @@ The app was registered via `MacosLauncher::LaunchAgent`, creating a hidden `.pli
 
 ---
 
-## 2026-06-25 - (Uncommitted)
-**Change:** fix: window state persistence and login-item toggle desync (v0.5.4)
+### 2026-06-25 - fix: remove macOS frameless window 28px shift compensation (PR #62)
+
+**Details/Why:**
+The v0.5.4 window-state fix incorrectly added +/-28px compensation for a supposed macOS frameless window titlebar offset in `tauri-plugin-window-state`. Tracing through the full stack (`tauri-plugin-window-state` v2.4.1 → `tauri-runtime-wry` → `tao` 0.35.3) confirmed no such offset exists for `decorations: false` windows — `outer_position()` returns the window frame origin and `set_position()` sets it correctly. Removed all compensation from save and restore paths.
+
+**Files changed:** `src-tauri/src/commands/system.rs`, `src-tauri/src/lib.rs`, `CHANGELOG.md`.
+
+---
+
+### 2026-06-25 - fix: shortcut key pill "+" centered between key caps
+
+**Details/Why:**
+In the Settings global shortcuts section, the `renderShortcutDisplay` function grouped each key cap and the `+` to its right in a wrapper `<span>`, with the outer container using `justify-content: space-evenly`. This made the `+` appear closer to the left key cap. Fixed by flattening to `<Fragment>` siblings in a flex row with `justify-content: center` and `gap: 4px`.
+
+**Files changed:** `src/Settings.tsx`, `CHANGELOG.md`.
+
+---
+
+### 2026-06-25 - fix: window state persistence and login-item toggle desync (v0.5.4)
 
 **Details/Why:**
 Two bug fixes for window state and settings reliability:
