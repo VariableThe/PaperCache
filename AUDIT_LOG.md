@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-27 (API Key Persistence & Graph View Fixes)
+**Change:** fix(ai): fix API key saving/clearing logic and macOS keychain credential updating; fix(graph): prevent `fg.graphData` crashes when opening or closing Graph View
+
+**Details/Why:**
+1. **API Key Persistence**: When opening Settings, `apiKey` state initialized to empty string `''`. Clicking "Save Settings" after changing other preferences unintentionally took the `else` branch (`await window.electronAPI.setApiKey('')`), erasing existing keys from the OS keyring. Updated `saveSettings` to only save when `apiKey.trim()` is non-empty, and only clear when `!isApiKeySet`. Added an explicit "Clear Key" UI button next to the password input field when an API key is set.
+2. **Keyring Credential Updating**: In `src-tauri/src/commands/keychain.rs`, calling `set_password` on an existing keychain entry could fail on macOS. Updated `set_api_key` to delete any existing credential before setting the new password.
+3. **Graph View Crash Fixes**: Merged comprehensive defensive checks (`typeof fg.method === 'function'`) and ref caching into `GraphView.tsx` to prevent `fg.graphData is not a function` crashes when unmounting or toggling Graph View via `Cmd+G`.
+
+**Files changed:** `src/Settings.tsx`, `src-tauri/src/commands/keychain.rs`, `src/GraphView.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-27 (Graph View Bugfix)
 **Change:** fix(graph): prevent `e.graphData is not a function` crash on unmount and replace setInterval
 

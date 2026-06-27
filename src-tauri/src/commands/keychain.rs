@@ -12,12 +12,21 @@ const SERVICE_NAME: &str = "com.variablethe.papercache";
 pub fn set_api_key(key: String) -> Result<bool, String> {
     let entry = Entry::new(SERVICE_NAME, "openai_api_key")
         .map_err(|e| format!("Failed to access keyring: {}", e))?;
-    if key.is_empty() {
-        entry.delete_credential().ok();
-        return Ok(true);
+    let trimmed = key.trim();
+    if trimmed.is_empty() {
+        match entry.delete_credential() {
+            Ok(_) => return Ok(true),
+            Err(keyring::Error::NoEntry) => return Ok(true),
+            Err(e) => return Err(format!("Failed to delete API key: {}", e)),
+        }
+    }
+    match entry.delete_credential() {
+        Ok(_) => {},
+        Err(keyring::Error::NoEntry) => {},
+        Err(e) => return Err(format!("Failed to delete existing API key: {}", e)),
     }
     entry
-        .set_password(&key)
+        .set_password(trimmed)
         .map_err(|e| format!("Failed to set API key: {}", e))?;
     Ok(true)
 }
