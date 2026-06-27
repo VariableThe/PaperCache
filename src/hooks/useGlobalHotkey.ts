@@ -25,10 +25,7 @@ export function useGlobalHotkey() {
 
         if (isRecordingShortcut) return // Do not close app while recording shortcut
 
-        // Close the app if nothing else was open
-        if (!state.showNoteSearch && !isRenaming && actionMenuIndex === 0) {
-          await getCurrentWindow().hide()
-        }
+        // Dismiss overlays in priority order — highest-level first
         if (state.showMainActionMenu) {
           e.preventDefault()
           e.stopPropagation()
@@ -46,6 +43,15 @@ export function useGlobalHotkey() {
           e.stopPropagation()
           setShowGraphView(false)
           return
+        }
+        // Timers and Reminders pages have their own ESC handlers — let them fire
+        if (state.showTimersView || state.showRemindersView) {
+          return
+        }
+
+        // Nothing was open: hide the window
+        if (!isRenaming && actionMenuIndex === 0) {
+          await getCurrentWindow().hide()
         }
       }
 

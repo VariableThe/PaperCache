@@ -59,7 +59,7 @@ pub fn update_global_shortcut(
 
     // Update state
     let state = app.state::<GlobalShortcutState>();
-    let mut map = state.shortcuts.lock().unwrap();
+    let mut map = state.shortcuts.lock().map_err(|e| e.to_string())?;
     map.insert(action, new_shortcut);
 
     Ok(())
@@ -75,7 +75,7 @@ pub fn pause_shortcuts(app: AppHandle) -> Result<(), String> {
 #[tauri::command]
 pub fn resume_shortcuts(app: AppHandle) -> Result<(), String> {
     let state = app.state::<GlobalShortcutState>();
-    let map = state.shortcuts.lock().unwrap();
+    let map = state.shortcuts.lock().map_err(|e| e.to_string())?;
 
     for (action, shortcut_str) in map.iter() {
         if let Ok(shortcut) = shortcut_str.parse::<Shortcut>() {

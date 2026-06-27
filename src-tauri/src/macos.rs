@@ -65,6 +65,11 @@ pub fn setup_power_monitor(app_handle: AppHandle) {
 
         let delegate: id = msg_send![delegate_class, new];
 
+        // SAFETY: We intentionally leak the AppHandle here. The NSNotificationCenter
+        // observer (delegate) is registered for the lifetime of the process and must
+        // always have a valid pointer to the handle. Freeing the box would invalidate
+        // the pointer stored in the Objective-C ivar, causing a use-after-free.
+        // This is a deliberate, bounded leak (one pointer per process lifetime).
         let app_box = Box::new(app_handle);
         let ptr = Box::into_raw(app_box) as *mut c_void;
         (*delegate).set_ivar("app_handle", ptr);
