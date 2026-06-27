@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react'
 import * as THREE from 'three'
 import * as d3 from 'd3-force'
+import type { ForceGraphMethods } from 'react-force-graph-3d'
 import { getFolderColor } from './utils'
 
 const ForceGraph3D = lazy(() => import('react-force-graph-3d'))
@@ -46,15 +47,8 @@ function buildFolderCentroids(folderNames: string[]): Map<string, { cx: number; 
   return centroids
 }
 
-// Minimal typing for the react-force-graph-3d instance (library ships no declarations)
-interface ForceGraphInstance {
-  controls: () => Record<string, unknown> | null
-  cameraPosition: (pos: { x: number; y: number; z: number }) => void
-  zoomToFit: (duration: number, padding: number) => void
-  graphData: () => { nodes: GraphNode[]; links: GraphLink[] } | null
-  d3Force: (name: string, force?: unknown) => unknown
-  scene: () => THREE.Scene
-  nodeThreeObject: unknown
+interface ForceGraphInstance extends ForceGraphMethods<GraphNode, GraphLink> {
+  graphData: () => { nodes: GraphNode[]; links: GraphLink[] }
 }
 
 export default function GraphView({
@@ -430,7 +424,7 @@ export default function GraphView({
             }
           >
             <ForceGraph3D
-              ref={fgRef}
+              ref={fgRef as never}
               graphData={graphData}
               numDimensions={2}
               nodeLabel="name"
