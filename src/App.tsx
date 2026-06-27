@@ -57,6 +57,17 @@ function App() {
     window.electronAPI.isHyprland().then((isHyp) => {
       useAppStore.getState().setIsHyprland(isHyp)
     })
+
+    // Show a toast before the app auto-restarts for an update
+    const disposeUpdateReady = window.electronAPI.onUpdateReady(() => {
+      useAppStore.getState().addToast({
+        message: '✨ PaperCache updated — restarting in 3 seconds…',
+        type: 'info',
+      })
+    })
+    return () => {
+      disposeUpdateReady()
+    }
   }, [])
 
   // Auto-dismiss toasts after 5 seconds

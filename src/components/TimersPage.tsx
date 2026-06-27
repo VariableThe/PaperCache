@@ -18,7 +18,6 @@ import { listen } from '@tauri-apps/api/event'
 interface TimerItemProps {
   timer: Timer
   onRemove: (id: string) => void
-  onPause: (id: string) => void
 }
 
 function formatTime(ms: number): string {
@@ -32,7 +31,7 @@ function formatTime(ms: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-function TimerItem({ timer, onRemove, onPause }: TimerItemProps) {
+function TimerItem({ timer, onRemove }: TimerItemProps) {
   const tickTimer = useTimerStore((s) => s.tickTimer)
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -75,11 +74,6 @@ function TimerItem({ timer, onRemove, onPause }: TimerItemProps) {
       <div className="timer-header">
         <span className="timer-label">{timer.label || 'Timer'}</span>
         <div className="timer-controls">
-          {timer.status === 'running' && (
-            <button className="timer-btn" onClick={() => onPause(timer.id)} title="Pause">
-              ⏸
-            </button>
-          )}
           <button
             className="timer-btn timer-btn-remove"
             onClick={() => onRemove(timer.id)}
@@ -119,7 +113,6 @@ export function TimersPage({ onClose }: TimersPageProps) {
   const timers = useTimerStore((s) => s.timers)
   const addTimer = useTimerStore((s) => s.addTimer)
   const removeTimer = useTimerStore((s) => s.removeTimer)
-  const pauseTimer = useTimerStore((s) => s.pauseTimer)
   const completeTimer = useTimerStore((s) => s.completeTimer)
   const addToast = useAppStore((s) => s.addToast)
 
@@ -284,9 +277,7 @@ export function TimersPage({ onClose }: TimersPageProps) {
               </p>
             </div>
           ) : (
-            timers.map((t) => (
-              <TimerItem key={t.id} timer={t} onRemove={handleRemove} onPause={pauseTimer} />
-            ))
+            timers.map((t) => <TimerItem key={t.id} timer={t} onRemove={handleRemove} />)
           )}
         </div>
       </div>

@@ -39,9 +39,7 @@ export const tauriApi: ElectronAPI = {
     return () => {}
   },
   getLaunchAtStartup: () => invoke('get_launch_at_startup'),
-  setLaunchAtStartup: (value) => {
-    invoke('set_launch_at_startup', { enabled: value })
-  },
+  setLaunchAtStartup: (value) => invoke('set_launch_at_startup', { enabled: value }),
   updateGlobalShortcut: (action, oldShortcut, newShortcut) =>
     invoke('update_global_shortcut', { action, oldShortcut, newShortcut }),
   onTriggerNewNote: (callback) => {
@@ -84,4 +82,13 @@ export const tauriApi: ElectronAPI = {
   },
   pauseShortcuts: () => invoke('pause_shortcuts') as unknown as void,
   resumeShortcuts: () => invoke('resume_shortcuts') as unknown as void,
+  onUpdateReady: (callback) => {
+    let unlisten: (() => void) | undefined
+    listen('update-ready', () => callback()).then((fn) => {
+      unlisten = fn
+    })
+    return () => {
+      if (unlisten) unlisten()
+    }
+  },
 }

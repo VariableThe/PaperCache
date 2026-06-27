@@ -2,6 +2,25 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-27
+**Change:** fix: address audit findings — ESC logic, IPC types, update UX, mutex safety, ESLint (PR #68)
+
+**Details/Why:**
+Full-pass code-quality audit surfaced several correctness bugs and robustness issues that were fixed in a single PR:
+
+1. **ESC key logic** (`useGlobalHotkey.ts`) — The window was being hidden before checking whether any overlay (graph, timer panel, reminders) was open. Restructured to dismiss overlays in priority order; window hides only as final fallback.
+2. **IPC `void` types** (`types.d.ts`, `api.ts`) — `openExternal`, `openFile`, `setLaunchAtStartup`, `quitApp` were declared as returning `void` but the underlying `invoke()` is async. Changed to `Promise<void>`; `setLaunchAtStartup` now returns its promise instead of fire-and-forget.
+3. **Silent auto-restart** (`system.rs`) — App was calling `app.restart()` immediately after an update download with no user notice. Now runs download in a background Tokio task, emits `update-ready` to the frontend (which shows a toast), waits 3 seconds, then restarts.
+4. **Mutex `unwrap()` panics** (`shortcuts.rs`) — Two `.unwrap()` calls on `Mutex::lock()` replaced with `.map_err(|e| e.to_string())?` for graceful error propagation.
+5. **Dead-end Pause button** (`TimersPage.tsx`) — Removed the ⏸ button since `resumeTimer` is an unimplemented stub; a button with no un-pause path was worse UX than no button.
+6. **macOS `AppHandle` memory leak** (`macos.rs`) — Added a `SAFETY` comment documenting why `Box::into_raw` is intentionally not paired with `Box::from_raw`.
+7. **ESLint warnings** (`GraphView.tsx`) — Introduced a `ForceGraphInstance` interface replacing the `any` ref type; snapshotted `fgRef.current` inside effect body to fix stale-ref cleanup warning.
+8. **`react`/`react-dom` dependency category** (`package.json`) — Moved from `devDependencies` to `dependencies`.
+
+**Files changed:** `src/hooks/useGlobalHotkey.ts`, `src/types.d.ts`, `src/api.ts`, `src/App.tsx`, `src-tauri/src/commands/system.rs`, `src-tauri/src/commands/shortcuts.rs`, `src-tauri/src/macos.rs`, `src/components/TimersPage.tsx`, `src/GraphView.tsx`, `package.json`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-25
 **Change:** fix: switch autostart from LaunchAgent to LoginItem (AppleScript)
 

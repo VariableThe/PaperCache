@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
@@ -114,11 +114,16 @@ pub async fn check_for_updates(app: tauri::AppHandle) -> Result<(), String> {
     use tauri_plugin_updater::UpdaterExt;
     let updater = app.updater().map_err(|e| e.to_string())?;
 
-    // We handle the update automatically if one is available
     if let Some(update) = updater.check().await.map_err(|e| e.to_string())? {
-        // Here we could emit an event to the frontend or just download and install it
-        let _ = update.download_and_install(|_, _| {}, || {}).await;
-        app.restart();
+        // Run the download + install + restart in the background so the command
+        // returns immediately. The "update-ready" event gives the frontend 3 seconds
+        // to show a toast before the process restarts.
+        tokio::spawn(async move {
+            let _ = update.download_and_install(|_, _| {}, || {}).await;
+            let _ = app.emit("update-ready", ());
+            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
+            app.restart();
+        });
     }
     Ok(())
 }

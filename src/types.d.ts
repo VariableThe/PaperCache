@@ -29,12 +29,12 @@ export interface ElectronAPI {
   cancelTimer: (id: string) => Promise<void>
 
   removeOnboardingFiles: () => Promise<void>
-  quitApp: () => void
-  openExternal: (url: string) => void
-  openFile: (path: string) => void
+  quitApp: () => Promise<void>
+  openExternal: (url: string) => Promise<void>
+  openFile: (path: string) => Promise<void>
   onSwipeGesture: (callback: (direction: string) => void) => () => void
   getLaunchAtStartup: () => Promise<boolean>
-  setLaunchAtStartup: (value: boolean) => void
+  setLaunchAtStartup: (value: boolean) => Promise<void>
   updateGlobalShortcut: (action: string, oldShortcut: string, newShortcut: string) => void
   onTriggerNewNote: (callback: () => void) => () => void
   onTriggerTasks: (callback: () => void) => () => void
@@ -44,6 +44,7 @@ export interface ElectronAPI {
   onPowerResume: (callback: () => void) => () => void
   pauseShortcuts: () => void
   resumeShortcuts: () => void
+  onUpdateReady: (callback: () => void) => () => void
 }
 
 declare global {

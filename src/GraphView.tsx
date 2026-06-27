@@ -46,6 +46,17 @@ function buildFolderCentroids(folderNames: string[]): Map<string, { cx: number; 
   return centroids
 }
 
+// Minimal typing for the react-force-graph-3d instance (library ships no declarations)
+interface ForceGraphInstance {
+  controls: () => Record<string, unknown> | null
+  cameraPosition: (pos: { x: number; y: number; z: number }) => void
+  zoomToFit: (duration: number, padding: number) => void
+  graphData: () => { nodes: GraphNode[]; links: GraphLink[] } | null
+  d3Force: (name: string, force?: unknown) => unknown
+  scene: () => THREE.Scene
+  nodeThreeObject: unknown
+}
+
 export default function GraphView({
   notes,
   onClose,
@@ -54,13 +65,13 @@ export default function GraphView({
   bgColor,
   accentColor,
 }: GraphViewProps) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const fgRef = useRef<any>(null)
+  const fgRef = useRef<ForceGraphInstance | null>(null)
 
   const draggedNodesRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
     let raf: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let ctrls: any = null
     const setup = () => {
       const fg = fgRef.current
@@ -89,8 +100,10 @@ export default function GraphView({
   }, [])
 
   useEffect(() => {
+    // Snapshot ref at effect-run time so the cleanup reads a stable value
+    // (avoids the react-hooks/exhaustive-deps stale-ref warning)
+    const fg = fgRef.current
     return () => {
-      const fg = fgRef.current
       if (!fg) return
       const data = fg.graphData()
       if (!data || !data.nodes) return
