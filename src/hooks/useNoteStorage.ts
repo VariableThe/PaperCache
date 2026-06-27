@@ -36,7 +36,7 @@ export function useNoteStorage() {
   useEffect(() => {
     const handleOpenNote = (e: Event) => {
       const customEvent = e as CustomEvent
-      let path = customEvent.detail.path
+      let path = customEvent.detail.path.replace(/\\/g, '/')
       if (!path.endsWith('.md')) path += '.md'
 
       // We need the latest notes, so use useAppStore.getState()

@@ -22,7 +22,15 @@ pub fn get_papercache_dir() -> Result<PathBuf, String> {
 
 pub fn get_safe_path(id: &str) -> Result<PathBuf, String> {
     let base = get_papercache_dir()?;
-    let target = base.join(id);
+    let clean_id = id.replace('\\', "/");
+    let mut target = base.clone();
+    for comp in clean_id.split('/') {
+        if !comp.is_empty() && comp != "." && comp != ".." {
+            target.push(comp);
+        } else if comp == ".." {
+            return Err("Path traversal detected".to_string());
+        }
+    }
 
     let parent = target.parent().ok_or("Invalid path parent")?;
     if !parent.exists() {
@@ -74,7 +82,7 @@ fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) -> Result<(), S
                     .strip_prefix(base_path)
                     .unwrap_or(&path)
                     .to_string_lossy()
-                    .to_string();
+                    .replace('\\', "/");
                 notes.push(Note { id, content, mtime });
             }
         }
@@ -125,7 +133,7 @@ pub fn read_note(id: String) -> Result<String, String> {
 
 #[tauri::command]
 pub fn delete_note(id: String) -> Result<bool, String> {
-    if id.starts_with("commands/") {
+    if id.replace('\\', "/").starts_with("commands/") {
         return Err("Cannot delete protected command files".into());
     }
     let path = get_safe_path(&id)?;
@@ -197,13 +205,18 @@ pub fn set_dialog_open(state: tauri::State<'_, crate::DialogState>, open: bool) 
     state.is_open.store(open, Ordering::SeqCst);
 }
 
-fn write_onboarding_file(base: &Path, rel_path: &str, content: &str, _is_new_version: bool) {
-    let path = base.join(rel_path);
+fn write_onboarding_file(base: &Path, rel_path: &str, content: &str, is_new_version: bool) {
+    let mut path = base.to_path_buf();
+    for comp in rel_path.replace('\\', "/").split('/') {
+        if !comp.is_empty() {
+            path.push(comp);
+        }
+    }
     if let Some(parent) = path.parent() {
         let _ = fs::create_dir_all(parent);
     }
-    // Only write if file doesn't exist — preserve user edits across version changes
-    if !path.exists() {
+    // Only write if file doesn't exist, or if upgrading to a new app version
+    if !path.exists() || is_new_version {
         let _ = fs::write(&path, content);
     }
 }

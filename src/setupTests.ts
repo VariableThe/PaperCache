@@ -2,6 +2,10 @@ import '@testing-library/jest-dom'
 import { vi, afterEach } from 'vitest'
 import type { ElectronAPI } from './types'
 
+vi.mock('@tauri-apps/api/app', () => ({
+  getVersion: vi.fn().mockResolvedValue('0.5.3'),
+}))
+
 // Mock matchMedia which is not present in jsdom but might be needed by some components
 if (typeof window !== 'undefined') {
   Object.defineProperty(window, 'matchMedia', {

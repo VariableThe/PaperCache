@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-27 (Settings & Onboarding Fixes)
+**Change:** feat: add Bug Report option and About section in Settings; fix Windows onboarding file path generation
+
+**Details/Why:**
+1. Added "Submit a Bug Report" button under Settings > System linking directly to GitHub Issues creation page (`https://github.com/VariableThe/PaperCache/issues/new`).
+2. Added dedicated "About" section in Settings featuring app logo (`/icon.png`), dynamic app version number (`getVersion`), check for updates button, Ko-fi support button (`https://ko-fi.com/thevariable`), and user thank you message.
+3. Resolved onboarding note generation and `/file` linking failures on Windows. Previously, `walk_dir` generated note IDs with backslashes on Windows (e.g. `onboarding\Editor.md`), causing internal `/file` links using forward slashes in `Welcome.md` to fail lookup and duplicate empty notes. Normalized path generation across Rust (`fs.rs`) and frontend (`useNoteStorage.ts`, `markdownPlugin.ts`, `GraphView.tsx`) to guarantee consistent forward slash IDs across all OS targets. Updated `write_onboarding_file` to regenerate onboarding files on version bumps.
+
+**Files changed:** `src/Settings.tsx`, `src/setupTests.ts`, `src-tauri/src/commands/fs.rs`, `src/hooks/useNoteStorage.ts`, `src/lib/editor/markdownPlugin.ts`, `src/GraphView.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-27 (Lockfile Sync)
 **Change:** build(deps): move @emnapi WASM fallbacks to devDependencies for deterministic lockfile resolution across OS targets
 
