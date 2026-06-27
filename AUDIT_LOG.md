@@ -2,6 +2,19 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-27 (Update)
+**Change:** fix: resolve TypeScript strict build errors in GraphView and setupTests
+
+**Details/Why:**
+Resolved production build (`npm run tauri build` / `tsc -b`) failures caused by strict typing mismatches:
+1. **`ForceGraphMethods` Typing (`GraphView.tsx`)** — Configured `ForceGraphInstance` to extend `ForceGraphMethods` imported from `react-force-graph-3d`, enabling type-safe calls to `d3Force`, `strength`, `d3ReheatSimulation`, and `cameraPosition`.
+2. **Ref Variance (`GraphView.tsx`)** — Casted `<ForceGraph3D>` ref prop to resolve strict `MutableRefObject` variance mismatch.
+3. **Mock Contract (`setupTests.ts`)** — Added missing `onUpdateReady` mock implementation to `window.electronAPI` in unit test environment setup.
+
+**Files changed:** `src/GraphView.tsx`, `src/setupTests.ts`, `AUDIT_LOG.md`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-27
 **Change:** fix: address audit findings — ESC logic, IPC types, update UX, mutex safety, ESLint (PR #68)
 
