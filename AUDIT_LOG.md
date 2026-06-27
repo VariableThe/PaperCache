@@ -2,6 +2,16 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-27 (Lockfile Sync)
+**Change:** build(deps): move @emnapi WASM fallbacks to devDependencies for deterministic lockfile resolution across OS targets
+
+**Details/Why:**
+When `@emnapi/core` and `@emnapi/runtime` were listed under `optionalDependencies` in `package.json`, running `npm install` on macOS arm64 stripped their resolution metadata from `package-lock.json` (since npm deemed WASM fallback bindings inapplicable to macOS native architecture). However, sub-dependencies like `@rolldown/binding-wasm32-wasi` still referenced them, causing `npm ci` on Linux and Windows runners to crash with `Missing: @emnapi/core@1.11.1 from lock file`. Moved `@emnapi/core` and `@emnapi/runtime` to `devDependencies` to guarantee their resolution entries are preserved in `package-lock.json` across all OS targets.
+
+**Files changed:** `package.json`, `package-lock.json`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-27 (Update)
 **Change:** fix: resolve TypeScript strict build errors in GraphView and setupTests
 
