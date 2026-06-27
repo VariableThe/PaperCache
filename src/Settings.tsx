@@ -59,7 +59,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     })
   }, [])
 
-  const [appVersion, setAppVersion] = useState('0.5.3')
+  const [appVersion, setAppVersion] = useState('0.5.5')
   useEffect(() => {
     getVersion()
       .then((ver) => setAppVersion(ver))
@@ -239,24 +239,6 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
               onChange={(e) => setLaunchAtStartup(e.target.checked)}
               style={{ width: 'auto', marginRight: 'auto' }}
             />
-          </div>
-          <div className="setting-group">
-            <label>Auto-Updates</label>
-            <button
-              onClick={() => window.electronAPI.checkForUpdates()}
-              style={{
-                padding: '6px 12px',
-                background: 'rgba(128,128,128,0.1)',
-                border: '1px solid rgba(128,128,128,0.2)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                color: 'inherit',
-                fontFamily: 'inherit',
-                margin: '0 auto',
-              }}
-            >
-              Check for Updates Now
-            </button>
           </div>
           <div className="setting-group">
             <label>Submit a Bug Report</label>

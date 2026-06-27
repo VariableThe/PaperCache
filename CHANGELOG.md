@@ -5,9 +5,10 @@ All notable, user-facing changes to PaperCache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [v0.5.4] - 2026-06-25
+## [v0.5.5] - 2026-06-27
 
 ### Added
+- **Smart Onboarding & New Features Note Routing**: Brand new installations now cleanly launch directly into `Welcome.md` without copying or showing release note files. Existing users upgrading from previous versions will automatically receive the release notes file and be taken directly to the `New Features in v0.5.5.md` note upon opening the app.
 - **Settings Bug Report & About Menu**: Added a "Submit a Bug Report" button under System settings linking directly to the GitHub issue creation form. Added a dedicated "About" section displaying the app logo, current version number, update checker, Ko-fi support link, and a thank you message.
 
 ### Fixed

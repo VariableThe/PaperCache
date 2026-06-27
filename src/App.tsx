@@ -109,24 +109,24 @@ function App() {
       const currentVersion = await getVersion()
       const lastSeenVersion = localStorage.getItem('papercache-last-seen-version')
 
-      if (lastSeenVersion === null) {
-        localStorage.setItem('papercache-last-seen-version', currentVersion)
-        const welcomeIndex = notes.findIndex((n) => {
-          const filename = n.id.split('/').pop() || ''
-          return filename === 'Welcome.md'
-        })
-        if (welcomeIndex !== -1) {
-          setCurrentNoteIndex(welcomeIndex)
-        }
-      } else if (lastSeenVersion !== currentVersion) {
+      if (lastSeenVersion !== currentVersion) {
         localStorage.setItem('papercache-last-seen-version', currentVersion)
         const targetId = `New Features in v${currentVersion}.md`
         const targetIndex = notes.findIndex((n) => {
           const filename = n.id.split('/').pop() || ''
           return filename === targetId
         })
+
         if (targetIndex !== -1) {
           setCurrentNoteIndex(targetIndex)
+        } else if (lastSeenVersion === null) {
+          const welcomeIndex = notes.findIndex((n) => {
+            const filename = n.id.split('/').pop() || ''
+            return filename === 'Welcome.md'
+          })
+          if (welcomeIndex !== -1) {
+            setCurrentNoteIndex(welcomeIndex)
+          }
         }
       }
     }

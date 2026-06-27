@@ -2,15 +2,17 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
-## 2026-06-27 (Settings & Onboarding Fixes)
-**Change:** feat: add Bug Report option and About section in Settings; fix Windows onboarding file path generation
+## 2026-06-27 (v0.5.5 Release & Smart Onboarding)
+**Change:** chore(release): bump version to 0.5.5; implement smart onboarding and release notes routing
 
 **Details/Why:**
-1. Added "Submit a Bug Report" button under Settings > System linking directly to GitHub Issues creation page (`https://github.com/VariableThe/PaperCache/issues/new`).
-2. Added dedicated "About" section in Settings featuring app logo (`/icon.png`), dynamic app version number (`getVersion`), check for updates button, Ko-fi support button (`https://ko-fi.com/thevariable`), and user thank you message.
-3. Resolved onboarding note generation and `/file` linking failures on Windows. Previously, `walk_dir` generated note IDs with backslashes on Windows (e.g. `onboarding\Editor.md`), causing internal `/file` links using forward slashes in `Welcome.md` to fail lookup and duplicate empty notes. Normalized path generation across Rust (`fs.rs`) and frontend (`useNoteStorage.ts`, `markdownPlugin.ts`, `GraphView.tsx`) to guarantee consistent forward slash IDs across all OS targets. Updated `write_onboarding_file` to regenerate onboarding files on version bumps.
+1. Bumped application version from 0.5.3 to 0.5.5 across `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`.
+2. Implemented smart onboarding routing: detected brand new installations vs existing user upgrades in `run_onboarding` (`fs.rs`). For new installs, release notes (`New Features in v0.5.5.md`) are suppressed and cleaned up so users open directly into a clean `Welcome.md`. For upgrading users, the release note is copied and opened automatically on startup via `checkVersion` (`App.tsx`).
+3. Consolidated settings UI by removing duplicate "Check for updates" option from System settings, keeping it inside the new About menu.
+4. Added "Submit a Bug Report" button and About section (logo, Ko-fi link, version display).
+5. Fixed Windows path normalization for note IDs and internal links.
 
-**Files changed:** `src/Settings.tsx`, `src/setupTests.ts`, `src-tauri/src/commands/fs.rs`, `src/hooks/useNoteStorage.ts`, `src/lib/editor/markdownPlugin.ts`, `src/GraphView.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+**Files changed:** `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, `src/App.tsx`, `src/Settings.tsx`, `src/setupTests.ts`, `src-tauri/src/commands/fs.rs`, `src/hooks/useNoteStorage.ts`, `src/lib/editor/markdownPlugin.ts`, `src/GraphView.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
 
 ---
 
