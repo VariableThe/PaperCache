@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **IPC error handling for shell/file commands**: `openExternal`, `openFile`, `setLaunchAtStartup`, and `quitApp` now properly propagate backend errors to the caller instead of silently discarding the Promise.
 - **Update notification before restart**: When an auto-update is ready, PaperCache now shows a toast ("PaperCache updated — restarting in 3 seconds…") for 3 seconds before restarting, so users are never caught off-guard.
 - **Pause button removed from timer panel**: The ⏸ pause button had no corresponding resume path (backend not implemented). Removed to avoid a dead-end UX; the close/remove button remains.
+- **Resolved production build TypeScript errors**: Fixed strict compilation failures in GraphView (`d3Force`, `cameraPosition`, ref assignment) and unit test setup (`onUpdateReady`).
 
 ## [v0.5.3] - 2026-06-24
 
