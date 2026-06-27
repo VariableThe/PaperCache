@@ -88,13 +88,26 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     localStorage.setItem(SETTINGS_KEYS.API_MODEL, apiModel)
     localStorage.setItem(SETTINGS_KEYS.AI_SYSTEM_PROMPT, aiSystemPrompt)
 
-    if (apiKey) {
-      const success = await window.electronAPI.setApiKey(apiKey)
-      if (!success) {
-        alert('Failed to save API key securely. Check console.')
+    if (apiKey.trim()) {
+      try {
+        const success = await window.electronAPI.setApiKey(apiKey.trim())
+        if (success) {
+          setIsApiKeySet(true)
+        } else {
+          alert('Failed to save API key securely. Check console.')
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to save API key:', err)
+        alert(`Failed to save API key securely: ${err}`)
       }
-    } else {
-      await window.electronAPI.setApiKey('') // clear key
+    } else if (!isApiKeySet) {
+      try {
+        await window.electronAPI.setApiKey('') // clear key
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to clear API key:', err)
+      }
     }
 
     useSettingsStore.getState().setSettings({
@@ -167,12 +180,40 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           <h3>AI Configuration</h3>
           <div className="setting-group">
             <label>API Key {isApiKeySet ? '✅ (Set)' : ''}</label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder={isApiKeySet ? 'Enter new key to replace existing' : 'sk-...'}
-            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={isApiKeySet ? 'Enter new key to replace existing' : 'sk-...'}
+                style={{ flex: 1 }}
+              />
+              {isApiKeySet && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await window.electronAPI.setApiKey('')
+                      setIsApiKeySet(false)
+                      setApiKey('')
+                    } catch (err) {
+                      // eslint-disable-next-line no-console
+                      console.error('Failed to clear key:', err)
+                    }
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '4px',
+                    background: 'var(--bg-secondary)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-color)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear Key
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="setting-group">
