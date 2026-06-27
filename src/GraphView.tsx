@@ -140,7 +140,7 @@ export default function GraphView({
       const re = /\]\(\/file\s+([^)]+)\)/g
       let match
       while ((match = re.exec(note.content)) !== null) {
-        let targetId = match[1]
+        let targetId = match[1].trim().replace(/\\/g, '/')
         if (!targetId.endsWith('.md')) targetId += '.md'
         if (nodeIds.has(targetId)) {
           links.push({ source: note.id, target: targetId })

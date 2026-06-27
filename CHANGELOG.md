@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [v0.5.4] - 2026-06-25
 
+### Added
+- **Settings Bug Report & About Menu**: Added a "Submit a Bug Report" button under System settings linking directly to the GitHub issue creation form. Added a dedicated "About" section displaying the app logo, current version number, update checker, Ko-fi support link, and a thank you message.
+
 ### Fixed
+- **Windows Onboarding File Linking & Generation**: Fixed a bug on Windows where backslashes in generated note IDs caused internal `/file` links in `Welcome.md` to fail and create duplicate empty notes. Normalized note ID generation across Rust and TypeScript to consistently use forward slashes on all platforms, and ensured onboarding template files regenerate correctly on application updates.
 - **Window position/size now persists across restarts**: The window-state plugin's `on_window_ready` fires before the macOS display server is ready, causing `available_monitors()` to return empty and the saved position to be silently discarded. Fixed by deferring window-state restoration via a background thread + `run_on_main_thread` 300ms after `setup()` completes, bypassing the plugin's monitor-intersection check with a direct file read. Both the tray "Quit" and Settings "Quit" buttons now explicitly save window state before exit.
 - **Launch at Startup now registers as a proper Login Item**: Changed `MacosLauncher` from `LaunchAgent` to `AppleScript`, which registers PaperCache in System Settings > General > Login Items instead of creating a hidden `launchd` plist. Users can now see and manage the autostart entry directly from System Settings.
 - **Window no longer shifts down on restart on macOS**: Removed the +/-28px compensation that was incorrectly added for a macOS frameless window offset which does not exist in `tauri-plugin-window-state` v2.4.1 — the plugin correctly saves `outer_position()` and restores via `set_position()` with no titlebar offset for frameless windows.

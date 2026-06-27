@@ -1,4 +1,5 @@
 import { useState, useEffect, Fragment } from 'react'
+import { getVersion } from '@tauri-apps/api/app'
 import { SETTINGS_KEYS } from './lib/settingsKeys'
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
@@ -56,6 +57,13 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
       setLaunchAtStartup(enabled)
       localStorage.setItem(SETTINGS_KEYS.LAUNCH_STARTUP, enabled.toString())
     })
+  }, [])
+
+  const [appVersion, setAppVersion] = useState('0.5.3')
+  useEffect(() => {
+    getVersion()
+      .then((ver) => setAppVersion(ver))
+      .catch(() => {})
   }, [])
 
   // Appearance State
@@ -250,6 +258,28 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
               Check for Updates Now
             </button>
           </div>
+          <div className="setting-group">
+            <label>Submit a Bug Report</label>
+            <button
+              onClick={() =>
+                window.electronAPI.openExternal(
+                  'https://github.com/VariableThe/PaperCache/issues/new'
+                )
+              }
+              style={{
+                padding: '6px 12px',
+                background: 'rgba(128,128,128,0.1)',
+                border: '1px solid rgba(128,128,128,0.2)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                color: 'inherit',
+                fontFamily: 'inherit',
+                margin: '0 auto',
+              }}
+            >
+              Report Issue on GitHub 🐞
+            </button>
+          </div>
         </section>
 
         <section>
@@ -346,6 +376,72 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           <div className="setting-group color-row">
             <label>AI Response Text</label>
             <input type="color" value={aiColor} onChange={(e) => setAiColor(e.target.value)} />
+          </div>
+        </section>
+
+        <section>
+          <h3>About</h3>
+          <div style={{ textAlign: 'center', padding: '10px 0' }}>
+            <img
+              src="/icon.png"
+              alt="PaperCache Logo"
+              style={{
+                width: '64px',
+                height: '64px',
+                margin: '0 auto 12px',
+                display: 'block',
+                borderRadius: '12px',
+              }}
+            />
+            <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>PaperCache</div>
+            <div style={{ fontSize: '13px', color: '#888', marginBottom: '16px' }}>
+              Version {appVersion}
+            </div>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#ccc',
+                lineHeight: '1.5',
+                maxWidth: '400px',
+                margin: '0 auto 20px',
+              }}
+            >
+              Thank you for using PaperCache! We hope it helps organize your thoughts and boost your
+              daily productivity.
+            </p>
+            <div
+              style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}
+            >
+              <button
+                onClick={() => window.electronAPI.checkForUpdates()}
+                style={{
+                  padding: '6px 14px',
+                  background: 'rgba(128,128,128,0.1)',
+                  border: '1px solid rgba(128,128,128,0.2)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  color: 'inherit',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Check for Updates
+              </button>
+              <button
+                onClick={() => window.electronAPI.openExternal('https://ko-fi.com/thevariable')}
+                style={{
+                  padding: '6px 14px',
+                  background: 'rgba(255,94,91,0.15)',
+                  border: '1px solid rgba(255,94,91,0.3)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  color: '#ff5e5b',
+                  fontFamily: 'inherit',
+                  fontWeight: 500,
+                }}
+              >
+                Support on Ko-fi ☕
+              </button>
+            </div>
           </div>
         </section>
       </div>

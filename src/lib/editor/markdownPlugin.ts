@@ -87,7 +87,7 @@ export const markdownPlugin = ViewPlugin.fromClass(
 
           if (linkPath.startsWith('/file')) {
             isFile = true
-            linkPath = linkPath.substring(5).trim()
+            linkPath = linkPath.substring(5).trim().replace(/\\/g, '/')
           } else if (linkPath.startsWith('/url')) {
             linkPath = linkPath.substring(4).trim()
           }
