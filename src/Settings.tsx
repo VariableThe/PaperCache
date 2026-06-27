@@ -101,13 +101,6 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
         console.error('Failed to save API key:', err)
         alert(`Failed to save API key securely: ${err}`)
       }
-    } else if (!isApiKeySet) {
-      try {
-        await window.electronAPI.setApiKey('') // clear key
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to clear API key:', err)
-      }
     }
 
     useSettingsStore.getState().setSettings({

@@ -14,10 +14,17 @@ pub fn set_api_key(key: String) -> Result<bool, String> {
         .map_err(|e| format!("Failed to access keyring: {}", e))?;
     let trimmed = key.trim();
     if trimmed.is_empty() {
-        let _ = entry.delete_credential();
-        return Ok(true);
+        match entry.delete_credential() {
+            Ok(_) => return Ok(true),
+            Err(keyring::Error::NoEntry) => return Ok(true),
+            Err(e) => return Err(format!("Failed to delete API key: {}", e)),
+        }
     }
-    let _ = entry.delete_credential();
+    match entry.delete_credential() {
+        Ok(_) => {},
+        Err(keyring::Error::NoEntry) => {},
+        Err(e) => return Err(format!("Failed to delete existing API key: {}", e)),
+    }
     entry
         .set_password(trimmed)
         .map_err(|e| format!("Failed to set API key: {}", e))?;
