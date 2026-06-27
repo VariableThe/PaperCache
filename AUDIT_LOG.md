@@ -2,6 +2,17 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-27 (Graph View Bugfix)
+**Change:** fix(graph): prevent `e.graphData is not a function` crash on unmount and replace setInterval
+
+**Details/Why:**
+1. When navigating to a note from Graph View (`onNodeClick`), the unmounting sequence destroyed internal `react-force-graph-3d` methods on `fgRef.current` before `GraphView`'s effect cleanup ran. Calling `fg.graphData()` threw a TypeError (`e.graphData is not a function`). Added defensive `typeof fg.graphData === 'function'` verification before invocation and introduced `graphDataRef` as a safe fallback cache for node positions.
+2. Replaced the active `setInterval` loop in `GraphView.tsx` with a chained `setTimeout` pattern to comply with project timer guidelines (`No setInterval in renderer or main process`).
+
+**Files changed:** `src/GraphView.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-27 (v0.5.5 Release & Smart Onboarding)
 **Change:** chore(release): bump version to 0.5.5; implement smart onboarding and release notes routing
 

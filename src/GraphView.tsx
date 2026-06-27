@@ -65,6 +65,7 @@ export default function GraphView({
   const fgRef = useRef<ForceGraphMethods<GraphNode, GraphLink> | undefined>(undefined)
 
   const draggedNodesRef = useRef<Set<string>>(new Set())
+  const graphDataRef = useRef<{ nodes: GraphNode[]; links: GraphLink[] }>({ nodes: [], links: [] })
 
   useEffect(() => {
     let raf: number
@@ -72,7 +73,7 @@ export default function GraphView({
     let ctrls: any = null
     const setup = () => {
       const fg = fgRef.current
-      if (!fg) {
+      if (!fg || typeof fg.controls !== 'function') {
         raf = requestAnimationFrame(setup)
         return
       }
@@ -89,8 +90,12 @@ export default function GraphView({
       ctrls.zoomSpeed = 6
       ctrls.panSpeed = 0.15
       ctrls.update()
-      fg.cameraPosition({ x: 0, y: 0, z: 500 })
-      setTimeout(() => fg.zoomToFit(400, 50), 300)
+      if (typeof fg.cameraPosition === 'function') {
+        fg.cameraPosition({ x: 0, y: 0, z: 500 })
+      }
+      setTimeout(() => {
+        if (fg && typeof fg.zoomToFit === 'function') fg.zoomToFit(400, 50)
+      }, 300)
     }
     raf = requestAnimationFrame(setup)
     return () => cancelAnimationFrame(raf)
@@ -101,8 +106,7 @@ export default function GraphView({
     // (avoids the react-hooks/exhaustive-deps stale-ref warning)
     const fg = fgRef.current
     return () => {
-      if (!fg) return
-      const data = fg.graphData()
+      const data = fg && typeof fg.graphData === 'function' ? fg.graphData() : graphDataRef.current
       if (!data || !data.nodes) return
       data.nodes.forEach((node: GraphNode) => {
         if (node.x != null && node.y != null) {
@@ -152,15 +156,22 @@ export default function GraphView({
   }, [notes])
 
   useEffect(() => {
+    graphDataRef.current = graphData
+  }, [graphData])
+
+  useEffect(() => {
     let attempts = 0
-    const id = setInterval(() => {
+    let timeoutId: number | null = null
+
+    const attemptForceSetup = () => {
       const fg = fgRef.current
-      if (!fg) {
+      if (!fg || typeof fg.d3Force !== 'function') {
         attempts++
-        if (attempts > 20) clearInterval(id)
+        if (attempts <= 20) {
+          timeoutId = window.setTimeout(attemptForceSetup, 50)
+        }
         return
       }
-      clearInterval(id)
 
       const folders = Array.from(new Set(graphData.nodes.map((n) => n.folder).filter(Boolean)))
       const centroids = buildFolderCentroids(folders)
@@ -187,9 +198,15 @@ export default function GraphView({
       )
       fg.d3Force('charge')?.strength(-120)
       fg.d3Force('collision', d3.forceCollide<GraphNode>(22))
-      fg.d3ReheatSimulation()
-    }, 50)
-    return () => clearInterval(id)
+      if (typeof fg.d3ReheatSimulation === 'function') {
+        fg.d3ReheatSimulation()
+      }
+    }
+
+    timeoutId = window.setTimeout(attemptForceSetup, 50)
+    return () => {
+      if (timeoutId !== null) clearTimeout(timeoutId)
+    }
   }, [graphData])
 
   const handleNodeClick = useCallback(
@@ -212,8 +229,8 @@ export default function GraphView({
 
   const focusOnNode = useCallback((nodeId: string) => {
     const fg = fgRef.current
-    if (!fg) return
-    const node = fg.graphData().nodes.find((n: GraphNode) => n.id === nodeId)
+    if (!fg || typeof fg.graphData !== 'function' || typeof fg.cameraPosition !== 'function') return
+    const node = fg.graphData()?.nodes?.find((n: GraphNode) => n.id === nodeId)
     if (!node || node.x == null || node.y == null) return
     fg.cameraPosition({ x: node.x, y: node.y, z: 120 }, { x: node.x, y: node.y, z: 0 }, 400)
   }, [])
