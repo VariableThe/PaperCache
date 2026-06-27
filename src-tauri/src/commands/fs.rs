@@ -234,6 +234,30 @@ pub fn remove_onboarding_files() -> Result<(), String> {
     Ok(())
 }
 
+fn has_user_notes(dir: &Path) -> bool {
+    if let Ok(entries) = fs::read_dir(dir) {
+        for entry in entries.filter_map(Result::ok) {
+            let path = entry.path();
+            if path.is_dir() {
+                if has_user_notes(&path) {
+                    return true;
+                }
+            } else if path.is_file() {
+                if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                    if name.ends_with(".md")
+                        && !name.starts_with("Welcome")
+                        && !name.starts_with("New Features")
+                        && !name.starts_with("Shortcuts")
+                    {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
 pub fn run_onboarding(app: &AppHandle) {
     let is_hyprland = std::env::var("HYPRLAND_INSTANCE_SIGNATURE").is_ok() || std::env::var("HYPRLAND_CMD").is_ok();
     let mod_key = if is_hyprland { "Alt" } else { "Command/Ctrl" };
@@ -242,6 +266,7 @@ pub fn run_onboarding(app: &AppHandle) {
         let version = app.package_info().version.to_string();
         let version_marker = base.join(".onboarding_version");
         let last_version = fs::read_to_string(&version_marker).ok();
+        let is_existing_user = version_marker.exists() || has_user_notes(&base);
         let is_new_version = last_version.as_deref() != Some(&version);
 
         if is_new_version {
@@ -432,12 +457,15 @@ pub fn run_onboarding(app: &AppHandle) {
         let note_filename = format!("New Features in v{}.md", version);
         let note_target_path = base.join(&note_filename);
 
-        if !note_target_path.exists() {
+        if is_existing_user && is_new_version && !note_target_path.exists() {
             if let Ok(entries) = fs::read_dir(&base) {
                 for entry in entries.filter_map(Result::ok) {
                     let path = entry.path();
                     if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
-                        if name.starts_with("New Features in v") && name.ends_with(".md") && name != note_filename.as_str() {
+                        if name.starts_with("New Features in v")
+                            && name.ends_with(".md")
+                            && name != note_filename.as_str()
+                        {
                             let _ = fs::remove_file(&path);
                         }
                     }
@@ -446,11 +474,23 @@ pub fn run_onboarding(app: &AppHandle) {
 
             if let Ok(resource_dir) = app.path().resource_dir() {
                 let bundled_note = resource_dir.join("notes").join(&note_filename);
-                let bundled_note_up = resource_dir.join("_up_").join("notes").join(&note_filename);
+                let bundled_note_up =
+                    resource_dir.join("_up_").join("notes").join(&note_filename);
                 if bundled_note.exists() {
                     let _ = fs::copy(&bundled_note, &note_target_path);
                 } else if bundled_note_up.exists() {
                     let _ = fs::copy(&bundled_note_up, &note_target_path);
+                }
+            }
+        } else if !is_existing_user {
+            if let Ok(entries) = fs::read_dir(&base) {
+                for entry in entries.filter_map(Result::ok) {
+                    let path = entry.path();
+                    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                        if name.starts_with("New Features in v") && name.ends_with(".md") {
+                            let _ = fs::remove_file(&path);
+                        }
+                    }
                 }
             }
         }
