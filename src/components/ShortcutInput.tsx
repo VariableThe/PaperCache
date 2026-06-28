@@ -22,7 +22,13 @@ export function ShortcutInput({
     } else {
       if (window.electronAPI.resumeShortcuts) window.electronAPI.resumeShortcuts()
     }
-  }, [recording])
+    return () => {
+      if (recording) {
+        if (window.electronAPI.resumeShortcuts) window.electronAPI.resumeShortcuts()
+        setIsRecordingShortcut(false)
+      }
+    }
+  }, [recording, setIsRecordingShortcut])
 
   const renderShortcutDisplay = (shortcut: string) => {
     if (!shortcut)

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { SETTINGS_KEYS } from '../lib/settingsKeys'
+import { SETTINGS_KEYS, getShortcut } from '../lib/settingsKeys'
 import { useAppStore } from '../store/useAppStore'
 import { ShortcutInput } from './ShortcutInput'
 
@@ -13,39 +13,39 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
 
   // Global Shortcuts
   const [shortcutNewNote, setShortcutNewNote] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE) || `${defaultMod}+Shift+N`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
   )
   const [shortcutToggle, setShortcutToggle] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TOGGLE) || `${defaultMod}+Shift+C`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
   )
 
   // In-App Shortcuts
   const [shortcutTasks, setShortcutTasks] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TASKS) || `${defaultMod}+R`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_TASKS, `${defaultMod}+R`)
   )
   const [shortcutTimers, setShortcutTimers] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TIMERS) || `${defaultMod}+T`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_TIMERS, `${defaultMod}+T`)
   )
   const [shortcutSearch, setShortcutSearch] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_SEARCH) || `${defaultMod}+P`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_SEARCH, `${defaultMod}+P`)
   )
   const [shortcutGraph, setShortcutGraph] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_GRAPH) || `${defaultMod}+G`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_GRAPH, `${defaultMod}+G`)
   )
   const [shortcutActionMenu, setShortcutActionMenu] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_ACTION_MENU) || `${defaultMod}+K`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_ACTION_MENU, `${defaultMod}+K`)
   )
   const [shortcutExport, setShortcutExport] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_EXPORT) || `${defaultMod}+E`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_EXPORT, `${defaultMod}+E`)
   )
   const [shortcutRef, setShortcutRef] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_REF) || `${defaultMod}+/`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_REF, `${defaultMod}+/`)
   )
   const [shortcutSettings, setShortcutSettings] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_SETTINGS) || `${defaultMod}+Shift+S`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_SETTINGS, `${defaultMod}+Shift+S`)
   )
   const [shortcutNewNoteInApp, setShortcutNewNoteInApp] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE_INAPP) || `${defaultMod}+N`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE_INAPP, `${defaultMod}+N`)
   )
 
   useEffect(() => {

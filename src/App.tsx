@@ -74,6 +74,7 @@ function App() {
     useTimerStore.getState().cleanExpiredTimers()
 
     let unlistenTimer: (() => void) | undefined
+    let isUnmounted = false
     listen<string>('timer-complete', (event) => {
       const id = event.payload
       useTimerStore.getState().completeTimer(id)
@@ -82,10 +83,12 @@ function App() {
         .getState()
         .addToast({ message: `⏱ Timer done: ${t?.label || ''}`, type: 'success' })
     }).then((fn) => {
-      unlistenTimer = fn
+      if (isUnmounted) fn()
+      else unlistenTimer = fn
     })
 
     return () => {
+      isUnmounted = true
       disposeUpdateReady()
       unlistenTimer?.()
     }

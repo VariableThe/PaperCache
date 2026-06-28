@@ -32,10 +32,8 @@ interface GraphLink {
   target: string
 }
 
-function buildFolderCentroids(
-  folderNames: string[]
-): Map<string, { cx: number; cy: number; cz: number }> {
-  const centroids = new Map<string, { cx: number; cy: number; cz: number }>()
+function buildFolderCentroids(folderNames: string[]): Map<string, { cx: number; cy: number }> {
+  const centroids = new Map<string, { cx: number; cy: number }>()
   const n = folderNames.length
   if (n === 0) return centroids
   const radius = 60
@@ -44,7 +42,6 @@ function buildFolderCentroids(
     centroids.set(folder, {
       cx: radius * Math.cos(angle),
       cy: radius * Math.sin(angle),
-      cz: (i % 2 === 0 ? 1 : -1) * (15 * (i % 3)),
     })
   })
   return centroids
@@ -167,7 +164,7 @@ export default function GraphView({
       // 3. Match [[<title>]]
       const reWiki = /\[\[([^\]]+)\]\]/g
       while ((match = reWiki.exec(note.content)) !== null) {
-        let targetId = match[1].trim().replace(/\\/g, '/')
+        let targetId = match[1].split('|')[0].trim().replace(/\\/g, '/')
         if (!targetId.endsWith('.md')) targetId += '.md'
         targets.add(targetId)
       }

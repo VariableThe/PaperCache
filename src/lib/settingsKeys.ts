@@ -27,3 +27,8 @@ export const SETTINGS_KEYS = {
   LAUNCH_STARTUP: 'papercache-launch-startup',
   NOTIFIED_REMINDERS: 'papercache_notified',
 } as const
+
+export function getShortcut(key: string, fallback: string): string {
+  const val = localStorage.getItem(key)
+  return val !== null ? val : fallback
+}

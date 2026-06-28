@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getVersion } from '@tauri-apps/api/app'
-import { SETTINGS_KEYS } from './lib/settingsKeys'
+import { SETTINGS_KEYS, getShortcut } from './lib/settingsKeys'
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
 import { ShortcutInput } from './components/ShortcutInput'
@@ -41,10 +41,10 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   const defaultMod = isHyprland ? 'Alt' : 'CommandOrControl'
 
   const [shortcutNewNote, setShortcutNewNote] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE) || `${defaultMod}+Shift+N`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
   )
   const [shortcutToggle, setShortcutToggle] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TOGGLE) || `${defaultMod}+Shift+C`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
   )
 
   // Startup
@@ -132,18 +132,17 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     }
 
     // Shortcuts
-    const oldShortcut =
-      localStorage.getItem('papercache-shortcut-newnote') || `${defaultMod}+Shift+N`
+    const oldShortcut = getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('new-note', oldShortcut, shortcutNewNote)
     }
-    localStorage.setItem('papercache-shortcut-newnote', shortcutNewNote)
+    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE, shortcutNewNote)
 
-    const oldToggleShortcut =
-      localStorage.getItem('papercache-shortcut-toggle') || `${defaultMod}+Shift+C`
+    const oldToggleShortcut = getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('toggle', oldToggleShortcut, shortcutToggle)
     }
+    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_TOGGLE, shortcutToggle)
 
     // Dispatch storage event manually for the same window to pick it up immediately
     window.dispatchEvent(new Event('storage'))

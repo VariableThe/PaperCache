@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
-import { SETTINGS_KEYS } from '../lib/settingsKeys'
+import { SETTINGS_KEYS, getShortcut } from '../lib/settingsKeys'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 function matchShortcut(e: KeyboardEvent, configuredStr: string): boolean {
@@ -47,6 +47,7 @@ export function useGlobalHotkey() {
   useEffect(() => {
     const handleGlobalKeyDown = async (e: KeyboardEvent) => {
       const state = useAppStore.getState()
+      if (state.isRecordingShortcut) return
       const defaultMod = isHyprland ? 'Alt' : 'CommandOrControl'
 
       if (e.key === 'Escape') {
@@ -90,18 +91,17 @@ export function useGlobalHotkey() {
       }
 
       // Read current configured shortcuts or defaults
-      const scSettings =
-        localStorage.getItem(SETTINGS_KEYS.SHORTCUT_SETTINGS) || `${defaultMod}+Shift+S`
-      const scGraph = localStorage.getItem(SETTINGS_KEYS.SHORTCUT_GRAPH) || `${defaultMod}+G`
-      const scNewNoteInApp =
-        localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE_INAPP) || `${defaultMod}+N`
-      const scExport = localStorage.getItem(SETTINGS_KEYS.SHORTCUT_EXPORT) || `${defaultMod}+E`
-      const scSearch = localStorage.getItem(SETTINGS_KEYS.SHORTCUT_SEARCH) || `${defaultMod}+P`
-      const scTasks = localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TASKS) || `${defaultMod}+R`
-      const scTimers = localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TIMERS) || `${defaultMod}+T`
-      const scActionMenu =
-        localStorage.getItem(SETTINGS_KEYS.SHORTCUT_ACTION_MENU) || `${defaultMod}+K`
-      const scRef = localStorage.getItem(SETTINGS_KEYS.SHORTCUT_REF) || `${defaultMod}+/`
+      const scSettings = getShortcut(SETTINGS_KEYS.SHORTCUT_SETTINGS, `${defaultMod}+Shift+S`)
+      const scGraph = getShortcut(SETTINGS_KEYS.SHORTCUT_GRAPH, `${defaultMod}+G`)
+      const scNewNoteInApp = getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE_INAPP, `${defaultMod}+N`)
+      const scExport = getShortcut(SETTINGS_KEYS.SHORTCUT_EXPORT, `${defaultMod}+E`)
+      const scSearch = getShortcut(SETTINGS_KEYS.SHORTCUT_SEARCH, `${defaultMod}+P`)
+      const scTasks = getShortcut(SETTINGS_KEYS.SHORTCUT_TASKS, `${defaultMod}+R`)
+      const scTimers = getShortcut(SETTINGS_KEYS.SHORTCUT_TIMERS, `${defaultMod}+T`)
+      const scActionMenu = getShortcut(SETTINGS_KEYS.SHORTCUT_ACTION_MENU, `${defaultMod}+K`)
+      const scRef = getShortcut(SETTINGS_KEYS.SHORTCUT_REF, `${defaultMod}+/`)
+      const scToggle = getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
+      const scNewNote = getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
 
       // Settings Shortcut
       if (matchShortcut(e, scSettings)) {
@@ -185,20 +185,26 @@ export function useGlobalHotkey() {
         if (existingIndex !== -1) {
           setCurrentNoteIndex(existingIndex)
         } else {
+          const fmt = (sc: string) =>
+            sc
+              .replace(/CommandOrControl/g, isHyprland ? 'Alt' : 'Cmd')
+              .replace(/Command/g, 'Cmd')
+              .replace(/Control/g, 'Ctrl')
+
           const shortcutsContent = `# Shortcuts
 
-- \`Cmd+Shift+C\` — Toggle visibility (global, configurable)
-- \`Cmd+Shift+N\` — New note (global, configurable)
-- \`Cmd+Shift+S\` — Open settings
-- \`Cmd+N\` — New note
-- \`Cmd+R\` — Tasks / Reminders
-- \`Cmd+T\` — Timers Panel
-- \`Cmd+K\` — Main action menu
-- \`Cmd+P\` — Search notes
-- \`Cmd+G\` — Graph view
+- \`${fmt(scToggle)}\` — Toggle visibility (global, configurable)
+- \`${fmt(scNewNote)}\` — New note (global, configurable)
+- \`${fmt(scSettings)}\` — Open settings
+- \`${fmt(scNewNoteInApp)}\` — New note
+- \`${fmt(scTasks)}\` — Tasks / Reminders
+- \`${fmt(scTimers)}\` — Timers Panel
+- \`${fmt(scActionMenu)}\` — Main action menu
+- \`${fmt(scSearch)}\` — Search notes
+- \`${fmt(scGraph)}\` — Graph view
 - \`Cmd+F\` — Search in graph
-- \`Cmd+E\` — Export note
-- \`Cmd+/\` — Show this shortcuts reference
+- \`${fmt(scExport)}\` — Export note
+- \`${fmt(scRef)}\` — Show this shortcuts reference
 - \`Esc\` — Close menus / modals
 
 ### Slash Commands
@@ -222,12 +228,11 @@ Type \`/\` in the editor for inline suggestions:
 
     // Sync global shortcut on load
     const defaultMod = isHyprland ? 'Alt' : 'CommandOrControl'
-    const shortcut = localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE) || `${defaultMod}+Shift+N`
+    const shortcut = getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('new-note', '', shortcut)
     }
-    const toggleShortcut =
-      localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TOGGLE) || `${defaultMod}+Shift+C`
+    const toggleShortcut = getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('toggle', '', toggleShortcut)
     }
