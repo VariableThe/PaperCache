@@ -12,9 +12,6 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useTimerStore, type Timer } from '../store/useTimerStore'
-import { useAppStore } from '../store/useAppStore'
-import { listen } from '@tauri-apps/api/event'
-
 interface TimerItemProps {
   timer: Timer
   onRemove: (id: string) => void
@@ -113,27 +110,11 @@ export function TimersPage({ onClose }: TimersPageProps) {
   const timers = useTimerStore((s) => s.timers)
   const addTimer = useTimerStore((s) => s.addTimer)
   const removeTimer = useTimerStore((s) => s.removeTimer)
-  const completeTimer = useTimerStore((s) => s.completeTimer)
-  const addToast = useAppStore((s) => s.addToast)
 
   const [labelInput, setLabelInput] = useState('')
   const [hInput, setHInput] = useState('0')
   const [mInput, setMInput] = useState('25')
   const [sInput, setSInput] = useState('0')
-
-  // Listen for backend timer-complete events
-  useEffect(() => {
-    let unlisten: (() => void) | undefined
-    listen<string>('timer-complete', (event) => {
-      const id = event.payload
-      completeTimer(id)
-      const t = useTimerStore.getState().timers.find((x) => x.id === id)
-      addToast({ message: `⏱ Timer done: ${t?.label || ''}`, type: 'success' })
-    }).then((fn) => {
-      unlisten = fn
-    })
-    return () => unlisten?.()
-  }, [completeTimer, addToast])
 
   // Close on Escape
   useEffect(() => {

@@ -5,9 +5,12 @@ import './App.css'
 const GraphView = lazy(() => import('./GraphView'))
 import { RemindersPage } from './components/RemindersPage'
 import { TimersPage } from './components/TimersPage'
+import { KeybindsModal } from './components/KeybindsModal'
 
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
+import { useTimerStore } from './store/useTimerStore'
+import { listen } from '@tauri-apps/api/event'
 
 import { useNoteStorage } from './hooks/useNoteStorage'
 import { useVariables } from './hooks/useVariables'
@@ -37,6 +40,8 @@ function App() {
   const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
   const showSettingsModal = useAppStore((state) => state.showSettingsModal)
   const setShowSettingsModal = useAppStore((state) => state.setShowSettingsModal)
+  const showKeybindsModal = useAppStore((state) => state.showKeybindsModal)
+  const setShowKeybindsModal = useAppStore((state) => state.setShowKeybindsModal)
 
   const { themePreset, fontFamily, showRulings, bgType, bgColor, bgImage, textColor, numColor } =
     useSettingsStore()
@@ -65,8 +70,27 @@ function App() {
         type: 'info',
       })
     })
+
+    useTimerStore.getState().cleanExpiredTimers()
+
+    let unlistenTimer: (() => void) | undefined
+    let isUnmounted = false
+    listen<string>('timer-complete', (event) => {
+      const id = event.payload
+      useTimerStore.getState().completeTimer(id)
+      const t = useTimerStore.getState().timers.find((x) => x.id === id)
+      useAppStore
+        .getState()
+        .addToast({ message: `⏱ Timer done: ${t?.label || ''}`, type: 'success' })
+    }).then((fn) => {
+      if (isUnmounted) fn()
+      else unlistenTimer = fn
+    })
+
     return () => {
+      isUnmounted = true
       disposeUpdateReady()
+      unlistenTimer?.()
     }
   }, [])
 
@@ -231,12 +255,32 @@ function App() {
             left: 0,
             right: 0,
             bottom: 0,
-            backgroundColor: bgType === 'color' ? bgColor : '#1a1a1a',
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(5px)',
             zIndex: 9999,
             overflow: 'auto',
           }}
         >
           <Settings onClose={() => setShowSettingsModal(false)} />
+        </div>
+      )}
+
+      {showKeybindsModal && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(5px)',
+            zIndex: 10000,
+            overflow: 'auto',
+          }}
+        >
+          <KeybindsModal onClose={() => setShowKeybindsModal(false)} />
         </div>
       )}
 

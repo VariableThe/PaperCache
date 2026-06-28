@@ -1,8 +1,9 @@
-import { useState, useEffect, Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import { getVersion } from '@tauri-apps/api/app'
-import { SETTINGS_KEYS } from './lib/settingsKeys'
+import { SETTINGS_KEYS, getShortcut } from './lib/settingsKeys'
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
+import { ShortcutInput } from './components/ShortcutInput'
 import './Settings.css'
 
 export default function Settings({ onClose }: { onClose?: () => void }) {
@@ -40,10 +41,10 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   const defaultMod = isHyprland ? 'Alt' : 'CommandOrControl'
 
   const [shortcutNewNote, setShortcutNewNote] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE) || `${defaultMod}+Shift+N`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
   )
   const [shortcutToggle, setShortcutToggle] = useState(
-    localStorage.getItem(SETTINGS_KEYS.SHORTCUT_TOGGLE) || `${defaultMod}+Shift+C`
+    getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
   )
 
   // Startup
@@ -59,7 +60,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     })
   }, [])
 
-  const [appVersion, setAppVersion] = useState('0.5.5')
+  const [appVersion, setAppVersion] = useState('0.5.6')
   useEffect(() => {
     getVersion()
       .then((ver) => setAppVersion(ver))
@@ -124,18 +125,17 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     }
 
     // Shortcuts
-    const oldShortcut =
-      localStorage.getItem('papercache-shortcut-newnote') || `${defaultMod}+Shift+N`
+    const oldShortcut = getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('new-note', oldShortcut, shortcutNewNote)
     }
-    localStorage.setItem('papercache-shortcut-newnote', shortcutNewNote)
+    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE, shortcutNewNote)
 
-    const oldToggleShortcut =
-      localStorage.getItem('papercache-shortcut-toggle') || `${defaultMod}+Shift+C`
+    const oldToggleShortcut = getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('toggle', oldToggleShortcut, shortcutToggle)
     }
+    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_TOGGLE, shortcutToggle)
 
     // Dispatch storage event manually for the same window to pick it up immediately
     window.dispatchEvent(new Event('storage'))
@@ -253,13 +253,32 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
 
         <section>
           <h3>Global Shortcuts</h3>
-          <div className="setting-group">
+          <div className="setting-group color-row">
             <label>Toggle App Visibility</label>
             <ShortcutInput value={shortcutToggle} onChange={setShortcutToggle} />
           </div>
-          <div className="setting-group">
+          <div className="setting-group color-row">
             <label>New Note (Global)</label>
             <ShortcutInput value={shortcutNewNote} onChange={setShortcutNewNote} />
+          </div>
+          <div className="setting-group" style={{ marginTop: '16px', justifyContent: 'center' }}>
+            <button
+              type="button"
+              onClick={() => useAppStore.getState().setShowKeybindsModal(true)}
+              style={{
+                padding: '8px 16px',
+                background: 'rgba(59, 130, 246, 0.15)',
+                border: '1px solid #3b82f6',
+                borderRadius: '6px',
+                color: '#3b82f6',
+                cursor: 'pointer',
+                fontWeight: 500,
+                fontSize: '13px',
+                width: '100%',
+              }}
+            >
+              ⌨️ Open Keybinds Settings Panel
+            </button>
           </div>
         </section>
 
@@ -474,168 +493,5 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
         </button>
       </div>
     </div>
-  )
-}
-
-function ShortcutInput({ value, onChange }: { value: string; onChange: (val: string) => void }) {
-  const [recording, setRecordingLocal] = useState(false)
-  const setIsRecordingShortcut = useAppStore((state) => state.setIsRecordingShortcut)
-
-  const setRecording = (val: boolean) => {
-    setRecordingLocal(val)
-    setIsRecordingShortcut(val)
-  }
-
-  useEffect(() => {
-    if (recording) {
-      if (window.electronAPI.pauseShortcuts) window.electronAPI.pauseShortcuts()
-    } else {
-      if (window.electronAPI.resumeShortcuts) window.electronAPI.resumeShortcuts()
-    }
-  }, [recording])
-
-  const renderShortcutDisplay = (shortcut: string) => {
-    if (!shortcut) return <span>Click to record</span>
-    const parts = shortcut.split('+')
-    return (
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '4px',
-          width: '100%',
-          justifyContent: 'center',
-        }}
-      >
-        {parts.map((part, index) => {
-          let display = part
-          switch (part) {
-            case 'CommandOrControl':
-            case 'Command':
-              display = '⌘'
-              break
-            case 'Control':
-              display = '⌃'
-              break
-            case 'Shift':
-              display = '⇧'
-              break
-            case 'Alt':
-            case 'Option':
-              display = '⌥'
-              break
-            case 'Up':
-              display = '↑'
-              break
-            case 'Down':
-              display = '↓'
-              break
-            case 'Left':
-              display = '←'
-              break
-            case 'Right':
-              display = '→'
-              break
-            case 'Space':
-              display = '␣'
-              break
-          }
-          return (
-            <Fragment key={index}>
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  minWidth: '24px',
-                  height: '24px',
-                  padding: '0 6px',
-                  background: 'rgba(128,128,128,0.2)',
-                  borderRadius: '6px',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1)',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  fontFamily: 'system-ui, -apple-system, sans-serif',
-                }}
-              >
-                {display}
-              </span>
-              {index < parts.length - 1 && (
-                <span style={{ opacity: 0.5, fontSize: '14px' }}>+</span>
-              )}
-            </Fragment>
-          )
-        })}
-      </div>
-    )
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!recording) return
-    e.preventDefault()
-    e.stopPropagation()
-    e.nativeEvent.stopImmediatePropagation()
-
-    if (e.key === 'Escape') {
-      setRecording(false)
-      return
-    }
-
-    if (e.key === 'Backspace' || e.key === 'Delete') {
-      onChange('')
-      setRecording(false)
-      return
-    }
-
-    const modifiers = []
-    if (e.metaKey || e.ctrlKey) modifiers.push('CommandOrControl')
-    if (e.altKey) modifiers.push('Alt')
-    if (e.shiftKey) modifiers.push('Shift')
-
-    // Don't record if only a modifier is pressed
-    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) {
-      return
-    }
-
-    let key = e.key.toUpperCase()
-    if (key === ' ') key = 'Space'
-    // Map arrows and other special keys
-    if (key === 'ARROWUP') key = 'Up'
-    if (key === 'ARROWDOWN') key = 'Down'
-    if (key === 'ARROWLEFT') key = 'Left'
-    if (key === 'ARROWRIGHT') key = 'Right'
-
-    const shortcut = [...modifiers, key].join('+')
-    onChange(shortcut)
-    setRecording(false)
-  }
-
-  return (
-    <button
-      className="shortcut-input-btn"
-      onClick={(e) => {
-        setRecording(true)
-        e.currentTarget.focus()
-      }}
-      onKeyDown={handleKeyDown}
-      onBlur={() => setRecording(false)}
-      style={{
-        padding: '8px 12px',
-        background: recording ? 'rgba(138, 180, 248, 0.2)' : 'rgba(128,128,128,0.1)',
-        border: recording ? '1px solid #8ab4f8' : '1px solid rgba(128,128,128,0.2)',
-        borderRadius: '6px',
-        cursor: 'pointer',
-        minWidth: '220px',
-        margin: '0 auto',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        color: 'inherit',
-        fontFamily: 'inherit',
-        fontSize: '13px',
-      }}
-    >
-      {recording ? 'Recording... (Press Esc to cancel)' : renderShortcutDisplay(value)}
-    </button>
   )
 }

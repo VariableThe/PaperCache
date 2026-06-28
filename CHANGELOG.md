@@ -5,6 +5,16 @@ All notable, user-facing changes to PaperCache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.5.6] - 2026-06-28
+
+### Added
+- **Dedicated Keybinds Settings Panel**: Added a sleek, high-contrast dark modal accessible from Settings (`Cmd+Shift+S`) to view and remap all application shortcuts with live recording. Designed with rich typography, glassmorphic cards, and fixed-width input buttons for perfectly vertically aligned shortcut columns.
+
+### Changed
+- **Updated Default Shortcut Mappings**: Shifted the Reminders/Tasks view shortcut to `Cmd+R` and Timers panel shortcut to `Cmd+T`.
+- **Timer Auto-Deletion**: Expired countdown timers are now automatically removed from the active list 5 seconds after completing, keeping the UI clean. Timer completion notifications and auto-cleanup now function globally even when the Timers panel is closed.
+- **Enhanced Graph View Link Parsing**: Extended 3D Graph View link detection to support standard markdown links (`[Note](Note.md)`) and wikilinks (`[[Note]]`) alongside the existing `/file` syntax, and added z-axis forces for improved 3D layout stability.
+
 ## [v0.5.5] - 2026-06-27
 
 ### Added

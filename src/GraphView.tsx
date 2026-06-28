@@ -141,15 +141,39 @@ export default function GraphView({
     const nodeIds = new Set(nodes.map((n) => n.id))
 
     notes.forEach((note) => {
-      const re = /\]\(\/file\s+([^)]+)\)/g
+      const targets = new Set<string>()
+
+      // 1. Match ](/file <path>)
+      const reFile = /\]\(\/file\s+([^)]+)\)/g
       let match
-      while ((match = re.exec(note.content)) !== null) {
+      while ((match = reFile.exec(note.content)) !== null) {
         let targetId = match[1].trim().replace(/\\/g, '/')
         if (!targetId.endsWith('.md')) targetId += '.md'
-        if (nodeIds.has(targetId)) {
+        targets.add(targetId)
+      }
+
+      // 2. Match ](<path>.md)
+      const reMd = /\]\(([^)]+\.md)\)/g
+      while ((match = reMd.exec(note.content)) !== null) {
+        let targetId = match[1].trim().replace(/\\/g, '/')
+        if (targetId.startsWith('./')) targetId = targetId.slice(2)
+        if (targetId.startsWith('/')) targetId = targetId.slice(1)
+        targets.add(targetId)
+      }
+
+      // 3. Match [[<title>]]
+      const reWiki = /\[\[([^\]]+)\]\]/g
+      while ((match = reWiki.exec(note.content)) !== null) {
+        let targetId = match[1].split('|')[0].trim().replace(/\\/g, '/')
+        if (!targetId.endsWith('.md')) targetId += '.md'
+        targets.add(targetId)
+      }
+
+      targets.forEach((targetId) => {
+        if (nodeIds.has(targetId) && targetId !== note.id) {
           links.push({ source: note.id, target: targetId })
         }
-      }
+      })
     })
 
     return { nodes, links }
