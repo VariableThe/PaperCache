@@ -32,6 +32,7 @@ interface AppState {
   showMainActionMenu: boolean
   actionMenuIndex: number
   showSettingsModal: boolean
+  showKeybindsModal: boolean
   isRecordingShortcut: boolean
 
   setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void
@@ -53,6 +54,7 @@ interface AppState {
   setShowMainActionMenu: (show: boolean | ((prev: boolean) => boolean)) => void
   setActionMenuIndex: (index: number | ((prev: number) => number)) => void
   setShowSettingsModal: (show: boolean) => void
+  setShowKeybindsModal: (show: boolean) => void
   setIsRecordingShortcut: (isRecording: boolean) => void
 }
 
@@ -75,6 +77,7 @@ export const useAppStore = create<AppState>((set) => ({
   showMainActionMenu: false,
   actionMenuIndex: 0,
   showSettingsModal: false,
+  showKeybindsModal: false,
   isRecordingShortcut: false,
 
   setNotes: (notes) =>
@@ -136,5 +139,6 @@ export const useAppStore = create<AppState>((set) => ({
           : actionMenuIndex,
     })),
   setShowSettingsModal: (showSettingsModal) => set({ showSettingsModal }),
+  setShowKeybindsModal: (showKeybindsModal) => set({ showKeybindsModal }),
   setIsRecordingShortcut: (isRecordingShortcut) => set({ isRecordingShortcut }),
 }))

@@ -2,6 +2,20 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-28 (v0.5.6 Release: Keybinds Modal, Shortcut Mappings, Timer Auto-Delete, and Graph Link Refinement)
+**Change:** chore(release): bump version to 0.5.6; feat(shortcuts): add dedicated keybinds settings modal and update global hotkeys (`Cmd+R` for tasks, `Cmd+T` for timers); feat(timers): auto-delete expired timers after 5 seconds; feat(graph): support standard markdown links and wikilinks
+
+**Details/Why:**
+1. **Version Bump**: Bumped application version to 0.5.6 across `package.json`, `Cargo.toml`, `tauri.conf.json`, and added release notes file `New Features in v0.5.6.md`.
+2. **Keybinds Settings Panel**: Created `ShortcutInput.tsx` as a shared component and `KeybindsModal.tsx` as a dedicated settings panel for remapping shortcuts, accessible via Settings. Added new storage keys in `settingsKeys.ts` and updated `useGlobalHotkey.ts` to dynamically match keyboard events against customizable shortcut settings. Refined UI layout so keycaps are centered horizontally and the container/buttons match the main Settings window.
+3. **Keybind Updates**: Updated default shortcuts so `Cmd+R` opens Tasks/Reminders and `Cmd+T` opens the countdown Timers panel, aligning with user navigation habits.
+4. **Timer Auto-Deletion**: Updated `useTimerStore.ts` and `App.tsx` so that when a countdown timer completes, it schedules a targeted 5-second `setTimeout` to call `removeTimer(id)`, reducing UI clutter. Moved backend `timer-complete` event listener to `App.tsx` so completion notifications and auto-cleanup function globally even when the panel is closed.
+5. **Graph View Link Parsing**: Expanded regex detection in `GraphView.tsx` to link notes using standard markdown links (`[Title](Title.md)`) and wikilinks (`[[Title]]`) in addition to `/file` links, and added z-axis centering forces (`centerZ`, `folderZ`) for improved 3D layout stability.
+
+**Files changed:** `package.json`, `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, `notes/New Features in v0.5.6.md`, `src/lib/settingsKeys.ts`, `src/components/ShortcutInput.tsx`, `src/components/KeybindsModal.tsx`, `src/store/useAppStore.ts`, `src/App.tsx`, `src/Settings.tsx`, `src/hooks/useGlobalHotkey.ts`, `src/store/useTimerStore.ts`, `src/components/TimersPage.tsx`, `src/GraphView.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-27 (API Key Persistence & Graph View Fixes)
 **Change:** fix(ai): fix API key saving/clearing logic and macOS keychain credential updating; fix(graph): prevent `fg.graphData` crashes when opening or closing Graph View
 
