@@ -1,70 +1,76 @@
-# Performance Audit: PaperCache V0.5.0-beta (Tauri Migration)
+# Performance Audit: PaperCache V0.5.8
 
-**Date:** June 22, 2026
+**Date:** June 29, 2026
 **Auditor:** VariableThe  
-**App Version:** 0.5.0-beta (Tauri Migration)  
+**App Version:** 0.5.8 (Tauri, custom arithmetic evaluator)  
 
-## 1. Executive Summary (The TL;DR)
-This document details the performance improvements made in V0.5.0-beta by migrating from Electron to Tauri and Rust. The primary goals were drastically reducing the application size and background RAM usage by eliminating the embedded Node.js runtime and Chromium binaries.
+## 1. Executive Summary
 
-| Metric | V0.4.0 (Electron) | V0.5.0-beta (Tauri) | Delta |
+PaperCache is built on Tauri v2, Rust, and React. After migrating from Electron (v0.5.0-beta), we've continued shrinking the footprint through dependency removal, custom evaluators, and lazy-loading.
+
+| Metric | V0.5.0-beta | V0.5.8 | Delta |
 | :--- | :--- | :--- | :--- |
-| **App Installer Size (DMG)** | ~80.0 MB | ~7.3 MB | **-90%** |
-| **Idle RAM Usage** | ~120 MB | ~40 MB | **-66%** |
+| **App Installer Size (DMG)** | ~7.3 MB | ~6.8 MB | **-7%** |
+| **Idle RAM Usage** | ~40 MB | ~38 MB | **-5%** |
 | **Idle CPU Usage** | 0.0% | 0.0% | **Maintained** |
-| **IPC Save Latency (500 notes)**| 12 ms (Async) | <5 ms (Rust fs) | **Faster** |
+| **Bundle Dependencies** | ~600 packages | ~590 packages | **Smaller** |
 
 ## 2. Testing Methodology & Environment
-*To ensure reproducibility, all metrics were captured under the following conditions:*
-- **Hardware:** MacBook Air M4, 16GB RAM (Baseline mid-tier dev machine).
+- **Hardware:** MacBook Air M4, 16GB RAM
 - **OS:** macOS 15.7.5
 - **Dataset:** Workspace containing 500 markdown notes, averaging 2KB each.
-- **Tooling:** Activity Monitor, `ls -lh`, and Rust `std::time::Instant`.
+- **Tooling:** Activity Monitor, `ls -lh`, `du -sh`
 
-## 3. The Tauri Migration (V0.5.0-beta)
-*Goal: Remove the massive Electron overhead for a background utility.*
+## 3. Recent Performance Improvements (V0.5.3 — V0.5.8)
 
-- **Zero-Copy IPC via `serde`:** Electron relies on JSON stringification over a Node.js bridge. Tauri uses Rust's `serde` library, which serializes and deserializes IPC payloads with near-zero overhead, making data transfer between the UI and backend virtually instantaneous.
-- **Native Async Runtime:** The Rust backend utilizes the `tokio` multi-threaded async runtime. Heavy operations like recursive directory walking (`get_notes`) and HTTP requests (`reqwest` for OpenAI) are executed off the main thread, ensuring the UI never stutters during disk I/O.
-- **Native Security:** Replaced Electron's `safeStorage` with a custom Rust implementation using the `keyring` crate (for OS-level credential storage) and `aes-gcm` (for AES-256-GCM encryption). This provides hardware-backed security with a fraction of the memory footprint.
-- **Strict Capability Scoping:** Migrated to Tauri v2's capability system, ensuring the frontend can only invoke explicitly whitelisted Rust commands and access strictly scoped file paths, eliminating entire classes of XSS-to-filesystem vulnerabilities present in Electron.
+### Custom Arithmetic Evaluator (V0.5.8)
+Replaced `expr-eval` (~15KB, high-severity prototype pollution vulnerability, no fix available) with a custom recursive-descent parser at `src/lib/evaluator.ts` (~2KB).
+- Zero external dependencies — no `eval`, no `Function` constructors.
+- ~150 lines of TypeScript with 26 unit tests.
+- Not susceptible to prototype pollution.
+- *Impact:* Eliminated a security vulnerability with a smaller, faster evaluator.
 
----
+### Unused Dependency Removal (V0.5.6 — V0.5.8)
+Removed 4 unused npm packages: `@tauri-apps/plugin-fs`, `@tauri-apps/plugin-shell`, `@emnapi/core`, `@emnapi/runtime`.
+- *Impact:* Reduced package.json weight and CI install times.
 
-## Historical: V0.4.0 Performance Audit
+### Lazy-Loaded WebGL Graph View (V0.5.3)
+Replaced D3.js Canvas 2D graph with `react-force-graph-3d` (Three.js/WebGL), dynamically imported via `React.lazy() + Suspense`.
+- The Three.js bundle (~1.3 MB) loads **only** when the graph is first opened.
+- *Impact:* Graph rendering is offloaded to the GPU. No startup penalty. No UI freeze on large graphs.
 
-## 3. Bundle & Ship Size Optimization
-*Goal: Reduce the amount of JavaScript V8 must parse on cold start.*
+### DSL Regex Engine — Visible-Range Scanning (V0.5.3)
+Created `dslPlugin.ts` — `createRegexPlugin()` scans only `view.visibleRanges` per update tick.
+- O(visible lines) complexity instead of O(document length).
+- *Impact:* Lag-free typing at any document size, even with many active regex rules. Eliminated the previous main-thread bottleneck for custom DSL parsing.
 
-- **Removed `mathjs` (16MB):** Replaced with `expr-eval` (160KB). 
-  - *Impact:* Reduced initial JS parse time by ~400ms.
-- **Removed `openai` Node SDK (16MB):** Replaced with native `fetch()` (20 lines of code).
-  - *Impact:* Eliminated 16MB of dead weight. The AI feature now lazy-loads only when triggered, but the base bundle is permanently smaller.
-- **Vite Code Splitting:** Verified that heavy CodeMirror language parsers are dynamically imported only when a specific code block is rendered.
+### Drift-Corrected Timer Countdowns (V0.5.3)
+Replaced `setInterval` with chained `setTimeout` loops in the timer panel.
+- *Impact:* No timer drift accumulation. Accurate countdowns regardless of browser event loop pressure.
 
-## 4. Main Process & IPC Architecture
-*Goal: Prevent the Electron main thread from blocking on disk I/O, which causes global hotkey lag and tray menu freezes.*
+### Debounced Saves (V0.4.0, maintained)
+500ms debounce on `saveNote` IPC calls.
+- Disk I/O reduced from ~3 writes/sec to ~1 write/sec during continuous typing.
 
-- **Async File I/O:** Migrated 8 synchronous `fs.*Sync` calls in IPC handlers (`get-notes`, `save-note`, etc.) to `fs.promises`.
-  - *Before:* Loading 500 notes blocked the main thread for 450ms. The UI was completely unresponsive.
-  - *After:* Loading 500 notes uses `Promise.all()` and takes 12ms of main-thread time. 
-- **Startup Bootstrap:** Left 2 synchronous `existsSync`/`mkdirSync` calls in the pre-app-ready bootstrap phase for creating `.papercache` and `commands` directories.
-  - *Justification:* These run before the `BrowserWindow` is created. Making them async adds complexity for zero user-perceptible benefit.
+### TypeScript Strict Mode (V0.5.8)
+Enabled `strict: true` in tsconfig, catching null/type issues at compile time rather than runtime.
+- *Impact:* Zero new type errors at enablement — the codebase was already compatible.
 
-## 5. Renderer & React State
-*Goal: Eliminate UI stuttering during rapid typing and state updates.*
+### Coverage Thresholds (V0.5.8)
+Added minimum coverage guardrails to vitest config (statements 65%, branches 50%, functions 55%, lines 65%).
+- *Impact:* Prevents silent coverage regression in CI.
 
-- **Debounced Saves:** Implemented a 500ms debounce on `window.electronAPI.saveNote`. 
-  - *Impact:* Disk I/O reduced from ~3 writes/sec to 1 write/sec during continuous typing.
-- **Pure State Updaters:** Refactored `App.tsx` to remove IPC side-effects from `setNotes` updaters. 
-  - *Impact:* Eliminated React "Cannot update a component while rendering a different component" warnings and prevented double-saving race conditions.
-- **Window Consolidation:** Removed the secondary `BrowserWindow` for Settings. 
-  - *Impact:* Saved ~40MB of baseline RAM (no second Chromium renderer process) and eliminated the fragile `localStorage` event listener sync.
+## 4. Desktop Integration Overhead
 
-## 6. Known Limitations & Future Bottlenecks
-*Intellectual honesty: Where the app is still not perfectly optimized, and why.*
+- **Native API Key Storage:** Uses the OS keychain (macOS Keychain, Linux Secret Service, Windows Credential Manager) via the Rust `keyring` crate. No user-visible memory or latency cost.
+- **Global Shortcuts:** Registered via `tauri-plugin-global-shortcut` — zero ongoing CPU overhead, fires events only on keypress.
+- **Auto-Updates:** Uses `tauri-plugin-updater` — checks version metadata on startup (~1 HTTP HEAD request). No persistent overhead.
+- **Window State Persistence:** Reads/writes a small JSON file (~200 bytes) on exit/startup. No runtime cost.
 
-1. **Graph View Rendering:** The D3.js graph view currently recalculates the entire force-directed layout on every node addition. With 1,000+ notes, this causes a 2-second UI freeze. 
-   - *Mitigation:* We accept this for V0.4.0 as graph view is a secondary feature. V0.5.0 will implement WebGL (via `react-force-graph`) to offload layout calculations to the GPU.
-2. **Regex Parsing on Large Files:** The custom DSL regex runs on the entire document string on every keystroke. For files >50KB, this causes minor input latency in the JS main thread.
-   - *Mitigation:* In V0.5.0, this parsing can be ported to a `#[tauri::command]` in Rust. Rust's regex engine is highly performant and completely bypasses the JS main thread, eliminating input latency without needing Web Workers.
+## 5. Known Limitations & Future Bottlenecks
+
+1. **Full-Text Search:** Currently searches are done client-side via JavaScript string matching on loaded notes. For workspaces exceeding 5,000+ notes, this could introduce noticeable search latency. A future optimization could implement a persistent search index in Rust (e.g., via `tantivy` or `skim`).
+
+2. **Graph Layout on Very Large Datasets:** The WebGL graph renders smoothly for typical workspaces (up to ~500 nodes). With 2,000+ nodes, force simulation convergence time and interaction framerate may degrade. Future optimization: implement LOD (level-of-detail) rendering or cluster-collapse for large folders.
+
+3. **Startup Time (Cold):** Initial load requires parsing note directory via Rust's `walkdir` (~5ms for 500 notes) plus React hydration. The JS bundle is ~200KB gzipped. Cold launch is typically sub-second but varies by filesystem speed and note count.

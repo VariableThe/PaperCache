@@ -18,7 +18,8 @@ Summon it with a hotkey. Jot. Dismiss. It stays out of your way until you need i
 - **Inline AI** — type `/ai <prompt>`, press enter, get the answer inserted directly into your note. No sidebar, no context switch.
 - **Auto-highlights hex colors, dates, and times** — `#D97757` renders as a color pill. Clicking on the circle copies the hex code. `31-05-2024` gets highlighted. Useful at a glance.
 - **Interactive Checkboxes & Slash Commands** — Type `/` to see inline autosuggestions (like `/check`, `/task`, or `/ai`). Press `Tab` to instantly complete them. Checkboxes strike through text when clicked.
-- **Tasks & Reminders** — Type `/task` followed by `@ 1d2h` to set a due date. Press `Cmd+T` to open a unified Tasks view that tracks all your pending items and due times.
+- **Tasks & Reminders** — Type `/task` followed by `@ 1d2h` to set a due date. Press `Cmd+R` to open a unified Tasks view that tracks all your pending items and due times.
+- **Countdown Timers** — Type `/timer` or press `Cmd+T` to open the Timers panel. Create timers with quick presets or custom durations — native OS notifications fire even when the app is minimized.
 - **Tags & folders** — `!tagname` for tags, `/` in note titles for folders. Right-click any tag pill to export or delete all tagged notes at once.
 - **Graph view** — press `Cmd+G` to open a 2D knowledge graph with flat circle nodes, always-visible labels, and folder-based clustering. Press `Cmd+F` to fuzzy-search nodes and fly directly to the match.
 
