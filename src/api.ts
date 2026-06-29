@@ -64,4 +64,6 @@ export const tauriApi: ElectronAPI = {
   pauseShortcuts: () => invoke('pause_shortcuts'),
   resumeShortcuts: () => invoke('resume_shortcuts'),
   onUpdateReady: (callback) => onEvent('update-ready', callback),
+  restartApp: () => invoke('restart_app'),
+  onUpdateStatus: (callback) => onEvent('update-status', callback),
 }
