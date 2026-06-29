@@ -77,17 +77,6 @@ function App() {
       }
     })
 
-    const disposeUpdateReady = window.electronAPI.onUpdateReady(() => {
-      useAppStore.getState().addToast({
-        message: '✨ A new update is ready to install.',
-        type: 'info',
-        actionLabel: 'Restart Now',
-        onAction: () => {
-          window.electronAPI.restartApp()
-        },
-      })
-    })
-
     useTimerStore.getState().cleanExpiredTimers()
 
     let unlistenTimer: (() => void) | undefined
@@ -107,7 +96,6 @@ function App() {
     return () => {
       isUnmounted = true
       disposeUpdateStatus()
-      disposeUpdateReady()
       unlistenTimer?.()
     }
   }, [])
