@@ -3,7 +3,7 @@ import { vi, afterEach } from 'vitest'
 import type { ElectronAPI } from './types'
 
 vi.mock('@tauri-apps/api/app', () => ({
-  getVersion: vi.fn().mockResolvedValue('0.5.6'),
+  getVersion: vi.fn().mockResolvedValue('0.5.7'),
 }))
 
 // Mock matchMedia which is not present in jsdom but might be needed by some components

@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-29 (v0.5.7 Release: Auto-Update Overhaul, On-Demand Update Checks, and Build Fixes)
+**Change:** chore(release): bump version to 0.5.7; feat(updater): overhaul auto-update flow with real-time UI feedback ("Checking…"), toast notification with "Restart Now" button, and manifest configuration; fix(api): update `onEvent` listener helper to forward payloads to callbacks fixing TS2345 strict build error
+
+**Details/Why:**
+1. **Version Bump**: Bumped application version to 0.5.7 across `package.json`, `package-lock.json`, `Cargo.toml`, `Cargo.lock`, `tauri.conf.json`, `Settings.tsx`, and `setupTests.ts`, and added release note `notes/New Features in v0.5.7.md`.
+2. **Auto-Update & On-Demand Checks**: Overhauled Tauri updater mechanism to emit status events and prompt user for controlled restart when updates are ready. Added "Check for Updates" visual feedback in Settings.
+3. **Build Fix**: Fixed TS2345 error where `onEvent` discarded payload parameters, ensuring strict `tsc -b` compilation succeeds cleanly.
+
+**Files changed:** `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, `src-tauri/tauri.conf.json`, `src/Settings.tsx`, `src/setupTests.ts`, `notes/New Features in v0.5.7.md`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-29 (Security & Repo Hygiene Audit Fixes)
 **Change:** chore(ci): pin action references in `release.yml` to SHA digests; chore(repo): untrack build binary `PaperCache_aarch64.app.tar.gz` and update `.gitignore`; fix(rust): replace `#[allow(dead_code)]` with `#[cfg(not(target_os = "macos"))]` on debounce constants
 
@@ -11,6 +23,8 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 3. **Rust Config Gating**: Gated `FOCUS_LOSS_DEBOUNCE_MS` in `src-tauri/src/lib.rs` with `#[cfg(not(target_os = "macos"))]` so it is cleanly excluded on macOS where it is not used, eliminating dead-code warnings without blanket suppressions.
 
 **Files changed:** `.github/workflows/release.yml`, `.gitignore`, `src-tauri/src/lib.rs`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
 ## 2026-06-29 (Code Quality Refactor & Test Suite)
 **Change:** refactor(shortcuts): extract helper to deduplicate global shortcut trigger logic; fix(timers): manage completion timeout lifecycle in store; test(editor): add comprehensive unit test suite for `VariableScope`
 
