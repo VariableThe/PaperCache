@@ -10,6 +10,16 @@ import { create } from 'zustand'
 
 const COMPLETED_TIMER_CLEANUP_MS = 10000
 
+const completionTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+
+function clearCompletionTimeout(id: string) {
+  const timeout = completionTimeouts.get(id)
+  if (timeout) {
+    clearTimeout(timeout)
+    completionTimeouts.delete(id)
+  }
+}
+
 export type TimerStatus = 'running' | 'paused' | 'completed'
 
 export interface Timer {
@@ -40,9 +50,13 @@ export const useTimerStore = create<TimerState>((set) => ({
   cleanExpiredTimers: () => {
     const now = Date.now()
     set((state) => ({
-      timers: state.timers.filter(
-        (t) => t.status !== 'completed' || now - t.endsAt < COMPLETED_TIMER_CLEANUP_MS
-      ),
+      timers: state.timers.filter((t) => {
+        if (t.status === 'completed' && now - t.endsAt >= COMPLETED_TIMER_CLEANUP_MS) {
+          clearCompletionTimeout(t.id)
+          return false
+        }
+        return true
+      }),
     }))
   },
 
@@ -59,6 +73,7 @@ export const useTimerStore = create<TimerState>((set) => ({
   },
 
   removeTimer: (id) => {
+    clearCompletionTimeout(id)
     set((state) => ({ timers: state.timers.filter((t) => t.id !== id) }))
   },
 
@@ -79,14 +94,17 @@ export const useTimerStore = create<TimerState>((set) => ({
     const existing = useTimerStore.getState().timers.find((t) => t.id === id)
     if (!existing || existing.status === 'completed') return
 
+    clearCompletionTimeout(id)
     set((state) => ({
       timers: state.timers.map((t) =>
         t.id === id ? { ...t, remainingMs: 0, status: 'completed' } : t
       ),
     }))
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
+      completionTimeouts.delete(id)
       useTimerStore.getState().removeTimer(id)
-    }, 5000)
+    }, COMPLETED_TIMER_CLEANUP_MS)
+    completionTimeouts.set(id, timeout)
   },
 
   pauseTimer: (id) => {
