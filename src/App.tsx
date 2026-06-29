@@ -24,7 +24,6 @@ import { Editor, type EditorRef } from './components/Editor'
 import Settings from './Settings'
 
 const TOAST_TIMEOUT_MS = 5000
-const FOCUS_DELAY_MS = 50
 const MODAL_Z_INDEX = 9999
 const KEYBINDS_Z_INDEX = 10000
 const TOAST_Z_INDEX = 99999
@@ -42,7 +41,6 @@ function App() {
   const setShowTimersView = useAppStore((state) => state.setShowTimersView)
   const toasts = useAppStore((state) => state.toasts)
   const removeToast = useAppStore((state) => state.removeToast)
-  const showNoteSearch = useAppStore((state) => state.showNoteSearch)
   const setShowMainActionMenu = useAppStore((state) => state.setShowMainActionMenu)
   const showSettingsModal = useAppStore((state) => state.showSettingsModal)
   const setShowSettingsModal = useAppStore((state) => state.setShowSettingsModal)
@@ -53,8 +51,6 @@ function App() {
     useSettingsStore()
 
   const editorRef = useRef<EditorRef>(null)
-
-  const searchInputRef = useRef<HTMLInputElement>(null)
 
   useNoteStorage()
   useVariables()
@@ -119,14 +115,6 @@ function App() {
       }
     }
   }, [toasts, removeToast])
-
-  useEffect(() => {
-    if (showNoteSearch && searchInputRef.current) {
-      setTimeout(() => {
-        searchInputRef.current?.focus()
-      }, FOCUS_DELAY_MS)
-    }
-  }, [showNoteSearch])
 
   useEffect(() => {
     async function checkVersion() {

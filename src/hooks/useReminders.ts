@@ -40,14 +40,13 @@ export function useReminders() {
   const notes = useAppStore((state) => state.notes)
 
   useEffect(() => {
-    const pending = collectFutureReminders(notes)
     const token = ++scheduleToken
+    const pending = collectFutureReminders(notes)
+    if (token !== scheduleToken) return
 
     window.electronAPI
       .scheduleReminders(pending)
-      .then(() => {
-        if (token !== scheduleToken) return
-      })
+      .then(() => {})
       // eslint-disable-next-line no-console
       .catch((e) => console.error('Failed to schedule reminders', e))
   }, [notes])

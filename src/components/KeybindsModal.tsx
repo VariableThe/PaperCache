@@ -13,6 +13,8 @@ interface ShortcutConfig {
   storageKey: string
   defaultKey: string
   section: 'global' | 'app'
+  action?: string
+  oldShortcutStorageKey?: string
 }
 
 export function KeybindsModal({ onClose }: KeybindsModalProps) {
@@ -26,6 +28,8 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
       storageKey: SETTINGS_KEYS.SHORTCUT_TOGGLE,
       defaultKey: `${defaultMod}+Shift+C`,
       section: 'global',
+      action: 'toggle',
+      oldShortcutStorageKey: 'papercache-shortcut-toggle',
     },
     {
       key: 'shortcutNewNote',
@@ -33,6 +37,8 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
       storageKey: SETTINGS_KEYS.SHORTCUT_NEWNOTE,
       defaultKey: `${defaultMod}+Shift+N`,
       section: 'global',
+      action: 'new-note',
+      oldShortcutStorageKey: 'papercache-shortcut-newnote',
     },
     {
       key: 'shortcutTasks',
@@ -121,15 +127,12 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
 
   const handleSave = () => {
     for (const sc of shortcuts) {
-      if (sc.section === 'global') {
-        const oldShortcutKey =
-          sc.key === 'shortcutToggle' ? 'papercache-shortcut-toggle' : 'papercache-shortcut-newnote'
-        const oldShortcut = localStorage.getItem(oldShortcutKey) || sc.defaultKey
-        const action = sc.key === 'shortcutToggle' ? 'toggle' : 'new-note'
+      if (sc.section === 'global' && sc.action && sc.oldShortcutStorageKey) {
+        const oldShortcut = localStorage.getItem(sc.oldShortcutStorageKey) || sc.defaultKey
         if (window.electronAPI.updateGlobalShortcut) {
-          window.electronAPI.updateGlobalShortcut(action, oldShortcut, values[sc.key])
+          window.electronAPI.updateGlobalShortcut(sc.action, oldShortcut, values[sc.key])
         }
-        localStorage.setItem(oldShortcutKey, values[sc.key])
+        localStorage.setItem(sc.oldShortcutStorageKey, values[sc.key])
       }
       localStorage.setItem(sc.storageKey, values[sc.key])
     }

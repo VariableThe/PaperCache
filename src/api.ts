@@ -4,11 +4,17 @@ import type { ElectronAPI, ReminderPayload } from './types'
 
 const onEvent = (name: string, callback: () => void) => {
   let unlisten: (() => void) | undefined
+  let disposed = false
   listen(name, () => callback()).then((fn) => {
+    if (disposed) {
+      fn()
+      return
+    }
     unlisten = fn
   })
   return () => {
-    if (unlisten) unlisten()
+    disposed = true
+    unlisten?.()
   }
 }
 
@@ -55,7 +61,7 @@ export const tauriApi: ElectronAPI = {
   safeStorageDecrypt: (val) => invoke('safe_storage_decrypt', { val }),
   onPowerSuspend: (callback) => onEvent('power:suspend', callback),
   onPowerResume: (callback) => onEvent('power:resume', callback),
-  pauseShortcuts: () => invoke('pause_shortcuts') as unknown as void,
-  resumeShortcuts: () => invoke('resume_shortcuts') as unknown as void,
+  pauseShortcuts: () => invoke('pause_shortcuts'),
+  resumeShortcuts: () => invoke('resume_shortcuts'),
   onUpdateReady: (callback) => onEvent('update-ready', callback),
 }

@@ -33,5 +33,11 @@ tauri-plugin-notification = "2.0.0-rc.5"
 cocoa = "0.25"
 objc = "0.2"
 
+# The objc v0.2 crate macros use cfg(cargo-clippy) which is no longer recognized,
+# producing unexpected_cfgs warnings from external macro expansions that cannot
+# be suppressed per-function or per-module (the span originates in objc crate code).
 [lints.rust]
 unexpected_cfgs = "allow"
+
+
+

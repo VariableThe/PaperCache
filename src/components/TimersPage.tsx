@@ -41,7 +41,7 @@ function TimerItem({ timer, onRemove }: TimerItemProps) {
       }
     }
 
-    timeoutRef.current = setTimeout(tick, 250)
+    timeoutRef.current = setTimeout(tick, TICK_INTERVAL_MS)
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)

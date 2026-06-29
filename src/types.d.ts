@@ -44,8 +44,8 @@ export interface ElectronAPI {
   safeStorageDecrypt: (val: string) => Promise<string>
   onPowerSuspend: (callback: () => void) => () => void
   onPowerResume: (callback: () => void) => () => void
-  pauseShortcuts: () => void
-  resumeShortcuts: () => void
+  pauseShortcuts: () => Promise<void>
+  resumeShortcuts: () => Promise<void>
   onUpdateReady: (callback: () => void) => () => void
 }
 
