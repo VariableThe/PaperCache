@@ -28,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Improved Type Safety**: Replaced `any` with typed interfaces in GraphView; properly typed `openAIChat` API response; aligned async method return types across bridge API.
 - **Rust Lint Cleanup**: Fixed clippy warnings in notifications.rs; documented suppressions for legacy objc crate macro warnings.
 
+### Security
+- **CI Supply-Chain Protection**: Pinned all third-party GitHub Action references in release workflow (`release.yml`) to immutable SHA-1 digests to protect release signing keys against supply-chain attacks.
+- **Repository Hygiene**: Removed committed release build artifacts (`*.app.tar.gz`) from repository tracking and updated `.gitignore` to prevent leaking build binaries into git history.
+
 ## [v0.5.5] - 2026-06-27
 
 ### Added
