@@ -1,14 +1,4 @@
-/**
- * TimersPage – Active countdown timer management panel.
- *
- * Countdown accuracy: Uses a chained setTimeout pattern (instead of setInterval)
- * to comply with the "no setInterval" rule. Each tick schedules the next tick
- * dynamically, so drift correction is automatic.
- *
- * Background operation: The actual completion event is triggered by the Rust backend
- * (tokio::time::sleep), so the timer fires even if the app is minimized.
- * The frontend display is best-effort and syncs to the backend-derived endsAt timestamp.
- */
+const TICK_INTERVAL_MS = 250
 
 import { useState, useEffect, useRef } from 'react'
 import { useTimerStore, type Timer } from '../store/useTimerStore'
@@ -47,11 +37,11 @@ function TimerItem({ timer, onRemove }: TimerItemProps) {
       const remaining = Math.max(0, timer.endsAt - Date.now())
       if (remaining > 0) {
         // Schedule next tick in ~250ms for smooth display
-        timeoutRef.current = setTimeout(tick, 250)
+        timeoutRef.current = setTimeout(tick, TICK_INTERVAL_MS)
       }
     }
 
-    timeoutRef.current = setTimeout(tick, 250)
+    timeoutRef.current = setTimeout(tick, TICK_INTERVAL_MS)
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)

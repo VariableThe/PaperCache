@@ -171,18 +171,18 @@ export function useEditorExtensions() {
 
                     messages.push({ role: 'user', content: finalPrompt })
 
-                    const completion = (await window.electronAPI.openAIChat({
+                    const completion = await window.electronAPI.openAIChat({
                       model: apiModel.trim() || 'nvidia/nemotron-3-super-120b-a12b:free',
                       messages: messages,
                       baseUrl: finalBaseUrl || '',
-                    })) as {
-                      choices?: Array<{ message?: { content?: string } }>
-                      error?: { message?: string }
-                    }
+                    })
 
                     let response: string
-                    if (completion.choices && completion.choices.length > 0) {
-                      response = completion.choices[0].message?.content || ''
+                    const choice = completion.choices?.[0]
+                    if (choice?.message?.content) {
+                      response = choice.message.content
+                    } else if (choice?.message?.content === '') {
+                      response = ''
                     } else if (completion.error) {
                       throw new Error(completion.error.message || 'Unknown API Error')
                     } else {

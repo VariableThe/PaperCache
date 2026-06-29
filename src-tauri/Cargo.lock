@@ -2926,7 +2926,7 @@ dependencies = [
 
 [[package]]
 name = "papercache"
-version = "0.5.5"
+version = "0.5.6"
 dependencies = [
  "aes-gcm",
  "base64 0.22.1",

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Updated Default Shortcut Mappings**: Shifted the Reminders/Tasks view shortcut to `Cmd+R` and Timers panel shortcut to `Cmd+T`.
 - **Timer Auto-Deletion**: Expired countdown timers are now automatically removed from the active list 5 seconds after completing, keeping the UI clean. Timer completion notifications and auto-cleanup now function globally even when the Timers panel is closed.
 - **Enhanced Graph View Link Parsing**: Extended 3D Graph View link detection to support standard markdown links (`[Note](Note.md)`) and wikilinks (`[[Note]]`) alongside the existing `/file` syntax, and added z-axis forces for improved 3D layout stability.
+- **Code Quality Cleanup**: Consolidated repetitive boilerplate across stores, event listeners, and UI components; extracted ~25 magic numbers into named constants; removed dead code and pedagogical AI-style comments.
+- **Improved Type Safety**: Replaced `any` with typed interfaces in GraphView; properly typed `openAIChat` API response; aligned async method return types across bridge API.
+- **Rust Lint Cleanup**: Fixed clippy warnings in notifications.rs; documented suppressions for legacy objc crate macro warnings.
 
 ## [v0.5.5] - 2026-06-27
 

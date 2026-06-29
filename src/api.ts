@@ -2,6 +2,22 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import type { ElectronAPI, ReminderPayload } from './types'
 
+const onEvent = (name: string, callback: () => void) => {
+  let unlisten: (() => void) | undefined
+  let disposed = false
+  listen(name, () => callback()).then((fn) => {
+    if (disposed) {
+      fn()
+      return
+    }
+    unlisten = fn
+  })
+  return () => {
+    disposed = true
+    unlisten?.()
+  }
+}
+
 export const tauriApi: ElectronAPI = {
   // Implemented Phase 2 Commands
   getNotes: async () => {
@@ -35,60 +51,17 @@ export const tauriApi: ElectronAPI = {
   checkForUpdates: () => invoke('check_for_updates'),
   restoreWindowState: () => invoke('restore_window_state'),
   isHyprland: () => invoke('is_hyprland'),
-  onSwipeGesture: () => {
-    return () => {}
-  },
   getLaunchAtStartup: () => invoke('get_launch_at_startup'),
   setLaunchAtStartup: (value) => invoke('set_launch_at_startup', { enabled: value }),
   updateGlobalShortcut: (action, oldShortcut, newShortcut) =>
     invoke('update_global_shortcut', { action, oldShortcut, newShortcut }),
-  onTriggerNewNote: (callback) => {
-    let unlisten: (() => void) | undefined
-    listen('trigger-new-note', () => callback()).then((fn) => {
-      unlisten = fn
-    })
-    return () => {
-      if (unlisten) unlisten()
-    }
-  },
-  onTriggerTasks: (callback) => {
-    let unlisten: (() => void) | undefined
-    listen('trigger-tasks', () => callback()).then((fn) => {
-      unlisten = fn
-    })
-    return () => {
-      if (unlisten) unlisten()
-    }
-  },
+  onTriggerNewNote: (callback) => onEvent('trigger-new-note', callback),
+  onTriggerTasks: (callback) => onEvent('trigger-tasks', callback),
   safeStorageEncrypt: (val) => invoke('safe_storage_encrypt', { val }),
   safeStorageDecrypt: (val) => invoke('safe_storage_decrypt', { val }),
-  onPowerSuspend: (callback) => {
-    let unlisten: (() => void) | undefined
-    listen('power:suspend', () => callback()).then((fn) => {
-      unlisten = fn
-    })
-    return () => {
-      if (unlisten) unlisten()
-    }
-  },
-  onPowerResume: (callback) => {
-    let unlisten: (() => void) | undefined
-    listen('power:resume', () => callback()).then((fn) => {
-      unlisten = fn
-    })
-    return () => {
-      if (unlisten) unlisten()
-    }
-  },
-  pauseShortcuts: () => invoke('pause_shortcuts') as unknown as void,
-  resumeShortcuts: () => invoke('resume_shortcuts') as unknown as void,
-  onUpdateReady: (callback) => {
-    let unlisten: (() => void) | undefined
-    listen('update-ready', () => callback()).then((fn) => {
-      unlisten = fn
-    })
-    return () => {
-      if (unlisten) unlisten()
-    }
-  },
+  onPowerSuspend: (callback) => onEvent('power:suspend', callback),
+  onPowerResume: (callback) => onEvent('power:resume', callback),
+  pauseShortcuts: () => invoke('pause_shortcuts'),
+  resumeShortcuts: () => invoke('resume_shortcuts'),
+  onUpdateReady: (callback) => onEvent('update-ready', callback),
 }

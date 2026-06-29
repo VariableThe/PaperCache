@@ -7,6 +7,11 @@ mod commands;
 mod macos;
 mod tray;
 
+#[allow(dead_code)]
+const FOCUS_LOSS_DEBOUNCE_MS: u64 = 200;
+#[allow(dead_code)]
+const WINDOW_STATE_RESTORE_DELAY_MS: u64 = 300;
+
 
 use commands::shortcuts::GlobalShortcutState;
 use commands::notifications::NotificationState;
@@ -87,7 +92,7 @@ pub fn run() {
                                     let dialog_open = is_dialog_open.clone();
                                     std::thread::spawn(move || {
                                         std::thread::sleep(
-                                            std::time::Duration::from_millis(200),
+                                            std::time::Duration::from_millis(FOCUS_LOSS_DEBOUNCE_MS),
                                         );
                                         if g2.load(Ordering::SeqCst) == gen_at_spawn
                                             && !dialog_open.load(Ordering::SeqCst)
@@ -109,7 +114,7 @@ pub fn run() {
                 // Plugin's on_window_ready fires too early for available_monitors() on macOS.
                 let win = window.clone();
                 std::thread::spawn(move || {
-                    std::thread::sleep(std::time::Duration::from_millis(300));
+                    std::thread::sleep(std::time::Duration::from_millis(WINDOW_STATE_RESTORE_DELAY_MS));
                     let _ = win.clone().run_on_main_thread(move || {
                         let _ = win.restore_state(StateFlags::POSITION | StateFlags::SIZE);
                         if let Ok(app_dir) = win.app_handle().path().app_config_dir() {

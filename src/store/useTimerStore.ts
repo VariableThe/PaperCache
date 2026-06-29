@@ -8,6 +8,8 @@
 
 import { create } from 'zustand'
 
+const COMPLETED_TIMER_CLEANUP_MS = 10000
+
 export type TimerStatus = 'running' | 'paused' | 'completed'
 
 export interface Timer {
@@ -29,7 +31,6 @@ interface TimerState {
   tickTimer: (id: string) => void
   completeTimer: (id: string) => void
   pauseTimer: (id: string) => void
-  resumeTimer: (id: string) => void
   cleanExpiredTimers: () => void
 }
 
@@ -39,7 +40,9 @@ export const useTimerStore = create<TimerState>((set) => ({
   cleanExpiredTimers: () => {
     const now = Date.now()
     set((state) => ({
-      timers: state.timers.filter((t) => t.status !== 'completed' || now - t.endsAt < 10000),
+      timers: state.timers.filter(
+        (t) => t.status !== 'completed' || now - t.endsAt < COMPLETED_TIMER_CLEANUP_MS
+      ),
     }))
   },
 
@@ -92,9 +95,5 @@ export const useTimerStore = create<TimerState>((set) => ({
         t.id === id && t.status === 'running' ? { ...t, status: 'paused' } : t
       ),
     }))
-  },
-
-  resumeTimer: () => {
-    // Backend does not support pause/resume yet; resume action is gated in the UI
   },
 }))

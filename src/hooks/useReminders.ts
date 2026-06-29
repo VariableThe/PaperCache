@@ -1,11 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore, type Note } from '../store/useAppStore'
 import { SETTINGS_KEYS } from '../lib/settingsKeys'
 import { parseAllTasks } from '../lib/taskUtils'
 import type { ReminderPayload } from '../types'
 
-// Monotonically increasing token to prevent stale scheduleReminders calls
 let scheduleToken = 0
 
 function parseReminders(content: string, noteId: string): ReminderPayload[] {
@@ -39,25 +38,19 @@ function collectFutureReminders(notes: Note[]): ReminderPayload[] {
 
 export function useReminders() {
   const notes = useAppStore((state) => state.notes)
-  const prevNotesRef = useRef<Note[]>([])
 
-  // Schedule reminders with a monotonic token to prevent stale overwrites
   useEffect(() => {
-    prevNotesRef.current = notes
-    const pending = collectFutureReminders(notes)
     const token = ++scheduleToken
+    const pending = collectFutureReminders(notes)
+    if (token !== scheduleToken) return
 
     window.electronAPI
       .scheduleReminders(pending)
-      .then(() => {
-        // Only advance prevNotesRef if we're still the latest call
-        if (token !== scheduleToken) return
-      })
+      .then(() => {})
       // eslint-disable-next-line no-console
       .catch((e) => console.error('Failed to schedule reminders', e))
   }, [notes])
 
-  // Listen for the native "reminder-fired" event from the backend
   useEffect(() => {
     let unlisten: (() => void) | undefined
     let disposed = false

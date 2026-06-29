@@ -14,55 +14,10 @@ export interface SettingsState {
   aiColor: string
   mathColor: string
 
-  setThemePreset: (preset: string) => void
-  setFontFamily: (font: string) => void
-  setShowRulings: (show: boolean) => void
-  setBgType: (type: 'color' | 'image') => void
-  setBgColor: (color: string) => void
-  setBgImage: (image: string) => void
-  setTextColor: (color: string) => void
-  setNumColor: (color: string) => void
-  setSymColor: (color: string) => void
-  setAiColor: (color: string) => void
-  setMathColor: (color: string) => void
   setSettings: (
     settings:
-      | Partial<
-          Omit<
-            SettingsState,
-            | 'setSettings'
-            | 'setThemePreset'
-            | 'setFontFamily'
-            | 'setShowRulings'
-            | 'setBgType'
-            | 'setBgColor'
-            | 'setBgImage'
-            | 'setTextColor'
-            | 'setNumColor'
-            | 'setSymColor'
-            | 'setAiColor'
-            | 'setMathColor'
-          >
-        >
-      | ((
-          state: SettingsState
-        ) => Partial<
-          Omit<
-            SettingsState,
-            | 'setSettings'
-            | 'setThemePreset'
-            | 'setFontFamily'
-            | 'setShowRulings'
-            | 'setBgType'
-            | 'setBgColor'
-            | 'setBgImage'
-            | 'setTextColor'
-            | 'setNumColor'
-            | 'setSymColor'
-            | 'setAiColor'
-            | 'setMathColor'
-          >
-        >)
+      | Partial<Omit<SettingsState, 'setSettings'>>
+      | ((state: SettingsState) => Partial<Omit<SettingsState, 'setSettings'>>)
   ) => void
 }
 
@@ -81,17 +36,6 @@ export const useSettingsStore = create<SettingsState>()(
       aiColor: '#8b5cf6',
       mathColor: '#10b981',
 
-      setThemePreset: (themePreset) => set({ themePreset }),
-      setFontFamily: (fontFamily) => set({ fontFamily }),
-      setShowRulings: (showRulings) => set({ showRulings }),
-      setBgType: (bgType) => set({ bgType }),
-      setBgColor: (bgColor) => set({ bgColor }),
-      setBgImage: (bgImage) => set({ bgImage }),
-      setTextColor: (textColor) => set({ textColor }),
-      setNumColor: (numColor) => set({ numColor }),
-      setSymColor: (symColor) => set({ symColor }),
-      setAiColor: (aiColor) => set({ aiColor }),
-      setMathColor: (mathColor) => set({ mathColor }),
       setSettings: (settings) =>
         set((state) => ({
           ...state,

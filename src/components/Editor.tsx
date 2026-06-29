@@ -7,6 +7,8 @@ import { useSettingsStore } from '../store/useSettingsStore'
 import { useEditorExtensions } from '../lib/editor/extensions'
 import { MathEvaluator } from '../lib/editor/MathEvaluator'
 import { type TransactionSpec } from '@codemirror/state'
+const SAVE_DEBOUNCE_MS = 500
+
 import { EditorView } from '@codemirror/view'
 
 export interface EditorRef {
@@ -54,7 +56,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
           if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
           saveTimeoutRef.current = setTimeout(() => {
             window.electronAPI.saveNote(note.id, val)
-          }, 500)
+          }, SAVE_DEBOUNCE_MS)
         }
         return updatedNotes
       })

@@ -1,5 +1,3 @@
-#![allow(unexpected_cfgs)]
-
 #[cfg(target_os = "macos")]
 use tauri::{AppHandle, Emitter};
 

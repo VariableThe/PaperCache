@@ -103,7 +103,7 @@ pub async fn schedule_timer(
             .notification()
             .builder()
             .title("PaperCache Timer")
-            .body(&format!("⏱ Timer finished: {}", label))
+            .body(format!("⏱ Timer finished: {}", label))
             .show();
         let _ = app_clone.emit("timer-complete", &id_clone);
     });

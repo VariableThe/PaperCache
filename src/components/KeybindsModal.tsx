@@ -7,46 +7,111 @@ interface KeybindsModalProps {
   onClose: () => void
 }
 
+interface ShortcutConfig {
+  key: string
+  label: string
+  storageKey: string
+  defaultKey: string
+  section: 'global' | 'app'
+  action?: string
+  oldShortcutStorageKey?: string
+}
+
 export function KeybindsModal({ onClose }: KeybindsModalProps) {
   const isHyprland = useAppStore((state) => state.isHyprland)
   const defaultMod = isHyprland ? 'Alt' : 'CommandOrControl'
 
-  // Global Shortcuts
-  const [shortcutNewNote, setShortcutNewNote] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE, `${defaultMod}+Shift+N`)
-  )
-  const [shortcutToggle, setShortcutToggle] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_TOGGLE, `${defaultMod}+Shift+C`)
-  )
+  const shortcuts: ShortcutConfig[] = [
+    {
+      key: 'shortcutToggle',
+      label: 'Toggle App Visibility',
+      storageKey: SETTINGS_KEYS.SHORTCUT_TOGGLE,
+      defaultKey: `${defaultMod}+Shift+C`,
+      section: 'global',
+      action: 'toggle',
+      oldShortcutStorageKey: 'papercache-shortcut-toggle',
+    },
+    {
+      key: 'shortcutNewNote',
+      label: 'New Note (Global)',
+      storageKey: SETTINGS_KEYS.SHORTCUT_NEWNOTE,
+      defaultKey: `${defaultMod}+Shift+N`,
+      section: 'global',
+      action: 'new-note',
+      oldShortcutStorageKey: 'papercache-shortcut-newnote',
+    },
+    {
+      key: 'shortcutTasks',
+      label: 'Open Reminders / Tasks',
+      storageKey: SETTINGS_KEYS.SHORTCUT_TASKS,
+      defaultKey: `${defaultMod}+R`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutTimers',
+      label: 'Open Timers Panel',
+      storageKey: SETTINGS_KEYS.SHORTCUT_TIMERS,
+      defaultKey: `${defaultMod}+T`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutNewNoteInApp',
+      label: 'New Note (In-App)',
+      storageKey: SETTINGS_KEYS.SHORTCUT_NEWNOTE_INAPP,
+      defaultKey: `${defaultMod}+N`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutSearch',
+      label: 'Search Notes',
+      storageKey: SETTINGS_KEYS.SHORTCUT_SEARCH,
+      defaultKey: `${defaultMod}+P`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutGraph',
+      label: 'Graph View',
+      storageKey: SETTINGS_KEYS.SHORTCUT_GRAPH,
+      defaultKey: `${defaultMod}+G`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutActionMenu',
+      label: 'Main Action Menu',
+      storageKey: SETTINGS_KEYS.SHORTCUT_ACTION_MENU,
+      defaultKey: `${defaultMod}+K`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutExport',
+      label: 'Export Note',
+      storageKey: SETTINGS_KEYS.SHORTCUT_EXPORT,
+      defaultKey: `${defaultMod}+E`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutSettings',
+      label: 'Open Settings',
+      storageKey: SETTINGS_KEYS.SHORTCUT_SETTINGS,
+      defaultKey: `${defaultMod}+Shift+S`,
+      section: 'app',
+    },
+    {
+      key: 'shortcutRef',
+      label: 'Shortcuts Reference',
+      storageKey: SETTINGS_KEYS.SHORTCUT_REF,
+      defaultKey: `${defaultMod}+/`,
+      section: 'app',
+    },
+  ]
 
-  // In-App Shortcuts
-  const [shortcutTasks, setShortcutTasks] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_TASKS, `${defaultMod}+R`)
-  )
-  const [shortcutTimers, setShortcutTimers] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_TIMERS, `${defaultMod}+T`)
-  )
-  const [shortcutSearch, setShortcutSearch] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_SEARCH, `${defaultMod}+P`)
-  )
-  const [shortcutGraph, setShortcutGraph] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_GRAPH, `${defaultMod}+G`)
-  )
-  const [shortcutActionMenu, setShortcutActionMenu] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_ACTION_MENU, `${defaultMod}+K`)
-  )
-  const [shortcutExport, setShortcutExport] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_EXPORT, `${defaultMod}+E`)
-  )
-  const [shortcutRef, setShortcutRef] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_REF, `${defaultMod}+/`)
-  )
-  const [shortcutSettings, setShortcutSettings] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_SETTINGS, `${defaultMod}+Shift+S`)
-  )
-  const [shortcutNewNoteInApp, setShortcutNewNoteInApp] = useState(
-    getShortcut(SETTINGS_KEYS.SHORTCUT_NEWNOTE_INAPP, `${defaultMod}+N`)
-  )
+  const [values, setValues] = useState<Record<string, string>>(() => {
+    const initial: Record<string, string> = {}
+    for (const sc of shortcuts) {
+      initial[sc.key] = getShortcut(sc.storageKey, sc.defaultKey)
+    }
+    return initial
+  })
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -61,33 +126,16 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
   }, [onClose])
 
   const handleSave = () => {
-    // Save Global Shortcuts
-    const oldShortcutNewNote =
-      localStorage.getItem('papercache-shortcut-newnote') || `${defaultMod}+Shift+N`
-    if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut('new-note', oldShortcutNewNote, shortcutNewNote)
+    for (const sc of shortcuts) {
+      if (sc.section === 'global' && sc.action && sc.oldShortcutStorageKey) {
+        const oldShortcut = localStorage.getItem(sc.oldShortcutStorageKey) || sc.defaultKey
+        if (window.electronAPI.updateGlobalShortcut) {
+          window.electronAPI.updateGlobalShortcut(sc.action, oldShortcut, values[sc.key])
+        }
+        localStorage.setItem(sc.oldShortcutStorageKey, values[sc.key])
+      }
+      localStorage.setItem(sc.storageKey, values[sc.key])
     }
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE, shortcutNewNote)
-    localStorage.setItem('papercache-shortcut-newnote', shortcutNewNote)
-
-    const oldShortcutToggle =
-      localStorage.getItem('papercache-shortcut-toggle') || `${defaultMod}+Shift+C`
-    if (window.electronAPI.updateGlobalShortcut) {
-      window.electronAPI.updateGlobalShortcut('toggle', oldShortcutToggle, shortcutToggle)
-    }
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_TOGGLE, shortcutToggle)
-    localStorage.setItem('papercache-shortcut-toggle', shortcutToggle)
-
-    // Save In-App Shortcuts
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_TASKS, shortcutTasks)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_TIMERS, shortcutTimers)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_SEARCH, shortcutSearch)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_GRAPH, shortcutGraph)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_ACTION_MENU, shortcutActionMenu)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_EXPORT, shortcutExport)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_REF, shortcutRef)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_SETTINGS, shortcutSettings)
-    localStorage.setItem(SETTINGS_KEYS.SHORTCUT_NEWNOTE_INAPP, shortcutNewNoteInApp)
 
     useAppStore
       .getState()
@@ -96,18 +144,15 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
   }
 
   const handleResetDefaults = () => {
-    setShortcutToggle(`${defaultMod}+Shift+C`)
-    setShortcutNewNote(`${defaultMod}+Shift+N`)
-    setShortcutTasks(`${defaultMod}+R`)
-    setShortcutTimers(`${defaultMod}+T`)
-    setShortcutSearch(`${defaultMod}+P`)
-    setShortcutGraph(`${defaultMod}+G`)
-    setShortcutActionMenu(`${defaultMod}+K`)
-    setShortcutExport(`${defaultMod}+E`)
-    setShortcutRef(`${defaultMod}+/`)
-    setShortcutSettings(`${defaultMod}+Shift+S`)
-    setShortcutNewNoteInApp(`${defaultMod}+N`)
+    const reset: Record<string, string> = {}
+    for (const sc of shortcuts) {
+      reset[sc.key] = sc.defaultKey
+    }
+    setValues(reset)
   }
+
+  const globalShortcuts = shortcuts.filter((s) => s.section === 'global')
+  const appShortcuts = shortcuts.filter((s) => s.section === 'app')
 
   return (
     <div
@@ -126,49 +171,26 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
 
         <section>
           <h3>Global Shortcuts (OS Level)</h3>
-          <KeybindRow
-            label="Toggle App Visibility"
-            value={shortcutToggle}
-            onChange={setShortcutToggle}
-          />
-          <KeybindRow
-            label="New Note (Global)"
-            value={shortcutNewNote}
-            onChange={setShortcutNewNote}
-          />
+          {globalShortcuts.map((sc) => (
+            <KeybindRow
+              key={sc.key}
+              label={sc.label}
+              value={values[sc.key]}
+              onChange={(val) => setValues((prev) => ({ ...prev, [sc.key]: val }))}
+            />
+          ))}
         </section>
 
         <section>
           <h3>In-App Navigation & Actions</h3>
-          <KeybindRow
-            label="Open Reminders / Tasks"
-            value={shortcutTasks}
-            onChange={setShortcutTasks}
-          />
-          <KeybindRow
-            label="Open Timers Panel"
-            value={shortcutTimers}
-            onChange={setShortcutTimers}
-          />
-          <KeybindRow
-            label="New Note (In-App)"
-            value={shortcutNewNoteInApp}
-            onChange={setShortcutNewNoteInApp}
-          />
-          <KeybindRow label="Search Notes" value={shortcutSearch} onChange={setShortcutSearch} />
-          <KeybindRow label="Graph View" value={shortcutGraph} onChange={setShortcutGraph} />
-          <KeybindRow
-            label="Main Action Menu"
-            value={shortcutActionMenu}
-            onChange={setShortcutActionMenu}
-          />
-          <KeybindRow label="Export Note" value={shortcutExport} onChange={setShortcutExport} />
-          <KeybindRow
-            label="Open Settings"
-            value={shortcutSettings}
-            onChange={setShortcutSettings}
-          />
-          <KeybindRow label="Shortcuts Reference" value={shortcutRef} onChange={setShortcutRef} />
+          {appShortcuts.map((sc) => (
+            <KeybindRow
+              key={sc.key}
+              label={sc.label}
+              value={values[sc.key]}
+              onChange={(val) => setValues((prev) => ({ ...prev, [sc.key]: val }))}
+            />
+          ))}
         </section>
       </div>
 
