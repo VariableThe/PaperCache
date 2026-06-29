@@ -43,7 +43,7 @@ describe('VariableScope', () => {
 
   it('falls back to raw trimmed string if expression parsing fails', () => {
     const scopeMgr = new VariableScope()
-    const doc = '/var greeting = Hello World'
+    const doc = '/var greeting =   Hello World  '
 
     scopeMgr.triggerScopeUpdate(doc, null)
     vi.advanceTimersByTime(300)
