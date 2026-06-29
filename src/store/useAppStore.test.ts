@@ -33,7 +33,7 @@ describe('useAppStore', () => {
     // Set notes directly
     setNotes([{ id: '1', content: 'test', mtime: 123 }])
     expect(useAppStore.getState().notes).toHaveLength(1)
-    expect(useAppStore.getState().notes[0].content).toBe('test')
+    expect(useAppStore.getState().notes[0]!.content).toBe('test')
 
     // Functional update
     setNotes((prev) => [...prev, { id: '2', content: 'test2', mtime: 456 }])

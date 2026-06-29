@@ -53,7 +53,7 @@ export const markdownPlugin = ViewPlugin.fromClass(
         // Lists
         const reList = /^(\s*)\*\s+/gm
         while ((match = reList.exec(text)) !== null) {
-          const start = from + match.index + match[1].length
+          const start = from + match.index + match[1]!.length
           const end = start + 1
           if (!isCursorInMatch(start, end + 1)) {
             decos.push({ from: start, to: end, deco: Decoration.replace({}) })
@@ -78,12 +78,12 @@ export const markdownPlugin = ViewPlugin.fromClass(
           linkRanges.push({ from: start, to: end })
 
           const textStart = start + 1
-          const textEnd = start + 1 + match[1].length
+          const textEnd = start + 1 + match[1]!.length
           const urlStart = textEnd
           const urlEnd = end
 
           let isFile = false
-          let linkPath = match[2].trim()
+          let linkPath = match[2]!.trim()
 
           if (linkPath.startsWith('/file')) {
             isFile = true

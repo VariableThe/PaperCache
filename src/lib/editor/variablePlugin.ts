@@ -53,7 +53,7 @@ export const variablePlugin = ViewPlugin.fromClass(
             decos.push({
               from: start,
               to: end,
-              deco: Decoration.replace({ widget: new VariableWidget(String(scope[match[1]])) }),
+              deco: Decoration.replace({ widget: new VariableWidget(String(scope[match[1]!])) }),
             })
           } else {
             decos.push({

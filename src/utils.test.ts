@@ -37,13 +37,13 @@ describe('utils', () => {
       const color1 = getFolderColor('f1')
       const color2 = getFolderColor('f2')
 
-      const hue1 = parseInt(color1.match(/hsl\((\d+)/)![1])
-      const hue2 = parseInt(color2.match(/hsl\((\d+)/)![1])
+      const hue1 = parseInt(color1.match(/hsl\((\d+)/)![1]!)
+      const hue2 = parseInt(color2.match(/hsl\((\d+)/)![1]!)
 
       expect(hue1).not.toBe(hue2)
 
       const color3 = getFolderColor('f3')
-      const hue3 = parseInt(color3.match(/hsl\((\d+)/)![1])
+      const hue3 = parseInt(color3.match(/hsl\((\d+)/)![1]!)
       expect(hue3).not.toBe(hue1)
       expect(hue3).not.toBe(hue2)
     })

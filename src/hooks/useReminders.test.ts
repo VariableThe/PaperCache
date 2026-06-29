@@ -48,14 +48,14 @@ describe('useReminders', () => {
 
     // Should have called the backend to schedule the reminder
     expect(scheduleRemindersMock).toHaveBeenCalledTimes(1)
-    const reminders = scheduleRemindersMock.mock.calls[0][0] as {
+    const reminders = scheduleRemindersMock.mock.calls[0]![0] as {
       key: string
       label: string
       dueAt: number
     }[]
     expect(reminders.length).toBe(1)
-    expect(reminders[0].label).toBe('Buy bread')
-    expect(reminders[0].dueAt).toBeGreaterThan(Date.now())
+    expect(reminders[0]!.label).toBe('Buy bread')
+    expect(reminders[0]!.dueAt).toBeGreaterThan(Date.now())
   })
 
   it('should NOT schedule past-due reminders (already notified by backend on last run)', async () => {
@@ -73,7 +73,7 @@ describe('useReminders', () => {
 
     // Called but with empty array – past reminders are not re-scheduled
     expect(scheduleRemindersMock).toHaveBeenCalledTimes(1)
-    const reminders = scheduleRemindersMock.mock.calls[0][0] as unknown[]
+    const reminders = scheduleRemindersMock.mock.calls[0]![0] as unknown[]
     expect(reminders.length).toBe(0)
   })
 
@@ -90,7 +90,7 @@ describe('useReminders', () => {
 
     renderHook(() => useReminders())
 
-    const reminders = scheduleRemindersMock.mock.calls[0][0] as unknown[]
+    const reminders = scheduleRemindersMock.mock.calls[0]![0] as unknown[]
     expect(reminders.length).toBe(0)
   })
 

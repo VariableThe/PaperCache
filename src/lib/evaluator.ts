@@ -29,7 +29,7 @@ function tokenize(input: string): Token[] {
   const tokens: Token[] = []
   let i = 0
   while (i < input.length) {
-    const ch = input[i]
+    const ch = input[i]!
     if (ch === ' ' || ch === '\t') {
       i++
       continue
@@ -37,9 +37,9 @@ function tokenize(input: string): Token[] {
     if (ch >= '0' && ch <= '9') {
       let num = ''
       let dotCount = 0
-      while (i < input.length && ((input[i] >= '0' && input[i] <= '9') || input[i] === '.')) {
-        if (input[i] === '.') dotCount++
-        num += input[i]
+      while (i < input.length && ((input[i]! >= '0' && input[i]! <= '9') || input[i]! === '.')) {
+        if (input[i]! === '.') dotCount++
+        num += input[i]!
         i++
       }
       if (dotCount > 1) {
@@ -52,12 +52,12 @@ function tokenize(input: string): Token[] {
       let ident = ''
       while (
         i < input.length &&
-        ((input[i] >= 'a' && input[i] <= 'z') ||
-          (input[i] >= 'A' && input[i] <= 'Z') ||
-          (input[i] >= '0' && input[i] <= '9') ||
-          input[i] === '_')
+        ((input[i]! >= 'a' && input[i]! <= 'z') ||
+          (input[i]! >= 'A' && input[i]! <= 'Z') ||
+          (input[i]! >= '0' && input[i]! <= '9') ||
+          input[i]! === '_')
       ) {
-        ident += input[i]
+        ident += input[i]!
         i++
       }
       tokens.push({ type: IDENTIFIER, value: ident })

@@ -28,15 +28,15 @@ export class VariableScope {
       const globalVars = useVariableStore.getState().getGlobals() || {}
 
       while ((varMatch = reVar.exec(docStr)) !== null) {
-        const name = varMatch[1]
+        const name = varMatch[1]!
         try {
           const mergedScope = Object.assign({}, globalVars, newScope)
-          const val = evaluate(varMatch[2], mergedScope)
+          const val = evaluate(varMatch[2]!, mergedScope)
           newScope[name] = val
         } catch (e) {
           // eslint-disable-next-line no-console
           console.error(`VariableScope evaluation error for ${name}:`, e)
-          newScope[name] = varMatch[2].trim()
+          newScope[name] = varMatch[2]!.trim()
         }
 
         const currentNoteScope = useVariableStore.getState().getNoteScope()

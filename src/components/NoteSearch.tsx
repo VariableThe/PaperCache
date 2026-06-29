@@ -29,7 +29,7 @@ export function NoteSearch() {
   const getNoteTitle = (n: Note) => {
     const isAuto = /^\d+\.md$/.test(n.id)
     const fileName = n.id.replace(/\.md$/, '').split('/').pop() || ''
-    return isAuto ? n.content.split('\n')[0].trim() || 'New Note' : fileName
+    return isAuto ? n.content.split('\n')[0]!.trim() || 'New Note' : fileName
   }
 
   const getNoteTags = (n: Note): string[] => {
@@ -197,7 +197,7 @@ export function NoteSearch() {
             e.preventDefault()
             if (showNoteActionMenu) return
             if (filteredNotes.length > 0) {
-              const selNote = filteredNotes[searchSelectedIndex]
+              const selNote = filteredNotes[searchSelectedIndex]!
               const idx = notes.findIndex((note) => note.id === selNote.id)
               if (idx !== -1) setCurrentNoteIndex(idx)
               setShowNoteSearch(false)
@@ -404,7 +404,7 @@ export function NoteSearch() {
                           width: 8,
                           height: 8,
                           borderRadius: '50%',
-                          backgroundColor: getFolderColor(pathParts[0]),
+                          backgroundColor: getFolderColor(pathParts[0]!),
                         }}
                       />
                       <span className="ns-folder">{pathParts.join(' / ')}</span>

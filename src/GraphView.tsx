@@ -87,7 +87,7 @@ export default function GraphView({
   bgColor,
   accentColor,
 }: GraphViewProps) {
-  const fgRef = useRef<ForceGraphMethods<GraphNode, GraphLink> | undefined>(undefined)
+  const fgRef = useRef<ForceGraphMethods<GraphNode, GraphLink>>(null)
 
   const draggedNodesRef = useRef<Set<string>>(new Set())
   const graphDataRef = useRef<{ nodes: GraphNode[]; links: GraphLink[] }>({ nodes: [], links: [] })
@@ -158,12 +158,12 @@ export default function GraphView({
     const nodes: GraphNode[] = notes.map((n) => {
       const isAuto = /^\d+\.md$/.test(n.id)
       let title = n.id.replace(/\.md$/, '')
-      const folder = n.id.includes('/') ? n.id.split('/')[0] : ''
+      const folder = n.id.includes('/') ? n.id.split('/')[0]! : ''
 
       if (isAuto) {
         title =
           n.content
-            .split('\n')[0]
+            .split('\n')[0]!
             .trim()
             .replace(/^#+\s*/, '') || 'New Note'
       }
@@ -180,14 +180,14 @@ export default function GraphView({
       const reFile = /\]\(\/file\s+([^)]+)\)/g
       let match
       while ((match = reFile.exec(note.content)) !== null) {
-        let targetId = match[1].trim().replace(/\\/g, '/')
+        let targetId = match[1]!.trim().replace(/\\/g, '/')
         if (!targetId.endsWith('.md')) targetId += '.md'
         targets.add(targetId)
       }
 
       const reMd = /\]\(([^)]+\.md)\)/g
       while ((match = reMd.exec(note.content)) !== null) {
-        let targetId = match[1].trim().replace(/\\/g, '/')
+        let targetId = match[1]!.trim().replace(/\\/g, '/')
         if (targetId.startsWith('./')) targetId = targetId.slice(2)
         if (targetId.startsWith('/')) targetId = targetId.slice(1)
         targets.add(targetId)
@@ -195,7 +195,7 @@ export default function GraphView({
 
       const reWiki = /\[\[([^\]]+)\]\]/g
       while ((match = reWiki.exec(note.content)) !== null) {
-        let targetId = match[1].split('|')[0].trim().replace(/\\/g, '/')
+        let targetId = match[1]!.split('|')[0]!.trim().replace(/\\/g, '/')
         if (!targetId.endsWith('.md')) targetId += '.md'
         targets.add(targetId)
       }
@@ -299,8 +299,9 @@ export default function GraphView({
   }, [])
 
   const nodeThreeObject = useCallback(
-    (node: GraphNode) => {
-      const color = node.folder ? getFolderColor(node.folder) : accentColor
+    (node: object) => {
+      const gNode = node as GraphNode
+      const color = gNode.folder ? getFolderColor(gNode.folder) : accentColor
       const group = new THREE.Group()
 
       const geometry = new THREE.CircleGeometry(NODE_RADIUS, 32)
@@ -315,9 +316,9 @@ export default function GraphView({
       const ctx = canvas.getContext('2d')!
       ctx.clearRect(0, 0, 256, 64)
       const displayName =
-        node.name.length > MAX_NAME_LENGTH
-          ? node.name.slice(0, MAX_NAME_LENGTH - 3) + '…'
-          : node.name
+        gNode.name.length > MAX_NAME_LENGTH
+          ? gNode.name.slice(0, MAX_NAME_LENGTH - 3) + '…'
+          : gNode.name
       ctx.fillStyle = textColor
       ctx.font = `bold ${LABEL_FONT_SIZE}px sans-serif`
       ctx.textAlign = 'center'
@@ -510,7 +511,7 @@ export default function GraphView({
             }
           >
             <ForceGraph3D
-              ref={fgRef}
+              ref={fgRef as never}
               graphData={graphData}
               numDimensions={2}
               nodeLabel="name"

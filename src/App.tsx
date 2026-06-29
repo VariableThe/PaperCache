@@ -173,7 +173,7 @@ function App() {
   } as React.CSSProperties
 
   if (bgType === 'color') {
-    containerStyle['--bg-color' as string] = bgColor
+    ;(containerStyle as Record<string, string>)['--bg-color'] = bgColor
     containerStyle.backgroundImage = 'none'
   } else if (bgType === 'image' && bgImage) {
     containerStyle.backgroundImage = `url(${bgImage})`
@@ -211,7 +211,7 @@ function App() {
             const currentNotes = useAppStore.getState().notes
             const idx = currentNotes.findIndex((n) => n.id === noteId)
             if (idx === -1) return
-            const note = currentNotes[idx]
+            const note = currentNotes[idx]!
             const newContent = note.content.slice(0, from) + insert + note.content.slice(to)
 
             window.electronAPI.saveNote(note.id, newContent)

@@ -14,7 +14,7 @@ export function evaluateMath(
   const lines = docStr.split('\n')
   let offset = 0
   for (let i = 0; i < lines.length; i++) {
-    const text = lines[i]
+    const text = lines[i]!
     const lineLen = text.length
 
     if (!text.includes('\u200B') && text.trim().endsWith('=')) {
@@ -49,8 +49,8 @@ export function evaluateMath(
   const reCalc = /^(.*?=\s*)\u200B(.*)$/gm
   let calcMatch
   while ((calcMatch = reCalc.exec(docStr)) !== null) {
-    const exprPart = calcMatch[1]
-    const oldResult = calcMatch[2]
+    const exprPart = calcMatch[1]!
+    const oldResult = calcMatch[2]!
     const fullExpr = exprPart.replace(/=\s*$/, '').trim()
     if (fullExpr) {
       let newResult: string | null = null

@@ -130,11 +130,11 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
       if (sc.section === 'global' && sc.action && sc.oldShortcutStorageKey) {
         const oldShortcut = localStorage.getItem(sc.oldShortcutStorageKey) || sc.defaultKey
         if (window.electronAPI.updateGlobalShortcut) {
-          window.electronAPI.updateGlobalShortcut(sc.action, oldShortcut, values[sc.key])
+          window.electronAPI.updateGlobalShortcut(sc.action, oldShortcut, values[sc.key]!)
         }
-        localStorage.setItem(sc.oldShortcutStorageKey, values[sc.key])
+        localStorage.setItem(sc.oldShortcutStorageKey, values[sc.key]!)
       }
-      localStorage.setItem(sc.storageKey, values[sc.key])
+      localStorage.setItem(sc.storageKey, values[sc.key]!)
     }
 
     useAppStore
@@ -175,7 +175,7 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
             <KeybindRow
               key={sc.key}
               label={sc.label}
-              value={values[sc.key]}
+              value={values[sc.key]!}
               onChange={(val) => setValues((prev) => ({ ...prev, [sc.key]: val }))}
             />
           ))}
@@ -187,7 +187,7 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
             <KeybindRow
               key={sc.key}
               label={sc.label}
-              value={values[sc.key]}
+              value={values[sc.key]!}
               onChange={(val) => setValues((prev) => ({ ...prev, [sc.key]: val }))}
             />
           ))}
