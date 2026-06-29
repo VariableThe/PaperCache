@@ -4,6 +4,8 @@ import { useVariableStore } from '../../store/useVariableStore'
 import { Parser, type Values } from 'expr-eval'
 import { MathEvaluator } from './MathEvaluator'
 
+const SCOPE_DEBOUNCE_MS = 300
+
 export const scopeChangedEffect = StateEffect.define<void>()
 
 export class VariableScope {
@@ -54,7 +56,7 @@ export class VariableScope {
           MathEvaluator.triggerMathEvaluation(view)
         }
       }
-    }, 300)
+    }, SCOPE_DEBOUNCE_MS)
   }
 }
 

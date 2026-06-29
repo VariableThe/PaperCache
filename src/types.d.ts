@@ -14,7 +14,10 @@ export interface ElectronAPI {
     model: string
     messages: { role: string; content: string }[]
     baseUrl: string
-  }) => Promise<unknown>
+  }) => Promise<{
+    choices?: Array<{ message?: { content?: string } }>
+    error?: { message?: string }
+  }>
   setApiKey: (key: string) => Promise<boolean>
   getApiKeyStatus: () => Promise<boolean>
   checkForUpdates: () => Promise<void>
@@ -32,7 +35,6 @@ export interface ElectronAPI {
   quitApp: () => Promise<void>
   openExternal: (url: string) => Promise<void>
   openFile: (path: string) => Promise<void>
-  onSwipeGesture: (callback: (direction: string) => void) => () => void
   getLaunchAtStartup: () => Promise<boolean>
   setLaunchAtStartup: (value: boolean) => Promise<void>
   updateGlobalShortcut: (action: string, oldShortcut: string, newShortcut: string) => void

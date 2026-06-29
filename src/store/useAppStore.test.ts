@@ -7,7 +7,6 @@ describe('useAppStore', () => {
     useAppStore.setState({
       notes: [],
       currentNoteIndex: 0,
-      themePreset: 'grid-light',
       showGraphView: false,
       showRemindersView: false,
       isRenaming: false,
@@ -25,7 +24,6 @@ describe('useAppStore', () => {
     const state = useAppStore.getState()
     expect(state.notes).toEqual([])
     expect(state.currentNoteIndex).toBe(0)
-    expect(state.themePreset).toBe('grid-light')
     expect(state.showNoteSearch).toBe(false)
   })
 

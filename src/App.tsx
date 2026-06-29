@@ -23,6 +23,12 @@ import { NoteTitleBar } from './components/NoteTitleBar'
 import { Editor, type EditorRef } from './components/Editor'
 import Settings from './Settings'
 
+const TOAST_TIMEOUT_MS = 5000
+const FOCUS_DELAY_MS = 50
+const MODAL_Z_INDEX = 9999
+const KEYBINDS_Z_INDEX = 10000
+const TOAST_Z_INDEX = 99999
+
 function App() {
   const notes = useAppStore((state) => state.notes)
   const setNotes = useAppStore((state) => state.setNotes)
@@ -50,7 +56,6 @@ function App() {
 
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Custom Hooks
   useNoteStorage()
   useVariables()
   useReminders()
@@ -63,7 +68,6 @@ function App() {
       useAppStore.getState().setIsHyprland(isHyp)
     })
 
-    // Show a toast before the app auto-restarts for an update
     const disposeUpdateReady = window.electronAPI.onUpdateReady(() => {
       useAppStore.getState().addToast({
         message: '✨ PaperCache updated — restarting in 3 seconds…',
@@ -94,13 +98,11 @@ function App() {
     }
   }, [])
 
-  // Auto-dismiss toasts after 5 seconds
   const toastTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
   useEffect(() => {
     const timers = toastTimersRef.current
     const currentIds = new Set(toasts.map((t) => t.id))
 
-    // Clear timers for removed toasts
     for (const [id, timer] of timers) {
       if (!currentIds.has(id)) {
         clearTimeout(timer)
@@ -108,12 +110,11 @@ function App() {
       }
     }
 
-    // Set timers for new toasts
     for (const toast of toasts) {
       if (!timers.has(toast.id)) {
         timers.set(
           toast.id,
-          setTimeout(() => removeToast(toast.id), 5000)
+          setTimeout(() => removeToast(toast.id), TOAST_TIMEOUT_MS)
         )
       }
     }
@@ -123,7 +124,7 @@ function App() {
     if (showNoteSearch && searchInputRef.current) {
       setTimeout(() => {
         searchInputRef.current?.focus()
-      }, 50)
+      }, FOCUS_DELAY_MS)
     }
   }, [showNoteSearch])
 
@@ -205,13 +206,11 @@ function App() {
             const note = currentNotes[idx]
             const newContent = note.content.slice(0, from) + insert + note.content.slice(to)
 
-            // Side-effects outside of state updater
             window.electronAPI.saveNote(note.id, newContent)
             if (idx === currentNoteIndex) {
               editorRef.current?.dispatch({ changes: { from, to, insert } })
             }
 
-            // Pure state update
             setNotes((prevNotes) =>
               prevNotes.map((n) => (n.id === noteId ? { ...n, content: newContent } : n))
             )
@@ -257,7 +256,7 @@ function App() {
             bottom: 0,
             backgroundColor: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(5px)',
-            zIndex: 9999,
+            zIndex: MODAL_Z_INDEX,
             overflow: 'auto',
           }}
         >
@@ -276,7 +275,7 @@ function App() {
             bottom: 0,
             backgroundColor: 'rgba(0, 0, 0, 0.75)',
             backdropFilter: 'blur(5px)',
-            zIndex: 10000,
+            zIndex: KEYBINDS_Z_INDEX,
             overflow: 'auto',
           }}
         >
@@ -294,7 +293,7 @@ function App() {
             display: 'flex',
             flexDirection: 'column',
             gap: 8,
-            zIndex: 99999,
+            zIndex: TOAST_Z_INDEX,
           }}
         >
           {toasts.map((toast) => (

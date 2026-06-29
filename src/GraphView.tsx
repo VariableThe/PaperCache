@@ -6,6 +6,31 @@ import { getFolderColor } from './utils'
 
 const ForceGraph3D = lazy(() => import('react-force-graph-3d'))
 
+const FOLDER_CENTROID_RADIUS = 60
+const CAMERA_Z_POSITION = 500
+const ZOOM_TO_FIT_DURATION_MS = 400
+const ZOOM_TO_FIT_PADDING = 50
+const ZOOM_TO_FIT_DELAY_MS = 300
+const FORCE_CHARGE_STRENGTH = -120
+const COLLISION_RADIUS = 22
+const FOLDER_ATTRACTION_STRENGTH = 0.008
+const MAX_ATTEMPTS = 20
+const ATTEMPT_INTERVAL_MS = 50
+const GRAPH_Z_INDEX = 1000
+const LABEL_CANVAS_WIDTH = 256
+const LABEL_CANVAS_HEIGHT = 64
+const LABEL_SPRITE_SCALE_X = 36
+const LABEL_SPRITE_SCALE_Y = 9
+const LABEL_SPRITE_SCALE_Z = 1
+const NODE_REL_SIZE = 6
+const LINK_WIDTH = 1.5
+const LINK_OPACITY = 0.6
+const FOCUS_CAMERA_Z = 120
+const FOCUS_ANIMATION_DURATION_MS = 400
+const NODE_RADIUS = 12
+const LABEL_FONT_SIZE = 20
+const MAX_NAME_LENGTH = 20
+
 const nodePositionsCache = new Map<string, { x: number; y: number }>()
 
 interface GraphViewProps {
@@ -36,7 +61,7 @@ function buildFolderCentroids(folderNames: string[]): Map<string, { cx: number; 
   const centroids = new Map<string, { cx: number; cy: number }>()
   const n = folderNames.length
   if (n === 0) return centroids
-  const radius = 60
+  const radius = FOLDER_CENTROID_RADIUS
   folderNames.forEach((folder, i) => {
     const angle = (2 * Math.PI * i) / n - Math.PI / 2
     centroids.set(folder, {
@@ -67,17 +92,27 @@ export default function GraphView({
   const draggedNodesRef = useRef<Set<string>>(new Set())
   const graphDataRef = useRef<{ nodes: GraphNode[]; links: GraphLink[] }>({ nodes: [], links: [] })
 
+  interface GraphControls {
+    enableRotate: boolean
+    enablePan: boolean
+    enableZoom: boolean
+    mouseButtons: Record<string, number | null>
+    touches: Record<string, number>
+    zoomSpeed: number
+    panSpeed: number
+    update: () => void
+  }
+
   useEffect(() => {
     let raf: number
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let ctrls: any = null
+    let ctrls: GraphControls | null = null
     const setup = () => {
       const fg = fgRef.current
       if (!fg || typeof fg.controls !== 'function') {
         raf = requestAnimationFrame(setup)
         return
       }
-      ctrls = fg.controls()
+      ctrls = fg.controls() as GraphControls
       if (!ctrls) {
         raf = requestAnimationFrame(setup)
         return
@@ -91,19 +126,18 @@ export default function GraphView({
       ctrls.panSpeed = 0.15
       ctrls.update()
       if (typeof fg.cameraPosition === 'function') {
-        fg.cameraPosition({ x: 0, y: 0, z: 500 })
+        fg.cameraPosition({ x: 0, y: 0, z: CAMERA_Z_POSITION })
       }
       setTimeout(() => {
-        if (fg && typeof fg.zoomToFit === 'function') fg.zoomToFit(400, 50)
-      }, 300)
+        if (fg && typeof fg.zoomToFit === 'function')
+          fg.zoomToFit(ZOOM_TO_FIT_DURATION_MS, ZOOM_TO_FIT_PADDING)
+      }, ZOOM_TO_FIT_DELAY_MS)
     }
     raf = requestAnimationFrame(setup)
     return () => cancelAnimationFrame(raf)
   }, [])
 
   useEffect(() => {
-    // Snapshot ref at effect-run time so the cleanup reads a stable value
-    // (avoids the react-hooks/exhaustive-deps stale-ref warning)
     const fg = fgRef.current
     return () => {
       const data = fg && typeof fg.graphData === 'function' ? fg.graphData() : graphDataRef.current
@@ -143,7 +177,6 @@ export default function GraphView({
     notes.forEach((note) => {
       const targets = new Set<string>()
 
-      // 1. Match ](/file <path>)
       const reFile = /\]\(\/file\s+([^)]+)\)/g
       let match
       while ((match = reFile.exec(note.content)) !== null) {
@@ -152,7 +185,6 @@ export default function GraphView({
         targets.add(targetId)
       }
 
-      // 2. Match ](<path>.md)
       const reMd = /\]\(([^)]+\.md)\)/g
       while ((match = reMd.exec(note.content)) !== null) {
         let targetId = match[1].trim().replace(/\\/g, '/')
@@ -161,7 +193,6 @@ export default function GraphView({
         targets.add(targetId)
       }
 
-      // 3. Match [[<title>]]
       const reWiki = /\[\[([^\]]+)\]\]/g
       while ((match = reWiki.exec(note.content)) !== null) {
         let targetId = match[1].split('|')[0].trim().replace(/\\/g, '/')
@@ -191,8 +222,8 @@ export default function GraphView({
       const fg = fgRef.current
       if (!fg || typeof fg.d3Force !== 'function') {
         attempts++
-        if (attempts <= 20) {
-          timeoutId = window.setTimeout(attemptForceSetup, 50)
+        if (attempts <= MAX_ATTEMPTS) {
+          timeoutId = window.setTimeout(attemptForceSetup, ATTEMPT_INTERVAL_MS)
         }
         return
       }
@@ -200,8 +231,8 @@ export default function GraphView({
       const folders = Array.from(new Set(graphData.nodes.map((n) => n.folder).filter(Boolean)))
       const centroids = buildFolderCentroids(folders)
 
-      fg.d3Force('centerX', d3.forceX<GraphNode>(0).strength(0.008))
-      fg.d3Force('centerY', d3.forceY<GraphNode>(0).strength(0.008))
+      fg.d3Force('centerX', d3.forceX<GraphNode>(0).strength(FOLDER_ATTRACTION_STRENGTH))
+      fg.d3Force('centerY', d3.forceY<GraphNode>(0).strength(FOLDER_ATTRACTION_STRENGTH))
       fg.d3Force(
         'folderX',
         d3
@@ -209,7 +240,9 @@ export default function GraphView({
             const c = centroids.get(node.folder)
             return c ? c.cx : 0
           })
-          .strength((node) => (node.folder && !draggedNodesRef.current.has(node.id) ? 0.008 : 0))
+          .strength((node) =>
+            node.folder && !draggedNodesRef.current.has(node.id) ? FOLDER_ATTRACTION_STRENGTH : 0
+          )
       )
       fg.d3Force(
         'folderY',
@@ -218,16 +251,18 @@ export default function GraphView({
             const c = centroids.get(node.folder)
             return c ? c.cy : 0
           })
-          .strength((node) => (node.folder && !draggedNodesRef.current.has(node.id) ? 0.008 : 0))
+          .strength((node) =>
+            node.folder && !draggedNodesRef.current.has(node.id) ? FOLDER_ATTRACTION_STRENGTH : 0
+          )
       )
-      fg.d3Force('charge')?.strength(-120)
-      fg.d3Force('collision', d3.forceCollide<GraphNode>(22))
+      fg.d3Force('charge')?.strength(FORCE_CHARGE_STRENGTH)
+      fg.d3Force('collision', d3.forceCollide<GraphNode>(COLLISION_RADIUS))
       if (typeof fg.d3ReheatSimulation === 'function') {
         fg.d3ReheatSimulation()
       }
     }
 
-    timeoutId = window.setTimeout(attemptForceSetup, 50)
+    timeoutId = window.setTimeout(attemptForceSetup, ATTEMPT_INTERVAL_MS)
     return () => {
       if (timeoutId !== null) clearTimeout(timeoutId)
     }
@@ -256,7 +291,11 @@ export default function GraphView({
     if (!fg || typeof fg.graphData !== 'function' || typeof fg.cameraPosition !== 'function') return
     const node = fg.graphData()?.nodes?.find((n: GraphNode) => n.id === nodeId)
     if (!node || node.x == null || node.y == null) return
-    fg.cameraPosition({ x: node.x, y: node.y, z: 120 }, { x: node.x, y: node.y, z: 0 }, 400)
+    fg.cameraPosition(
+      { x: node.x, y: node.y, z: FOCUS_CAMERA_Z },
+      { x: node.x, y: node.y, z: 0 },
+      FOCUS_ANIMATION_DURATION_MS
+    )
   }, [])
 
   const nodeThreeObject = useCallback(
@@ -264,23 +303,26 @@ export default function GraphView({
       const color = node.folder ? getFolderColor(node.folder) : accentColor
       const group = new THREE.Group()
 
-      const geometry = new THREE.CircleGeometry(12, 32)
+      const geometry = new THREE.CircleGeometry(NODE_RADIUS, 32)
       const material = new THREE.MeshBasicMaterial({ color, side: THREE.DoubleSide })
       const circle = new THREE.Mesh(geometry, material)
       circle.position.z = 1
       group.add(circle)
 
       const canvas = document.createElement('canvas')
-      canvas.width = 256
-      canvas.height = 64
+      canvas.width = LABEL_CANVAS_WIDTH
+      canvas.height = LABEL_CANVAS_HEIGHT
       const ctx = canvas.getContext('2d')!
       ctx.clearRect(0, 0, 256, 64)
-      const displayName = node.name.length > 20 ? node.name.slice(0, 17) + '…' : node.name
+      const displayName =
+        node.name.length > MAX_NAME_LENGTH
+          ? node.name.slice(0, MAX_NAME_LENGTH - 3) + '…'
+          : node.name
       ctx.fillStyle = textColor
-      ctx.font = 'bold 20px sans-serif'
+      ctx.font = `bold ${LABEL_FONT_SIZE}px sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(displayName, 128, 32)
+      ctx.fillText(displayName, LABEL_CANVAS_WIDTH / 2, LABEL_CANVAS_HEIGHT / 2)
       const tex = new THREE.CanvasTexture(canvas)
       const labelMat = new THREE.SpriteMaterial({
         map: tex,
@@ -289,7 +331,7 @@ export default function GraphView({
         depthTest: false,
       })
       const label = new THREE.Sprite(labelMat)
-      label.scale.set(36, 9, 1)
+      label.scale.set(LABEL_SPRITE_SCALE_X, LABEL_SPRITE_SCALE_Y, LABEL_SPRITE_SCALE_Z)
       label.position.set(0, -15, 0)
       label.renderOrder = 2
       group.add(label)
@@ -360,7 +402,7 @@ export default function GraphView({
           right: 0,
           bottom: 0,
           backgroundColor: bgColor,
-          zIndex: 1000,
+          zIndex: GRAPH_Z_INDEX,
           display: 'flex',
           flexDirection: 'column',
           fontFamily: 'inherit',
@@ -479,12 +521,12 @@ export default function GraphView({
               }
               linkColor={() => `${textColor}55`}
               backgroundColor={bgColor}
-              onNodeClick={handleNodeClick as (node: object) => void}
-              onNodeDragEnd={handleNodeDragEnd as (node: object) => void}
+              onNodeClick={(node: object) => handleNodeClick(node as GraphNode)}
+              onNodeDragEnd={(node: object) => handleNodeDragEnd(node as GraphNode)}
               nodeThreeObject={nodeThreeObject}
-              nodeRelSize={6}
-              linkWidth={1.5}
-              linkOpacity={0.6}
+              nodeRelSize={NODE_REL_SIZE}
+              linkWidth={LINK_WIDTH}
+              linkOpacity={LINK_OPACITY}
               enableNodeDrag={true}
               enableNavigationControls={true}
               showNavInfo={false}

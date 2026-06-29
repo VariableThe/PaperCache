@@ -2,6 +2,8 @@ import type { EditorView } from '@codemirror/view'
 import { getScope } from './VariableScope'
 import { Parser, type Values } from 'expr-eval'
 
+const MATH_EVAL_DEBOUNCE_MS = 300
+
 export function evaluateMath(
   docStr: string,
   scope: Record<string, unknown>
@@ -97,6 +99,6 @@ export class MathEvaluator {
       if (changes.length > 0) {
         view.dispatch({ changes })
       }
-    }, 300)
+    }, MATH_EVAL_DEBOUNCE_MS)
   }
 }

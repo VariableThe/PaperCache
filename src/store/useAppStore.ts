@@ -15,7 +15,6 @@ export interface Toast {
 interface AppState {
   notes: Note[]
   currentNoteIndex: number
-  themePreset: string
   isHyprland: boolean
 
   // UI state
@@ -37,7 +36,6 @@ interface AppState {
 
   setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void
   setCurrentNoteIndex: (index: number) => void
-  setThemePreset: (preset: string) => void
   setIsHyprland: (isHyprland: boolean) => void
 
   setShowGraphView: (show: boolean | ((prev: boolean) => boolean)) => void
@@ -58,87 +56,75 @@ interface AppState {
   setIsRecordingShortcut: (isRecording: boolean) => void
 }
 
-export const useAppStore = create<AppState>((set) => ({
-  notes: [],
-  currentNoteIndex: 0,
-  themePreset: (localStorage.getItem('papercache-theme') as string) || 'grid-light',
-  isHyprland: false,
+export const useAppStore = create<AppState>((set) => {
+  const booleanSetter = (key: keyof AppState) => (value: boolean | ((prev: boolean) => boolean)) =>
+    set((state) => ({
+      [key]: typeof value === 'function' ? value(state[key] as boolean) : value,
+    }))
 
-  showGraphView: false,
-  showRemindersView: false,
-  showTimersView: false,
-  toasts: [],
-  isRenaming: false,
-  renameValue: '',
-  showNoteSearch: false,
-  noteSearchQuery: '',
-  searchSelectedIndex: 0,
-  showNoteActionMenu: false,
-  showMainActionMenu: false,
-  actionMenuIndex: 0,
-  showSettingsModal: false,
-  showKeybindsModal: false,
-  isRecordingShortcut: false,
+  const simpleSetter =
+    <K extends keyof AppState>(key: K) =>
+    (value: AppState[K]) =>
+      set({ [key]: value } as unknown as Partial<AppState>)
 
-  setNotes: (notes) =>
-    set((state) => ({
-      notes: typeof notes === 'function' ? notes(state.notes) : notes,
-    })),
-  setCurrentNoteIndex: (currentNoteIndex) => set({ currentNoteIndex }),
-  setThemePreset: (themePreset) => set({ themePreset }),
-  setIsHyprland: (isHyprland) => set({ isHyprland }),
+  return {
+    notes: [],
+    currentNoteIndex: 0,
+    isHyprland: false,
 
-  setShowGraphView: (showGraphView) =>
-    set((state) => ({
-      showGraphView:
-        typeof showGraphView === 'function' ? showGraphView(state.showGraphView) : showGraphView,
-    })),
-  setShowRemindersView: (showRemindersView) =>
-    set((state) => ({
-      showRemindersView:
-        typeof showRemindersView === 'function'
-          ? showRemindersView(state.showRemindersView)
-          : showRemindersView,
-    })),
-  setShowTimersView: (showTimersView) =>
-    set((state) => ({
-      showTimersView:
-        typeof showTimersView === 'function'
-          ? showTimersView(state.showTimersView)
-          : showTimersView,
-    })),
-  addToast: (toast) =>
-    set((state) => ({
-      toasts: [...state.toasts, { ...toast, id: `toast-${Date.now()}-${Math.random()}` }],
-    })),
-  removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
-  setIsRenaming: (isRenaming) => set({ isRenaming }),
-  setRenameValue: (renameValue) => set({ renameValue }),
-  setShowNoteSearch: (showNoteSearch) => set({ showNoteSearch }),
-  setNoteSearchQuery: (noteSearchQuery) => set({ noteSearchQuery }),
-  setSearchSelectedIndex: (searchSelectedIndex) =>
-    set((state) => ({
-      searchSelectedIndex:
-        typeof searchSelectedIndex === 'function'
-          ? searchSelectedIndex(state.searchSelectedIndex)
-          : searchSelectedIndex,
-    })),
-  setShowNoteActionMenu: (showNoteActionMenu) => set({ showNoteActionMenu }),
-  setShowMainActionMenu: (showMainActionMenu) =>
-    set((state) => ({
-      showMainActionMenu:
-        typeof showMainActionMenu === 'function'
-          ? showMainActionMenu(state.showMainActionMenu)
-          : showMainActionMenu,
-    })),
-  setActionMenuIndex: (actionMenuIndex) =>
-    set((state) => ({
-      actionMenuIndex:
-        typeof actionMenuIndex === 'function'
-          ? actionMenuIndex(state.actionMenuIndex)
-          : actionMenuIndex,
-    })),
-  setShowSettingsModal: (showSettingsModal) => set({ showSettingsModal }),
-  setShowKeybindsModal: (showKeybindsModal) => set({ showKeybindsModal }),
-  setIsRecordingShortcut: (isRecordingShortcut) => set({ isRecordingShortcut }),
-}))
+    showGraphView: false,
+    showRemindersView: false,
+    showTimersView: false,
+    toasts: [],
+    isRenaming: false,
+    renameValue: '',
+    showNoteSearch: false,
+    noteSearchQuery: '',
+    searchSelectedIndex: 0,
+    showNoteActionMenu: false,
+    showMainActionMenu: false,
+    actionMenuIndex: 0,
+    showSettingsModal: false,
+    showKeybindsModal: false,
+    isRecordingShortcut: false,
+
+    setNotes: (notes) =>
+      set((state) => ({
+        notes: typeof notes === 'function' ? notes(state.notes) : notes,
+      })),
+    setCurrentNoteIndex: simpleSetter('currentNoteIndex'),
+    setIsHyprland: simpleSetter('isHyprland'),
+
+    setShowGraphView: booleanSetter('showGraphView'),
+    setShowRemindersView: booleanSetter('showRemindersView'),
+    setShowTimersView: booleanSetter('showTimersView'),
+    addToast: (toast) =>
+      set((state) => ({
+        toasts: [...state.toasts, { ...toast, id: `toast-${Date.now()}-${Math.random()}` }],
+      })),
+    removeToast: (id) => set((state) => ({ toasts: state.toasts.filter((t) => t.id !== id) })),
+    setIsRenaming: simpleSetter('isRenaming'),
+    setRenameValue: simpleSetter('renameValue'),
+    setShowNoteSearch: simpleSetter('showNoteSearch'),
+    setNoteSearchQuery: simpleSetter('noteSearchQuery'),
+    setSearchSelectedIndex: (searchSelectedIndex) =>
+      set((state) => ({
+        searchSelectedIndex:
+          typeof searchSelectedIndex === 'function'
+            ? searchSelectedIndex(state.searchSelectedIndex)
+            : searchSelectedIndex,
+      })),
+    setShowNoteActionMenu: simpleSetter('showNoteActionMenu'),
+    setShowMainActionMenu: booleanSetter('showMainActionMenu'),
+    setActionMenuIndex: (actionMenuIndex) =>
+      set((state) => ({
+        actionMenuIndex:
+          typeof actionMenuIndex === 'function'
+            ? actionMenuIndex(state.actionMenuIndex)
+            : actionMenuIndex,
+      })),
+    setShowSettingsModal: simpleSetter('showSettingsModal'),
+    setShowKeybindsModal: simpleSetter('showKeybindsModal'),
+    setIsRecordingShortcut: simpleSetter('isRecordingShortcut'),
+  }
+})
