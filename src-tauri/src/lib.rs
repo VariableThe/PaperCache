@@ -7,9 +7,8 @@ mod commands;
 mod macos;
 mod tray;
 
-#[allow(dead_code)]
+#[cfg(not(target_os = "macos"))]
 const FOCUS_LOSS_DEBOUNCE_MS: u64 = 200;
-#[allow(dead_code)]
 const WINDOW_STATE_RESTORE_DELAY_MS: u64 = 300;
 
 
@@ -169,6 +168,7 @@ pub fn run() {
             commands::system::get_launch_at_startup,
             commands::system::set_launch_at_startup,
             commands::system::check_for_updates,
+            commands::system::restart_app,
             commands::system::is_hyprland,
             commands::keychain::set_api_key,
             commands::keychain::get_api_key_status,

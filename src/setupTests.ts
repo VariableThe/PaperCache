@@ -83,6 +83,8 @@ if (typeof window !== 'undefined') {
     restoreWindowState: vi.fn().mockResolvedValue(undefined),
     getLaunchAtStartup: vi.fn().mockResolvedValue(false),
     removeOnboardingFiles: vi.fn().mockResolvedValue(undefined),
+    restartApp: vi.fn().mockResolvedValue(undefined),
+    onUpdateStatus: vi.fn().mockReturnValue(() => {}),
   } as ElectronAPI
 }
 

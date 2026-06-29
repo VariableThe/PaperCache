@@ -109,23 +109,97 @@ pub fn set_launch_at_startup(app: AppHandle, enabled: bool) -> Result<(), String
     Ok(())
 }
 
+#[derive(serde::Serialize, Clone)]
+struct UpdatePayload {
+    status: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
+}
+
 #[tauri::command]
 pub async fn check_for_updates(app: tauri::AppHandle) -> Result<(), String> {
     use tauri_plugin_updater::UpdaterExt;
-    let updater = app.updater().map_err(|e| e.to_string())?;
+    let _ = app.emit("update-status", UpdatePayload {
+        status: "checking".into(),
+        version: None,
+        error: None,
+    });
 
-    if let Some(update) = updater.check().await.map_err(|e| e.to_string())? {
-        // Run the download + install + restart in the background so the command
-        // returns immediately. The "update-ready" event gives the frontend 3 seconds
-        // to show a toast before the process restarts.
-        tokio::spawn(async move {
-            let _ = update.download_and_install(|_, _| {}, || {}).await;
-            let _ = app.emit("update-ready", ());
-            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
-            app.restart();
-        });
+    let updater = match app.updater() {
+        Ok(u) => u,
+        Err(e) => {
+            let err_str = e.to_string();
+            let _ = app.emit("update-status", UpdatePayload {
+                status: "error".into(),
+                version: None,
+                error: Some(err_str.clone()),
+            });
+            return Err(err_str);
+        }
+    };
+
+    let update_res = updater.check().await;
+    match update_res {
+        Ok(Some(update)) => {
+            let version = update.version.clone();
+            let _ = app.emit("update-status", UpdatePayload {
+                status: "available".into(),
+                version: Some(version),
+                error: None,
+            });
+
+            let _ = app.emit("update-status", UpdatePayload {
+                status: "downloading".into(),
+                version: None,
+                error: None,
+            });
+
+            let app_clone = app.clone();
+            tokio::spawn(async move {
+                match update.download_and_install(|_, _| {}, || {}).await {
+                    Ok(_) => {
+                        let _ = app_clone.emit("update-status", UpdatePayload {
+                            status: "ready".into(),
+                            version: None,
+                            error: None,
+                        });
+                        let _ = app_clone.emit("update-ready", ());
+                    }
+                    Err(e) => {
+                        let _ = app_clone.emit("update-status", UpdatePayload {
+                            status: "error".into(),
+                            version: None,
+                            error: Some(e.to_string()),
+                        });
+                    }
+                }
+            });
+        }
+        Ok(None) => {
+            let _ = app.emit("update-status", UpdatePayload {
+                status: "up-to-date".into(),
+                version: None,
+                error: None,
+            });
+        }
+        Err(e) => {
+            let err_str = e.to_string();
+            let _ = app.emit("update-status", UpdatePayload {
+                status: "error".into(),
+                version: None,
+                error: Some(err_str.clone()),
+            });
+            return Err(err_str);
+        }
     }
     Ok(())
+}
+
+#[tauri::command]
+pub fn restart_app(app: AppHandle) {
+    app.restart();
 }
 
 #[tauri::command]

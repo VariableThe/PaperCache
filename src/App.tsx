@@ -64,10 +64,27 @@ function App() {
       useAppStore.getState().setIsHyprland(isHyp)
     })
 
+    const disposeUpdateStatus = window.electronAPI.onUpdateStatus((payload) => {
+      if (payload.status === 'ready') {
+        useAppStore.getState().addToast({
+          message: '✨ A new update is ready to install.',
+          type: 'info',
+          actionLabel: 'Restart Now',
+          onAction: () => {
+            window.electronAPI.restartApp()
+          },
+        })
+      }
+    })
+
     const disposeUpdateReady = window.electronAPI.onUpdateReady(() => {
       useAppStore.getState().addToast({
-        message: '✨ PaperCache updated — restarting in 3 seconds…',
+        message: '✨ A new update is ready to install.',
         type: 'info',
+        actionLabel: 'Restart Now',
+        onAction: () => {
+          window.electronAPI.restartApp()
+        },
       })
     })
 
@@ -89,6 +106,7 @@ function App() {
 
     return () => {
       isUnmounted = true
+      disposeUpdateStatus()
       disposeUpdateReady()
       unlistenTimer?.()
     }
@@ -108,10 +126,12 @@ function App() {
 
     for (const toast of toasts) {
       if (!timers.has(toast.id)) {
-        timers.set(
-          toast.id,
-          setTimeout(() => removeToast(toast.id), TOAST_TIMEOUT_MS)
-        )
+        if (!toast.actionLabel) {
+          timers.set(
+            toast.id,
+            setTimeout(() => removeToast(toast.id), TOAST_TIMEOUT_MS)
+          )
+        }
       }
     }
   }, [toasts, removeToast])
@@ -287,7 +307,9 @@ function App() {
           {toasts.map((toast) => (
             <div
               key={toast.id}
-              onClick={() => removeToast(toast.id)}
+              onClick={() => {
+                if (!toast.actionLabel) removeToast(toast.id)
+              }}
               style={{
                 padding: '10px 16px',
                 borderRadius: 8,
@@ -306,9 +328,35 @@ function App() {
                 cursor: 'pointer',
                 maxWidth: 320,
                 animation: 'toast-in 0.25s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 12,
               }}
             >
-              {toast.message}
+              <span>{toast.message}</span>
+              {toast.actionLabel && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    toast.onAction?.()
+                    removeToast(toast.id)
+                  }}
+                  style={{
+                    background: '#fff',
+                    color: '#000',
+                    border: 'none',
+                    borderRadius: 4,
+                    padding: '4px 8px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {toast.actionLabel}
+                </button>
+              )}
             </div>
           ))}
         </div>
