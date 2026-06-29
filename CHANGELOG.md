@@ -5,6 +5,11 @@ All notable, user-facing changes to PaperCache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Code Quality & Test Reliability**: Refactored global shortcut registration to remove duplicate event handling logic in the backend. Improved countdown timer cleanup reliability by properly tracking and clearing async timeouts when timers complete or are removed. Added comprehensive unit tests for inline DSL variable evaluation (`VariableScope`).
+
 ## [v0.5.6] - 2026-06-28
 
 ### Added

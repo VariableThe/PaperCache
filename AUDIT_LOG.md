@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-29 (Code Quality Refactor & Test Suite)
+**Change:** refactor(shortcuts): extract helper to deduplicate global shortcut trigger logic; fix(timers): manage completion timeout lifecycle in store; test(editor): add comprehensive unit test suite for `VariableScope`
+
+**Details/Why:**
+1. **Shortcut Deduplication**: Extracted `handle_shortcut_trigger` helper in `src-tauri/src/commands/shortcuts.rs` to replace 16 lines of identical duplicate code across `update_global_shortcut` and `resume_shortcuts`.
+2. **Managed Timeout Lifecycle**: Replaced unmanaged 5-second `setTimeout` in `useTimerStore.ts` with a tracked Map of active timeouts aligned to `COMPLETED_TIMER_CLEANUP_MS` (10s), ensuring timers cleaned up early or removed explicitly do not trigger orphan state updates.
+3. **VariableScope Unit Tests**: Created `src/lib/editor/VariableScope.test.ts` testing global/note scope merging and debounced regex mathematical expression parsing (`/var x = ...`) using fake timers.
+
+**Files changed:** `src-tauri/src/commands/shortcuts.rs`, `src/store/useTimerStore.ts`, `src/lib/editor/VariableScope.test.ts`, `AUDIT_LOG.md`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-29 (Code Quality Cleanup)
 **Change:** refactor: code quality cleanup — dead code, boilerplate, types, constants, AI comments; fix: address PR review findings — listener leak, type contracts, dead ref, stale guard, cfg scope, shortcut loop, timer constant
 
