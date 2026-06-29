@@ -20,11 +20,14 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 3. **VariableScope Unit Tests**: Created `src/lib/editor/VariableScope.test.ts` testing global/note scope merging and debounced regex mathematical expression parsing (`/var x = ...`) using fake timers.
 
 **Files changed:** `src-tauri/src/commands/shortcuts.rs`, `src/store/useTimerStore.ts`, `src/lib/editor/VariableScope.test.ts`, `AUDIT_LOG.md`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-29 (Security & Auto-Update Overhaul)
-**Change:** fix(security): pin third-party GitHub Action references in release workflow to immutable SHA-1 digests; fix(updater): overhaul Tauri auto-update mechanism to emit granular status events and require user-triggered restarts
+**Change:** fix(security): pin third-party GitHub Action references in release workflow to immutable SHA-1 digests, disable persisted checkout credentials, and pass stable toolchain selector; fix(updater): overhaul Tauri auto-update mechanism to emit granular status events and require user-triggered restarts
 
 **Details/Why:**
-1. **Supply-Chain Security**: Pinned `actions/checkout`, `dtolnay/rust-toolchain`, `actions/setup-node`, and `tauri-apps/tauri-action` to immutable SHA-1 commit hashes in `.github/workflows/release.yml` to prevent supply-chain attacks.
+1. **Supply-Chain & CI Security**: Pinned `actions/checkout`, `dtolnay/rust-toolchain`, `actions/setup-node`, and `tauri-apps/tauri-action` to immutable SHA-1 commit hashes in `.github/workflows/release.yml`. Disabled persisted checkout credentials (`persist-credentials: false`) so read-only clones do not store auth tokens. Explicitly passed `toolchain: stable` to `rust-toolchain` action since pinned SHA references do not inherit default branch selectors.
 2. **Updater Artifact Configuration**: Enabled `"createUpdaterArtifacts": "v1Compatible"` in `tauri.conf.json` and added `updaterJsonPreferNsis: true` to `release.yml` to ensure manifest generation (`latest.json`) functions properly for both v1 and v2 clients.
 3. **Event-Driven Update Flow**: Refactored `check_for_updates` in `system.rs` to emit `update-status` events (`checking`, `available`, `downloading`, `ready`, `error`, `up-to-date`) instead of executing opaque silent updates. Added a user-triggered `restart_app` command.
 4. **Contextual UI Feedback**: Updated `Settings.tsx` button to display "Checking…" visual state with disabled interaction during update checks. Updated `App.tsx` to display a persistent toast notification when an update is downloaded and ready, featuring a prominent "Restart Now" button that calls `restart_app`.
