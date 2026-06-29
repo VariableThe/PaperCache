@@ -2,6 +2,16 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-29 (CI Signing Key Sanitization Fix)
+**Change:** fix(ci): sanitize `TAURI_SIGNING_PRIVATE_KEY` before `tauri build` to strip trailing terminal prompt artifacts (`%`) or URL encoding
+
+**Details/Why:**
+1. **Secret Key Sanitization**: When copying private keys from macOS Zsh terminals without trailing newlines (`cat ~/.tauri/papercache.key`), Zsh appends an inverted `%` symbol at EOF. When pasted into GitHub repository secrets, this trailing `%` causes base64 decoding errors (`Invalid symbol 37, offset 348`). Added a pre-build workflow step in `.github/workflows/release.yml` to automatically strip trailing `%` symbols and decode URL encoding before running `tauri-action`.
+
+**Files changed:** `.github/workflows/release.yml`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-29 (v0.5.7 Release: Auto-Update Overhaul, On-Demand Update Checks, and Build Fixes)
 **Change:** chore(release): bump version to 0.5.7; feat(updater): overhaul auto-update flow with real-time UI feedback ("Checking…"), toast notification with "Restart Now" button, and manifest configuration; fix(api): update `onEvent` listener helper to forward payloads to callbacks fixing TS2345 strict build error
 
