@@ -2,6 +2,20 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-29 (Security & Auto-Update Overhaul)
+**Change:** fix(security): pin third-party GitHub Action references in release workflow to immutable SHA-1 digests; fix(updater): overhaul Tauri auto-update mechanism to emit granular status events and require user-triggered restarts
+
+**Details/Why:**
+1. **Supply-Chain Security**: Pinned `actions/checkout`, `dtolnay/rust-toolchain`, `actions/setup-node`, and `tauri-apps/tauri-action` to immutable SHA-1 commit hashes in `.github/workflows/release.yml` to prevent supply-chain attacks.
+2. **Updater Artifact Configuration**: Enabled `"createUpdaterArtifacts": "v1Compatible"` in `tauri.conf.json` and added `updaterJsonPreferNsis: true` to `release.yml` to ensure manifest generation (`latest.json`) functions properly for both v1 and v2 clients.
+3. **Event-Driven Update Flow**: Refactored `check_for_updates` in `system.rs` to emit `update-status` events (`checking`, `available`, `downloading`, `ready`, `error`, `up-to-date`) instead of executing opaque silent updates. Added a user-triggered `restart_app` command.
+4. **Contextual UI Feedback**: Updated `Settings.tsx` button to display "Checking…" visual state with disabled interaction during update checks. Updated `App.tsx` to display a persistent toast notification when an update is downloaded and ready, featuring a prominent "Restart Now" button that calls `restart_app`.
+5. **Dead Code Gate**: Gated `FOCUS_LOSS_DEBOUNCE_MS` constant in `lib.rs` with `#[cfg(not(target_os = "macos"))]` to prevent unused code warnings on non-macOS targets.
+
+**Files changed:** `.github/workflows/release.yml`, `src-tauri/tauri.conf.json`, `src-tauri/src/lib.rs`, `src-tauri/src/commands/system.rs`, `src/types.d.ts`, `src/api.ts`, `src/store/useAppStore.ts`, `src/App.tsx`, `src/Settings.tsx`, `src/setupTests.ts`, `AUDIT_LOG.md`, `CHANGELOG.md`.
+
+---
+
 ## 2026-06-29 (Code Quality Cleanup)
 **Change:** refactor: code quality cleanup — dead code, boilerplate, types, constants, AI comments; fix: address PR review findings — listener leak, type contracts, dead ref, stale guard, cfg scope, shortcut loop, timer constant
 

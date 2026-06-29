@@ -4,6 +4,12 @@ export interface ReminderPayload {
   dueAt: number
 }
 
+export interface UpdateStatusPayload {
+  status: string
+  version?: string
+  error?: string
+}
+
 export interface ElectronAPI {
   closeWindow: () => Promise<void>
   getNotes: () => Promise<import('./store/useAppStore').Note[]>
@@ -47,6 +53,8 @@ export interface ElectronAPI {
   pauseShortcuts: () => Promise<void>
   resumeShortcuts: () => Promise<void>
   onUpdateReady: (callback: () => void) => () => void
+  restartApp: () => Promise<void>
+  onUpdateStatus: (callback: (payload: UpdateStatusPayload) => void) => () => void
 }
 
 declare global {
