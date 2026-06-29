@@ -2,11 +2,10 @@ import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import type { ElectronAPI, ReminderPayload } from './types'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const onEvent = (name: string, callback: (payload: any) => void) => {
+const onEvent = <T>(name: string, callback: (payload: T) => void) => {
   let unlisten: (() => void) | undefined
   let disposed = false
-  listen(name, (event) => callback(event.payload)).then((fn) => {
+  listen<T>(name, (event) => callback(event.payload)).then((fn) => {
     if (disposed) {
       fn()
       return

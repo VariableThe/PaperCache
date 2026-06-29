@@ -1,7 +1,7 @@
 import type { EditorView } from '@codemirror/view'
 import { StateEffect } from '@codemirror/state'
 import { useVariableStore } from '../../store/useVariableStore'
-import { Parser, type Values } from 'expr-eval'
+import { evaluate } from '../evaluator'
 import { MathEvaluator } from './MathEvaluator'
 
 const SCOPE_DEBOUNCE_MS = 300
@@ -26,13 +26,12 @@ export class VariableScope {
       let changed = false
 
       const globalVars = useVariableStore.getState().getGlobals() || {}
-      const parser = new Parser()
 
       while ((varMatch = reVar.exec(docStr)) !== null) {
         const name = varMatch[1]
         try {
           const mergedScope = Object.assign({}, globalVars, newScope)
-          const val = parser.evaluate(varMatch[2], mergedScope as Values)
+          const val = evaluate(varMatch[2], mergedScope)
           newScope[name] = val
         } catch (e) {
           // eslint-disable-next-line no-console
