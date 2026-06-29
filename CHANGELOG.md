@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **Code Quality & Test Reliability**: Refactored global shortcut registration to remove duplicate event handling logic in the backend. Improved countdown timer cleanup reliability by properly tracking and clearing async timeouts when timers complete or are removed. Added comprehensive unit tests for inline DSL variable evaluation (`VariableScope`).
 ### Added
 - **Contextual Auto-Update UI**: When checking for updates in Settings, visual feedback is now displayed ("Checking…"). When an update is downloaded and ready, a persistent toast notification appears with a prominent "Restart Now" button so users can restart when convenient rather than experiencing unexpected application restarts.
 

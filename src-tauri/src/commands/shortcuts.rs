@@ -15,6 +15,22 @@ impl Default for GlobalShortcutState {
     }
 }
 
+fn handle_shortcut_trigger(app: &AppHandle, action: &str) {
+    if action == "new-note" {
+        if let Some(window) = app.get_webview_window("main") {
+            if !window.is_visible().unwrap_or(false) {
+                let _ = window.show();
+                let _ = window.set_focus();
+                #[cfg(target_os = "macos")]
+                crate::macos::force_focus();
+            }
+        }
+    } else {
+        crate::commands::system::toggle_window(app);
+    }
+    let _ = app.emit(&format!("trigger-{}", action), ());
+}
+
 #[tauri::command]
 pub fn update_global_shortcut(
     app: AppHandle,
@@ -39,19 +55,7 @@ pub fn update_global_shortcut(
         app.global_shortcut()
             .on_shortcut(shortcut, move |app, _shortcut, event| {
                 if event.state() == ShortcutState::Pressed {
-                    if action_clone == "new-note" {
-                        if let Some(window) = app.get_webview_window("main") {
-                            if !window.is_visible().unwrap_or(false) {
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                                #[cfg(target_os = "macos")]
-                                crate::macos::force_focus();
-                            }
-                        }
-                    } else {
-                        crate::commands::system::toggle_window(app);
-                    }
-                    let _ = app.emit(&format!("trigger-{}", action_clone), ());
+                    handle_shortcut_trigger(app, &action_clone);
                 }
             })
             .map_err(|e| format!("Failed to register shortcut: {}", e))?;
@@ -84,19 +88,7 @@ pub fn resume_shortcuts(app: AppHandle) -> Result<(), String> {
                 .global_shortcut()
                 .on_shortcut(shortcut, move |app, _, event| {
                     if event.state() == ShortcutState::Pressed {
-                        if action_clone == "new-note" {
-                            if let Some(window) = app.get_webview_window("main") {
-                                if !window.is_visible().unwrap_or(false) {
-                                    let _ = window.show();
-                                    let _ = window.set_focus();
-                                    #[cfg(target_os = "macos")]
-                                    crate::macos::force_focus();
-                                }
-                            }
-                        } else {
-                            crate::commands::system::toggle_window(app);
-                        }
-                        let _ = app.emit(&format!("trigger-{}", action_clone), ());
+                        handle_shortcut_trigger(app, &action_clone);
                     }
                 });
         }
