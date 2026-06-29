@@ -75,14 +75,17 @@ Built with Tauri, Rust, React, TypeScript, and Vite.
 
 ## Shortcuts
 
+All shortcuts are fully customizable via Settings → Keybinds (`Cmd+Shift+S`). Defaults:
+
 | Shortcut      | Action                                   |
 | ------------- | ---------------------------------------- |
 | `Cmd+Shift+C` | Toggle visibility (global, configurable) |
 | `Cmd+Shift+N` | New note (global, configurable)          |
-| `Cmd+Shift+S` | Open settings panel                      |
+| `Cmd+Shift+S` | Open keybinds settings modal             |
 | `Cmd+N`       | New note (in-app)                        |
 | `Cmd+/`       | Open shortcuts reference                 |
-| `Cmd+T`       | Open Tasks page                          |
+| `Cmd+R`       | Open Tasks & Reminders page              |
+| `Cmd+T`       | Open Timers page                         |
 | `Cmd+K`       | Main action menu                         |
 | `Cmd+P`       | Search notes                             |
 | `Cmd+G`       | Graph view                               |

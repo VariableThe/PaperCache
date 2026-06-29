@@ -11,7 +11,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Date & Time Formats**: Highlights standard date (`DD-MM-YYYY` or `YYYY-MM-DD`) and time (`HH:MM` or `HH:MM:SS`) formats into clean, distinct pills.
 - **Slash Command Autosuggest**: Type `/` to trigger an inline ghost-text autosuggest for commands like `/check`, `/task`, `/ai`, or `/ctx`. Press `Tab` to instantly complete the command without breaking your typing flow.
 - **Interactive Checkboxes**: Type `/check` to create an interactive checkbox widget. Clicking it changes it to `/checked` and visually strikes through the text on that line!
-- **Tasks & Reminders**: Type `/task` to create a task widget. Add a space followed by `@` and a time (like `1d2h`, `tmrw`, or a specific date `YYYY-MM-DD HH:MM`) to set a due date. Press `Cmd+T` (or `Ctrl+T`) to open the Tasks Page, which tracks all tasks, calculates due times, and highlights overdue tasks in red.
+- **Tasks & Reminders**: Type `/task` to create a task widget. Add a space followed by `@` and a time (like `1d2h`, `tmrw`, or a specific date `YYYY-MM-DD HH:MM`) to set a due date. Press `Cmd+T` (or `Ctrl+T`) to open the Tasks Page, which tracks all tasks, calculates due times, and highlights overdue tasks in red. Expired timers are automatically removed from the list after 5 seconds to keep the UI clean.
 - **Customizable Theming & Fonts**: Customize fonts, text colors, background colors, background images, and individual highlight colors for variables, AI, and math. Supports full dark mode (`grid-dark`, `blueprint`).
 
 ## Math, Variables, and Calculations
@@ -28,6 +28,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Interactive Graph View** (`Cmd+G`): An interactive 2D knowledge graph rendered with Three.js WebGL. Nodes are clean flat circles with always-visible labels, edges are colored by opacity. Features:
   - **Folder Clustering**: Notes in the same folder are gently attracted toward a shared centroid, creating subtle visual groupings.
   - **Cmd+F Fuzzy Search**: Press `Cmd+F` inside graph view to fuzzy-search note names. Navigate with arrow keys, press Enter to fly the camera directly to the matched node.
+  - **Multi-Format Link Detection**: Automatically detects connections via standard markdown links (`[Note](Note.md)`), wikilinks (`[[Note]]`), and `/file Note` syntax.
   - **Drag to Rearrange**: Nodes can be dragged freely; positions are cached and restored across graph sessions.
   - **Smooth Fade-in**: The graph overlay animates in with a 250ms fade.
   - **Lazy-Loaded**: The Three.js bundle (~1.3 MB) loads only when the graph is first opened, keeping startup fast.
@@ -49,7 +50,7 @@ This document outlines every feature available in the PaperCache codebase, organ
 - **Stealth / Background Mode**: Click away or lose focus, and the app instantly hides itself (macOS) or after a brief debounce (Windows/Linux — prevents accidental hide when dragging the title bar). On macOS, it runs as an "accessory" and hides its dock icon completely, acting like a true floating utility.
 - **Intelligent Multi-Monitor Support**: When summoning the app via its global hotkey, it detects the active screen your mouse is currently on and brings the window instantly to that specific screen's workspace.
 - **System Tray Icon**: A minimal system tray icon for toggling visibility or quitting the app cleanly, adapting to the user's OS theme (light/dark).
-- **Global Hotkeys**:
+- **Global Hotkeys**: All shortcuts are fully customizable via Settings → Keybinds (`Cmd+Shift+S`). The keybinds modal lets you remap every action with live recording. Defaults include:
   - `Cmd+Shift+N` (configurable): Spawn a new note from anywhere. If the app is already open, creates the note without hiding.
   - `Cmd+Shift+C` (configurable): Toggle PaperCache visibility from anywhere on your OS.
 - **State Memory**: Memorizes precise window coordinates, dimensions, and zoom levels across launches to persist workspace state.

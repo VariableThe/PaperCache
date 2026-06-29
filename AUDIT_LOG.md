@@ -2,6 +2,22 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-29 (Code Quality Cleanup)
+**Change:** refactor: code quality cleanup — dead code, boilerplate, types, constants, AI comments; fix: address PR review findings — listener leak, type contracts, dead ref, stale guard, cfg scope, shortcut loop, timer constant
+
+**Details/Why:**
+1. **Dead Code Removal**: Removed `resumeTimer` no-op stub from useTimerStore; removed `onSwipeGesture` (ignored callback) from api.ts and types; removed `themePreset`/`setThemePreset` from useAppStore (duplicated in useSettingsStore, all consumers used the latter); removed `prevNotesRef` from useReminders (assigned but never read).
+2. **Boilerplate Consolidation**: `useAppStore.ts` — consolidated 9 setters into `booleanSetter`/`simpleSetter` helpers; `api.ts` — extracted 5×8-line identical listener patterns into shared `onEvent` helper; `KeybindsModal.tsx` — replaced 9 parallel `useState`/`getShortcut` calls with data-driven config array; `useSettingsStore.ts` — removed 11 redundant individual setters (use `setSettings` instead).
+3. **Rust Fixes**: Fixed clippy `needless_borrows_for_generic_args` in `notifications.rs`; added doc-commented `[lints.rust] unexpected_cfgs = "allow"` for objc crate macro warnings.
+4. **Type Safety**: `any` → typed `GraphControls` interface in GraphView; `Promise<unknown>` → properly typed `openAIChat` response; replaced unsafe `as` casts with wrapper functions; `pauseShortcuts`/`resumeShortcuts` changed to return `Promise<void>`.
+5. **Magic Numbers → Named Constants**: Extracted ~25 magic numbers across the codebase (z-indices, timeouts, force params, debounce intervals, canvas dimensions, etc.).
+6. **Comment Cleanup**: Removed ~15 pedagogical/AI-generated comments.
+7. **PR Review Fixes**: Fixed `onEvent` listener leak (added `disposed` flag); fixed stale-token guard in `useReminders` to gate before backend call; fixed `openAIChat` response validation for missing content; removed dead `searchInputRef`/`useEffect` in App.tsx; narrowed `unexpected_cfgs` suppression; made KeybindsModal global shortcut loop data-driven via config; aligned initial timer tick constant in TimersPage.
+
+**Files changed:** `src/store/useTimerStore.ts`, `src/api.ts`, `src/types.d.ts`, `src/setupTests.ts`, `src/store/useAppStore.ts`, `src/store/useAppStore.test.ts`, `src/store/useSettingsStore.ts`, `src/hooks/useReminders.ts`, `src/components/KeybindsModal.tsx`, `src/components/TimersPage.tsx`, `src/GraphView.tsx`, `src/App.tsx`, `src/lib/editor/extensions.ts`, `src/lib/editor/MathEvaluator.ts`, `src/lib/editor/VariableScope.ts`, `src/components/Editor.tsx`, `src-tauri/src/commands/notifications.rs`, `src-tauri/Cargo.toml`, `src-tauri/src/lib.rs`, `src-tauri/src/macos.rs`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-28 (v0.5.6 Release: Keybinds Modal, Shortcut Mappings, Timer Auto-Delete, and Graph Link Refinement)
 **Change:** chore(release): bump version to 0.5.6; feat(shortcuts): add dedicated keybinds settings modal and update global hotkeys (`Cmd+R` for tasks, `Cmd+T` for timers); feat(timers): auto-delete expired timers after 5 seconds; feat(graph): support standard markdown links and wikilinks
 
