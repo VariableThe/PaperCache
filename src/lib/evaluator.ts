@@ -36,9 +36,14 @@ function tokenize(input: string): Token[] {
     }
     if (ch >= '0' && ch <= '9') {
       let num = ''
+      let dotCount = 0
       while (i < input.length && ((input[i] >= '0' && input[i] <= '9') || input[i] === '.')) {
+        if (input[i] === '.') dotCount++
         num += input[i]
         i++
+      }
+      if (dotCount > 1) {
+        throw new ParseError(`Invalid number: '${num}'`)
       }
       tokens.push({ type: NUMBER, value: num })
       continue
@@ -152,13 +157,7 @@ class Parser {
   }
 
   factor(): number {
-    let left = this.unary()
-    while (this.peek().type === OPERATOR && this.peek().value === '^') {
-      this.consume()
-      const right = this.unary()
-      left = Math.pow(left, right)
-    }
-    return left
+    return this.unary()
   }
 
   unary(): number {
@@ -167,7 +166,17 @@ class Parser {
       const right = this.unary()
       return op === '-' ? -right : right
     }
-    return this.primary()
+    return this.power()
+  }
+
+  power(): number {
+    const left = this.primary()
+    if (this.peek().type === OPERATOR && this.peek().value === '^') {
+      this.consume()
+      const right = this.power()
+      return Math.pow(left, right)
+    }
+    return left
   }
 
   primary(): number {

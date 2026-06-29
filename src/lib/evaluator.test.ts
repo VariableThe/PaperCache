@@ -105,4 +105,16 @@ describe('evaluate', () => {
   it('performs power before multiplication', () => {
     expect(evaluate('2 * 3 ^ 2')).toBe(18)
   })
+
+  it('power is right-associative (2^3^2 = 2^(3^2) = 512)', () => {
+    expect(evaluate('2 ^ 3 ^ 2')).toBe(512)
+  })
+
+  it('unary minus binds looser than power (-2^2 = -(2^2) = -4)', () => {
+    expect(evaluate('-2 ^ 2')).toBe(-4)
+  })
+
+  it('rejects malformed number with multiple dots', () => {
+    expect(() => evaluate('1..2')).toThrow(ParseError)
+  })
 })
