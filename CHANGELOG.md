@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.5.8] - 2026-06-29
+
+### Added
+- **Custom Arithmetic Evaluator**: Replaced `expr-eval` (high-severity prototype pollution vulnerability, no fix available) with a new custom recursive-descent arithmetic evaluator supporting `+`, `-`, `*`, `/`, `%`, `^`, parentheses, unary operators, and variable scope resolution. Zero external dependencies and 2KB vs ~15KB.
+- **TypeScript Strict Mode**: Enabled `"strict": true` in `tsconfig.app.json`, enabling `strictNullChecks`, `strictFunctionTypes`, `noImplicitAny`, and all other strict-family checks across the entire codebase.
+- **Coverage Thresholds**: Added minimum coverage thresholds to vitest config (statements 65%, branches 50%, functions 55%, lines 65%) to prevent silent coverage regression.
+
+### Changed
+- **API Type Safety**: Made `onEvent` helper generic `<T>` instead of using `any` for the payload parameter, ensuring proper type propagation to all event callbacks.
+
+### Removed
+- **Unused Dependencies**: Removed `@tauri-apps/plugin-fs`, `@tauri-apps/plugin-shell`, `@emnapi/core`, and `@emnapi/runtime` (4 packages) from `package.json`.
+
+### Security
+- **expr-eval Vulnerability Fixed**: Removed `expr-eval` (GHSA-8gw3-rxh4-v6jx, GHSA-jc85-fpwf-qm7x — prototype pollution & unsafe function evaluation) and replaced with a custom evaluator that does not use `eval` or `Function` constructors and is not susceptible to prototype pollution.
+
 ### Fixed
 - **Release Signing Key Sanitization**: Added automated workflow sanitization to strip trailing terminal prompt EOF symbols (`%`) or URL-encoding artifacts from `TAURI_SIGNING_PRIVATE_KEY` during CI builds.
 

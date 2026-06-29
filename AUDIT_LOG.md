@@ -2,6 +2,21 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-29 (v0.5.8 Release: Custom Evaluator, Strict Mode, Dep Cleanup)
+**Change:** chore(release): bump version to 0.5.8; replace expr-eval with custom arithmetic evaluator; enable TypeScript strict mode; remove unused dependencies; fix any type in onEvent helper; add coverage thresholds
+
+**Details/Why:**
+1. **Version Bump**: Bumped version to 0.5.8 across `package.json`, `package-lock.json`, `Cargo.toml`, `Cargo.lock`, and `tauri.conf.json`. Added release note `notes/New Features in v0.5.8.md`.
+2. **expr-eval Replacement**: `expr-eval` had a high-severity prototype pollution vulnerability (GHSA-8gw3-rxh4-v6jx, GHSA-jc85-fpwf-qm7x) with no fix available. Replaced with `src/lib/evaluator.ts` — a ~150-line recursive descent parser supporting `+`, `-`, `*`, `/`, `%`, `^`, parentheses, unary operators, and variable scope resolution. Includes 26 unit tests covering arithmetic, precedence, variables, and error cases. Removed `expr-eval` from `package.json`.
+3. **TypeScript Strict Mode**: Enabled `"strict": true` in `tsconfig.app.json`. Codebase was already compatible — zero new type errors.
+4. **Unused Dependency Removal**: Removed `@tauri-apps/plugin-fs` and `@tauri-apps/plugin-shell` from `package.json` — these npm packages were not imported anywhere in the JS/TS codebase and had no corresponding Rust plugin in `Cargo.toml`. Note: `@emnapi/core` and `@emnapi/runtime` were initially removed but restored because they are required in the lockfile as transitive WASM fallback dependencies for Linux/Windows CI runners.
+5. **API Type Safety**: Changed `onEvent` from `(payload: any) => void` to generic `<T>(name, callback: (payload: T) => void)`, removing the eslint-disable comment.
+6. **Coverage Thresholds**: Added minimum coverage guardrails to `vite.config.ts` (statements 65%, branches 50%, functions 55%, lines 65%).
+
+**Files changed:** `package.json`, `package-lock.json`, `src-tauri/Cargo.toml`, `src-tauri/Cargo.lock`, `src-tauri/tauri.conf.json`, `tsconfig.app.json`, `vite.config.ts`, `src/api.ts`, `src/lib/evaluator.ts` [NEW], `src/lib/evaluator.test.ts` [NEW], `src/lib/editor/MathEvaluator.ts`, `src/lib/editor/VariableScope.ts`, `src/hooks/useVariables.ts`, `notes/New Features in v0.5.8.md` [NEW], `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-29 (CI Signing Key Sanitization Fix)
 **Change:** fix(ci): sanitize `TAURI_SIGNING_PRIVATE_KEY` before `tauri build` to strip trailing terminal prompt artifacts (`%`) or URL encoding
 

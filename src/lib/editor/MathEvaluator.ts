@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view'
 import { getScope } from './VariableScope'
-import { Parser, type Values } from 'expr-eval'
+import { evaluate } from '../evaluator'
 
 const MATH_EVAL_DEBOUNCE_MS = 300
 
@@ -8,7 +8,6 @@ export function evaluateMath(
   docStr: string,
   scope: Record<string, unknown>
 ): { from: number; to: number; insert: string }[] {
-  const parser = new Parser()
   const changes: { from: number; to: number; insert: string }[] = []
 
   // 1. Evaluate new lines that end with '=' but don't have '\u200B' yet
@@ -26,7 +25,7 @@ export function evaluateMath(
           const subExpr = fullExpr.substring(j).trim()
           if (!subExpr) continue
           try {
-            result = String(parser.evaluate(subExpr, scope as Values))
+            result = String(evaluate(subExpr, scope))
             break // Found the longest valid math expression!
           } catch {
             // ignore and try next shorter substring
@@ -59,7 +58,7 @@ export function evaluateMath(
         const subExpr = fullExpr.substring(j).trim()
         if (!subExpr) continue
         try {
-          newResult = String(parser.evaluate(subExpr, scope as Values))
+          newResult = String(evaluate(subExpr, scope))
           break
         } catch {
           // ignore and try next shorter substring

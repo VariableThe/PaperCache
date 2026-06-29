@@ -1,6 +1,6 @@
 [package]
 name = "papercache"
-version = "0.5.7"
+version = "0.5.8"
 description = "A PaperCache Tauri App"
 authors = ["Aditya Sharma"]
 edition = "2021"
