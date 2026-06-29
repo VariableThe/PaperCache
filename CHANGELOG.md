@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v0.5.7] - 2026-06-29
+
 ### Added
 - **Contextual Auto-Update UI**: When checking for updates in Settings, visual feedback is now displayed ("Checking…"). When an update is downloaded and ready, a persistent toast notification appears with a prominent "Restart Now" button so users can restart when convenient rather than experiencing unexpected application restarts.
 

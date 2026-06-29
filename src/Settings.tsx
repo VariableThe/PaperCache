@@ -82,7 +82,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     return () => disposeUpdateStatus()
   }, [])
 
-  const [appVersion, setAppVersion] = useState('0.5.6')
+  const [appVersion, setAppVersion] = useState('0.5.7')
   useEffect(() => {
     getVersion()
       .then((ver) => setAppVersion(ver))
