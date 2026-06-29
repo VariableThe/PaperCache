@@ -13,8 +13,8 @@ export function NoteTitleBar() {
 
   const isAutoNamed = /^\d+\.md$/.test(activeNote.id)
   const displayTitle = isAutoNamed
-    ? activeNote.content.split('\n')[0].trim() || 'New Note'
-    : activeNote.id.split('/').pop() || ''
+    ? activeNote.content.split('\n')[0]!.trim() || 'New Note'
+    : activeNote.id.split('/').pop()! || ''
 
   const startRename = () => {
     setRenameValue(displayTitle)

@@ -35,7 +35,7 @@ export const taskPlugin = ViewPlugin.fromClass(
         while ((match = reRem.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          const isChecked = match[1] === 'task-done'
+          const isChecked = match[1]! === 'task-done'
 
           const line = view.state.doc.lineAt(start)
           let isOverdue = false
@@ -114,7 +114,7 @@ class RemConverterPlugin implements PluginValue {
       changes.push({
         from: match.index,
         to: match.index + match[0].length,
-        insert: `/${match[1]} ${timestamp} `,
+        insert: `/${match[1]!} ${timestamp} `,
       })
     }
 
@@ -123,7 +123,7 @@ class RemConverterPlugin implements PluginValue {
       /(?<=^|[ \t])(\/(?:task|task-done)[^\n]*?@\s*)((?:[0-9]+[smhd])+|tmrw)([ \t]+|\n|(?:\r\n))/gm
     while ((match = reShort.exec(docStr)) !== null) {
       const now = new Date()
-      const short = match[2]
+      const short = match[2]!
       if (short === 'tmrw') {
         now.setDate(now.getDate() + 1)
         now.setHours(9, 0, 0, 0)
@@ -131,8 +131,8 @@ class RemConverterPlugin implements PluginValue {
         const partRe = /([0-9]+)([smhd])/g
         let partMatch
         while ((partMatch = partRe.exec(short)) !== null) {
-          const val = parseInt(partMatch[1])
-          const unit = partMatch[2]
+          const val = parseInt(partMatch[1]!)
+          const unit = partMatch[2]!
           if (unit === 's') now.setSeconds(now.getSeconds() + val)
           else if (unit === 'm') now.setMinutes(now.getMinutes() + val)
           else if (unit === 'h') now.setHours(now.getHours() + val)
@@ -149,8 +149,8 @@ class RemConverterPlugin implements PluginValue {
       const absoluteDate = `${dd}-${mm}-${yyyy} ${hh}:${mins}`
 
       changes.push({
-        from: match.index + match[1].length,
-        to: match.index + match[1].length + match[2].length,
+        from: match.index + match[1]!.length,
+        to: match.index + match[1]!.length + match[2]!.length,
         insert: absoluteDate,
       })
     }

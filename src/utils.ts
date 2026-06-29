@@ -12,7 +12,7 @@ export const getFolderColor = (str: string): string => {
   const usedHues = Object.values(colors)
     .map((c) => {
       const match = c.match(/hsl\((\d+)/)
-      return match ? parseInt(match[1]) : null
+      return match ? parseInt(match[1]!) : null
     })
     .filter((h) => h !== null) as number[]
 
@@ -22,11 +22,11 @@ export const getFolderColor = (str: string): string => {
     let maxDist = 0
     for (let i = 0; i < usedHues.length; i++) {
       const next = (i + 1) % usedHues.length
-      let dist = usedHues[next] - usedHues[i]
+      let dist = usedHues[next]! - usedHues[i]!
       if (dist <= 0) dist += 360
       if (dist > maxDist) {
         maxDist = dist
-        bestHue = (usedHues[i] + dist / 2) % 360
+        bestHue = (usedHues[i]! + dist / 2) % 360
       }
     }
   } else {

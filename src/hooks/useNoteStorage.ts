@@ -28,7 +28,7 @@ export function useNoteStorage() {
   // Save current note index to localStorage
   useEffect(() => {
     if (notes.length > 0 && currentNoteIndex >= 0 && currentNoteIndex < notes.length) {
-      localStorage.setItem('papercache-last-open-note', notes[currentNoteIndex].id)
+      localStorage.setItem('papercache-last-open-note', notes[currentNoteIndex]!.id)
     }
   }, [currentNoteIndex, notes])
 

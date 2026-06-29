@@ -17,13 +17,13 @@ export function useVariables() {
       for (const note of notes) {
         let varMatch
         while ((varMatch = reVar.exec(note.content)) !== null) {
-          const name = varMatch[1]
+          const name = varMatch[1]!
           try {
-            globals[name] = evaluate(varMatch[2], globals)
+            globals[name] = evaluate(varMatch[2]!, globals)
           } catch (e) {
             // eslint-disable-next-line no-console
             console.error(`useVariables evaluation error for ${name}:`, e)
-            globals[name] = varMatch[2].trim()
+            globals[name] = varMatch[2]!.trim()
           }
         }
       }
