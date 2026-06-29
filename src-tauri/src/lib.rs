@@ -7,9 +7,8 @@ mod commands;
 mod macos;
 mod tray;
 
-#[allow(dead_code)]
+#[cfg(not(target_os = "macos"))]
 const FOCUS_LOSS_DEBOUNCE_MS: u64 = 200;
-#[allow(dead_code)]
 const WINDOW_STATE_RESTORE_DELAY_MS: u64 = 300;
 
 

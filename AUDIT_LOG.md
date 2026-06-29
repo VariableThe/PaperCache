@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-06-29 (Security & Repo Hygiene Audit Fixes)
+**Change:** chore(ci): pin action references in `release.yml` to SHA digests; chore(repo): untrack build binary `PaperCache_aarch64.app.tar.gz` and update `.gitignore`; fix(rust): replace `#[allow(dead_code)]` with `#[cfg(not(target_os = "macos"))]` on debounce constants
+
+**Details/Why:**
+1. **Supply-Chain Security**: Pinned `actions/checkout`, `actions/setup-node`, `dtolnay/rust-toolchain`, and `tauri-apps/tauri-action` in `.github/workflows/release.yml` to immutable SHA digests to prevent action tag hijacking on write-privileged workflows.
+2. **Repository Hygiene**: Removed 7MB untracked build archive `PaperCache_aarch64.app.tar.gz` and added `*.app.tar.gz`, `dist/`, and `coverage/` patterns to `.gitignore`.
+3. **Rust Config Gating**: Gated `FOCUS_LOSS_DEBOUNCE_MS` in `src-tauri/src/lib.rs` with `#[cfg(not(target_os = "macos"))]` so it is cleanly excluded on macOS where it is not used, eliminating dead-code warnings without blanket suppressions.
+
+**Files changed:** `.github/workflows/release.yml`, `.gitignore`, `src-tauri/src/lib.rs`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-29 (Code Quality Cleanup)
 **Change:** refactor: code quality cleanup — dead code, boilerplate, types, constants, AI comments; fix: address PR review findings — listener leak, type contracts, dead ref, stale guard, cfg scope, shortcut loop, timer constant
 
