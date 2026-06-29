@@ -5,6 +5,14 @@ All notable, user-facing changes to PaperCache will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Contextual Auto-Update UI**: When checking for updates in Settings, visual feedback is now displayed ("Checking…"). When an update is downloaded and ready, a persistent toast notification appears with a prominent "Restart Now" button so users can restart when convenient rather than experiencing unexpected application restarts.
+
+### Fixed
+- **Updater Artifact Manifest Generation**: Fixed an issue where auto-updates failed due to missing or improperly configured updater manifests (`latest.json`) in GitHub release assets.
+
 ## [v0.5.6] - 2026-06-28
 
 ### Added

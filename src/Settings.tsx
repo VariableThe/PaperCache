@@ -9,6 +9,7 @@ import './Settings.css'
 export default function Settings({ onClose }: { onClose?: () => void }) {
   const [apiKey, setApiKey] = useState('')
   const [isApiKeySet, setIsApiKeySet] = useState(false)
+  const [updateChecking, setUpdateChecking] = useState(false)
 
   useEffect(() => {
     window.electronAPI.getApiKeyStatus().then((status) => {
@@ -58,6 +59,27 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
       setLaunchAtStartup(enabled)
       localStorage.setItem(SETTINGS_KEYS.LAUNCH_STARTUP, enabled.toString())
     })
+
+    const disposeUpdateStatus = window.electronAPI.onUpdateStatus((payload) => {
+      if (payload.status === 'checking') {
+        setUpdateChecking(true)
+      } else {
+        setUpdateChecking(false)
+        if (payload.status === 'up-to-date') {
+          useAppStore.getState().addToast({ message: '✨ PaperCache is up to date.', type: 'info' })
+        } else if (payload.status === 'error') {
+          useAppStore.getState().addToast({
+            message: `Update failed: ${payload.error || 'Unknown error'}`,
+            type: 'error',
+          })
+        } else if (payload.status === 'available') {
+          useAppStore
+            .getState()
+            .addToast({ message: `Downloading update v${payload.version || ''}…`, type: 'info' })
+        }
+      }
+    })
+    return () => disposeUpdateStatus()
   }, [])
 
   const [appVersion, setAppVersion] = useState('0.5.6')
@@ -448,18 +470,23 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
               style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}
             >
               <button
-                onClick={() => window.electronAPI.checkForUpdates()}
+                onClick={() => {
+                  setUpdateChecking(true)
+                  window.electronAPI.checkForUpdates()
+                }}
+                disabled={updateChecking}
                 style={{
                   padding: '6px 14px',
-                  background: 'rgba(128,128,128,0.1)',
+                  background: updateChecking ? 'rgba(128,128,128,0.2)' : 'rgba(128,128,128,0.1)',
                   border: '1px solid rgba(128,128,128,0.2)',
                   borderRadius: '6px',
-                  cursor: 'pointer',
+                  cursor: updateChecking ? 'wait' : 'pointer',
                   color: 'inherit',
                   fontFamily: 'inherit',
+                  opacity: updateChecking ? 0.7 : 1,
                 }}
               >
-                Check for Updates
+                {updateChecking ? 'Checking…' : 'Check for Updates'}
               </button>
               <button
                 onClick={() => window.electronAPI.openExternal('https://ko-fi.com/thevariable')}
