@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Linux Compatibility (`glibc` version mismatch)**: Pinned GitHub Actions Linux runner to `ubuntu-22.04` across CI and release workflows instead of `ubuntu-latest` (Ubuntu 24.04). This ensures built Linux binaries and AppImages link against `glibc 2.35` so they can run out-of-the-box on Ubuntu 22.04 LTS, Debian 12, and other distributions without throwing `version glibc 2.38 not found` errors.
+
+
 ## [v0.5.8] - 2026-06-29
 
 ### Added

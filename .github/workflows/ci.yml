@@ -8,7 +8,7 @@ jobs:
   ci:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-22.04, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -23,7 +23,7 @@ jobs:
       - run: npm run format:check
       - run: npm run test
       - name: Check version bump and new features note
-        if: matrix.os == 'ubuntu-latest' && github.event_name == 'pull_request'
+        if: startsWith(matrix.os, 'ubuntu') && github.event_name == 'pull_request'
         run: |
           git fetch origin main
           MAIN_VERSION=$(git show origin/main:package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[", ]//g')
