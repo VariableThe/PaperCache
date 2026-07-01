@@ -66,4 +66,6 @@ export const tauriApi: ElectronAPI = {
   onUpdateReady: (callback) => onEvent('update-ready', callback),
   restartApp: () => invoke('restart_app'),
   onUpdateStatus: (callback) => onEvent('update-status', callback),
+  saveAsset: (dataBase64, ext, folder) => invoke('save_asset', { dataBase64, ext, folder }),
+  readAsset: (assetPath) => invoke('read_asset', { path: assetPath }),
 }

@@ -62,6 +62,13 @@ export function KeybindsModal({ onClose }: KeybindsModalProps) {
       section: 'app',
     },
     {
+      key: 'shortcutVoiceMemo',
+      label: 'Hold to Record Voice Memo',
+      storageKey: SETTINGS_KEYS.SHORTCUT_VOICE_MEMO,
+      defaultKey: `${defaultMod}+Shift+M`,
+      section: 'app',
+    },
+    {
       key: 'shortcutSearch',
       label: 'Search Notes',
       storageKey: SETTINGS_KEYS.SHORTCUT_SEARCH,

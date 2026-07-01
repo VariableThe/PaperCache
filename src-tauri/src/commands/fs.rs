@@ -1,3 +1,4 @@
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -60,6 +61,10 @@ fn walk_dir(dir: &Path, notes: &mut Vec<Note>, base_path: &Path) -> Result<(), S
         let entry = entry.map_err(|e| e.to_string())?;
         let path = entry.path();
         if path.is_dir() {
+            let dir_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+            if dir_name == ".images" || dir_name == ".audio" {
+                continue;
+            }
             walk_dir(&path, notes, base_path)?;
         } else if path.is_file() {
             let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
@@ -495,4 +500,118 @@ pub fn run_onboarding(app: &AppHandle) {
             }
         }
     }
+}
+
+#[tauri::command(async)]
+pub async fn save_asset(data_base64: String, ext: String, folder: String) -> Result<String, String> {
+    if folder.contains("..") || folder.contains('/') || folder.contains('\\') {
+        return Err("Invalid folder name".to_string());
+    }
+    let folder_name = if folder.starts_with('.') {
+        folder.clone()
+    } else {
+        format!(".{}", folder)
+    };
+    if folder_name != ".images" && folder_name != ".audio" {
+        return Err("Unsupported asset folder".to_string());
+    }
+
+    let base = get_papercache_dir()?;
+    let asset_dir = base.join(&folder_name);
+    if !asset_dir.exists() {
+        tokio::fs::create_dir_all(&asset_dir).await.map_err(|e| e.to_string())?;
+    }
+
+    let clean_ext: String = ext
+        .trim_start_matches('.')
+        .chars()
+        .filter(|c| c.is_alphanumeric())
+        .collect();
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_millis();
+    let prefix = folder_name.trim_start_matches('.');
+
+    // Generate unique filename with random suffix to avoid collisions
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let random_suffix: u32 = rng.gen();
+    let filename = format!("{}_{}_{:08x}.{}", prefix, timestamp, random_suffix, clean_ext);
+    let file_path = asset_dir.join(&filename);
+
+    let b64_str = if let Some(idx) = data_base64.find(',') {
+        &data_base64[idx + 1..]
+    } else {
+        &data_base64
+    };
+
+    let decoded = BASE64.decode(b64_str).map_err(|e| format!("Failed to decode base64: {}", e))?;
+    tokio::fs::write(&file_path, &decoded).await.map_err(|e| e.to_string())?;
+
+    Ok(format!("/{}/{}", folder_name, filename))
+}
+
+#[tauri::command(async)]
+pub async fn read_asset(path: String) -> Result<String, String> {
+    let clean_path = path.trim_start_matches('/');
+    if clean_path.contains("..") {
+        return Err("Invalid asset path".to_string());
+    }
+
+    // Read-only validation: ensure path is within allowed asset folders
+    let path_parts: Vec<&str> = clean_path.split('/').collect();
+    if path_parts.is_empty() {
+        return Err("Invalid asset path".to_string());
+    }
+    let first_component = path_parts[0];
+    if first_component != ".images" && first_component != ".audio" {
+        return Err("Asset path must start with .images or .audio".to_string());
+    }
+
+    let base = get_papercache_dir()?;
+    let mut target = base.clone();
+    for comp in clean_path.split('/') {
+        if !comp.is_empty() && comp != "." && comp != ".." {
+            target.push(comp);
+        } else if comp == ".." {
+            return Err("Path traversal detected".to_string());
+        }
+    }
+
+    // Verify the resolved path is within base without creating any directories
+    let canonical_base = base.canonicalize().map_err(|e| e.to_string())?;
+    if !target.exists() {
+        return Err("Asset file not found".to_string());
+    }
+    let canonical_target = target.canonicalize().map_err(|e| e.to_string())?;
+    if !canonical_target.starts_with(&canonical_base) {
+        return Err("Path traversal detected".to_string());
+    }
+
+    let file_path = canonical_target;
+    let bytes = tokio::fs::read(&file_path).await.map_err(|e| e.to_string())?;
+
+    let ext = file_path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+    let mime = match ext.as_str() {
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        "svg" => "image/svg+xml",
+        "webm" => "audio/webm",
+        "m4a" | "mp4" => "audio/mp4",
+        "aac" => "audio/aac",
+        "wav" => "audio/wav",
+        "mp3" => "audio/mpeg",
+        "ogg" => "audio/ogg",
+        _ => "application/octet-stream",
+    };
+
+    let encoded = BASE64.encode(&bytes);
+    Ok(format!("data:{};base64,{}", mime, encoded))
 }

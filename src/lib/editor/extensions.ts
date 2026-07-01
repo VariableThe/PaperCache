@@ -113,6 +113,15 @@ export function useEditorExtensions() {
                 return true
               }
 
+              // /memo — voice recording command (currently disabled)
+              // Voice recording functionality has been removed
+              // if (lowerLine === '/memo' || lowerLine.startsWith('/memo ')) {
+              //   const from = line.from
+              //   const to = Math.min(line.to + 1, view.state.doc.length)
+              //   view.dispatch({ changes: { from, to, insert: '' } })
+              //   return true
+              // }
+
               if (
                 lowerLine.startsWith('/ai') ||
                 lowerLine.startsWith('/ctx') ||
@@ -253,6 +262,62 @@ export function useEditorExtensions() {
               }
             }
             return true
+          }
+          return false
+        },
+        paste: (event, view) => {
+          const items = event.clipboardData?.items
+          if (!items) return false
+
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+            if (item && item.type.indexOf('image') !== -1) {
+              const file = item.getAsFile()
+              if (file) {
+                event.preventDefault()
+                // Capture selection range synchronously before async operations
+                const selection = view.state.selection.main
+                const from = selection.from
+                const to = selection.to
+                const placeholder = '![uploading...]'
+
+                // Insert placeholder immediately to replace selection
+                view.dispatch({
+                  changes: { from, to, insert: placeholder },
+                  selection: { anchor: from + placeholder.length },
+                })
+
+                const reader = new FileReader()
+                reader.onload = async (e) => {
+                  const dataUrl = e.target?.result as string
+                  if (dataUrl) {
+                    const ext = file.type.split('/')[1] || 'png'
+                    try {
+                      const path = await window.electronAPI.saveAsset(dataUrl, ext, '.images')
+                      const insertText = `![image](${path})`
+                      // Replace placeholder with actual image embed
+                      view.dispatch({
+                        changes: { from, to: from + placeholder.length, insert: insertText },
+                        selection: { anchor: from + insertText.length },
+                      })
+                    } catch (err) {
+                      // eslint-disable-next-line no-console
+                      console.error('Failed to save image asset', err)
+                      // Replace placeholder with error message
+                      view.dispatch({
+                        changes: {
+                          from,
+                          to: from + placeholder.length,
+                          insert: '![upload failed]',
+                        },
+                      })
+                    }
+                  }
+                }
+                reader.readAsDataURL(file)
+                return true
+              }
+            }
           }
           return false
         },
