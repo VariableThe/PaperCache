@@ -1,6 +1,6 @@
 import type { EditorView } from '@codemirror/view'
 import { describe, it, expect, vi } from 'vitest'
-import { CopyWidget, CheckboxWidget, VariableWidget, ColorWidget } from './widgets'
+import { CopyWidget, CheckboxWidget, VariableWidget, ColorWidget, ImageWidget } from './widgets'
 
 describe('Editor Widgets', () => {
   describe('CopyWidget', () => {
@@ -91,6 +91,18 @@ describe('Editor Widgets', () => {
 
       expect(dom.className).toBe('cm-color-pill')
       expect(dom.style.getPropertyValue('--pill-color')).toBe('#ff0000')
+    })
+  })
+
+  describe('ImageWidget', () => {
+    it('should create img element and check equality', () => {
+      const w1 = new ImageWidget('/.images/test.png', 'test image')
+      const w2 = new ImageWidget('/.images/test.png', 'test image')
+      expect(w1.eq(w2)).toBe(true)
+
+      const dom = w1.toDOM()
+      expect(dom.className).toBe('cm-image-widget')
+      expect(dom.querySelector('img')?.alt).toBe('test image')
     })
   })
 })

@@ -207,6 +207,60 @@ export class ReminderWidget extends WidgetType {
   }
 }
 
+const assetDataUrlCache = new Map<string, string>()
+
+export class ImageWidget extends WidgetType {
+  path: string
+  alt: string
+
+  constructor(path: string, alt: string) {
+    super()
+    this.path = path
+    this.alt = alt
+  }
+
+  eq(other: ImageWidget) {
+    return other.path === this.path && other.alt === this.alt
+  }
+
+  toDOM() {
+    const wrap = document.createElement('span')
+    wrap.className = 'cm-image-widget'
+    wrap.style.display = 'block'
+    wrap.style.margin = '8px 0'
+    wrap.style.maxWidth = '100%'
+
+    const img = document.createElement('img')
+    img.alt = this.alt || 'Asset image'
+    img.style.maxWidth = '100%'
+    img.style.maxHeight = '400px'
+    img.style.borderRadius = '8px'
+    img.style.border = '1px solid rgba(128, 128, 128, 0.25)'
+    img.style.objectFit = 'contain'
+
+    if (assetDataUrlCache.has(this.path)) {
+      img.src = assetDataUrlCache.get(this.path)!
+    } else if (window.electronAPI?.readAsset) {
+      window.electronAPI
+        .readAsset(this.path)
+        .then((dataUrl) => {
+          assetDataUrlCache.set(this.path, dataUrl)
+          img.src = dataUrl
+        })
+        .catch(() => {
+          img.alt = `Failed to load: ${this.path}`
+        })
+    }
+
+    wrap.appendChild(img)
+    return wrap
+  }
+
+  ignoreEvent() {
+    return false
+  }
+}
+
 export class ContextWidget extends WidgetType {
   toDOM() {
     const span = document.createElement('span')
