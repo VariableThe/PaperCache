@@ -2,6 +2,7 @@ const TICK_INTERVAL_MS = 250
 
 import { useState, useEffect, useRef } from 'react'
 import { useTimerStore, type Timer } from '../store/useTimerStore'
+import { useSettingsStore } from '../store/useSettingsStore'
 interface TimerItemProps {
   timer: Timer
   onRemove: (id: string) => void
@@ -97,6 +98,7 @@ const QUICK_PRESETS = [
 ]
 
 export function TimersPage({ onClose }: TimersPageProps) {
+  const fontFamily = useSettingsStore((s) => s.fontFamily)
   const timers = useTimerStore((s) => s.timers)
   const addTimer = useTimerStore((s) => s.addTimer)
   const removeTimer = useTimerStore((s) => s.removeTimer)
@@ -149,8 +151,8 @@ export function TimersPage({ onClose }: TimersPageProps) {
   }
 
   return (
-    <div className="timers-overlay" onClick={onClose}>
-      <div className="timers-panel" onClick={(e) => e.stopPropagation()}>
+    <div className="timers-overlay" style={{ fontFamily }} onClick={onClose}>
+      <div className="timers-panel" style={{ fontFamily }} onClick={(e) => e.stopPropagation()}>
         <div className="timers-header">
           <h2 style={{ margin: 0, color: 'var(--text-color)', fontWeight: 700, fontSize: 17 }}>
             <svg

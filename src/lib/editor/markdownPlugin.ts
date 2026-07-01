@@ -1,7 +1,7 @@
 import { ViewPlugin, Decoration, EditorView, ViewUpdate, WidgetType } from '@codemirror/view'
 import type { SyntaxNode } from '@lezer/common'
 import { syntaxTree } from '@codemirror/language'
-import { ContextWidget } from './widgets'
+import { ContextWidget, ImageWidget } from './widgets'
 
 export const markdownPlugin = ViewPlugin.fromClass(
   class {
@@ -31,6 +31,27 @@ export const markdownPlugin = ViewPlugin.fromClass(
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to)
         let match
+
+        // Image / Audio Embeds (![alt](path))
+        const reImage = /!\[(.*?)\]\((.*?)\)/g
+        while ((match = reImage.exec(text)) !== null) {
+          const start = from + match.index
+          const end = start + match[0].length
+          linkRanges.push({ from: start, to: end })
+
+          const altText = match[1]!
+          const assetPath = match[2]!.trim()
+
+          if (!isCursorInMatch(start, end)) {
+            decos.push({
+              from: start,
+              to: end,
+              deco: Decoration.replace({
+                widget: new ImageWidget(assetPath, altText),
+              }),
+            })
+          }
+        }
 
         // ==Highlight==
         const reHighlight = /==(.*?)==/g
@@ -74,6 +95,9 @@ export const markdownPlugin = ViewPlugin.fromClass(
         const reLink = /\[(.*?)\]\((.*?)\)/g
         while ((match = reLink.exec(text)) !== null) {
           const start = from + match.index
+          if (start > 0 && view.state.doc.sliceString(start - 1, start) === '!') {
+            continue
+          }
           const end = start + match[0].length
           linkRanges.push({ from: start, to: end })
 

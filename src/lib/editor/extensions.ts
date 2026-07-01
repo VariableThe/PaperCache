@@ -113,6 +113,16 @@ export function useEditorExtensions() {
                 return true
               }
 
+              // /memo — start voice recording and erase the command line
+              if (lowerLine === '/memo' || lowerLine.startsWith('/memo ')) {
+                const from = line.from
+                const to = Math.min(line.to + 1, view.state.doc.length)
+                view.dispatch({ changes: { from, to, insert: '' } })
+                useAppStore.getState().setRecordingCursorPos(from)
+                useAppStore.getState().setIsRecordingVoice(true)
+                return true
+              }
+
               if (
                 lowerLine.startsWith('/ai') ||
                 lowerLine.startsWith('/ctx') ||
@@ -253,6 +263,42 @@ export function useEditorExtensions() {
               }
             }
             return true
+          }
+          return false
+        },
+        paste: (event, view) => {
+          const items = event.clipboardData?.items
+          if (!items) return false
+
+          for (let i = 0; i < items.length; i++) {
+            const item = items[i]
+            if (item && item.type.indexOf('image') !== -1) {
+              const file = item.getAsFile()
+              if (file) {
+                event.preventDefault()
+                const reader = new FileReader()
+                reader.onload = async (e) => {
+                  const dataUrl = e.target?.result as string
+                  if (dataUrl) {
+                    const ext = file.type.split('/')[1] || 'png'
+                    try {
+                      const path = await window.electronAPI.saveAsset(dataUrl, ext, '.images')
+                      const insertText = `![image](${path})`
+                      const pos = view.state.selection.main.from
+                      view.dispatch({
+                        changes: { from: pos, insert: insertText },
+                        selection: { anchor: pos + insertText.length },
+                      })
+                    } catch (err) {
+                      // eslint-disable-next-line no-console
+                      console.error('Failed to save image asset', err)
+                    }
+                  }
+                }
+                reader.readAsDataURL(file)
+                return true
+              }
+            }
           }
           return false
         },

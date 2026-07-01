@@ -160,6 +160,8 @@ pub fn run() {
             commands::fs::export_note,
             commands::fs::set_dialog_open,
             commands::fs::remove_onboarding_files,
+            commands::fs::save_asset,
+            commands::fs::read_asset,
             commands::system::close_window,
             commands::system::restore_window_state,
             commands::system::quit_app,
