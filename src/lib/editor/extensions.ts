@@ -305,7 +305,11 @@ export function useEditorExtensions() {
                       console.error('Failed to save image asset', err)
                       // Replace placeholder with error message
                       view.dispatch({
-                        changes: { from, to: from + placeholder.length, insert: '![upload failed]' },
+                        changes: {
+                          from,
+                          to: from + placeholder.length,
+                          insert: '![upload failed]',
+                        },
                       })
                     }
                   }
