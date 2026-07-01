@@ -85,6 +85,8 @@ if (typeof window !== 'undefined') {
     removeOnboardingFiles: vi.fn().mockResolvedValue(undefined),
     restartApp: vi.fn().mockResolvedValue(undefined),
     onUpdateStatus: vi.fn().mockReturnValue(() => {}),
+    saveAsset: vi.fn().mockResolvedValue('/.images/test.png'),
+    readAsset: vi.fn().mockResolvedValue('data:image/png;base64,'),
   } as ElectronAPI
 }
 
