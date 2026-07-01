@@ -532,7 +532,12 @@ pub async fn save_asset(data_base64: String, ext: String, folder: String) -> Res
         .map_err(|e| e.to_string())?
         .as_millis();
     let prefix = folder_name.trim_start_matches('.');
-    let filename = format!("{}_{}.{}", prefix, timestamp, clean_ext);
+
+    // Generate unique filename with random suffix to avoid collisions
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let random_suffix: u32 = rng.gen();
+    let filename = format!("{}_{}_{:08x}.{}", prefix, timestamp, random_suffix, clean_ext);
     let file_path = asset_dir.join(&filename);
 
     let b64_str = if let Some(idx) = data_base64.find(',') {
@@ -553,7 +558,38 @@ pub async fn read_asset(path: String) -> Result<String, String> {
     if clean_path.contains("..") {
         return Err("Invalid asset path".to_string());
     }
-    let file_path = get_safe_path(clean_path)?;
+
+    // Read-only validation: ensure path is within allowed asset folders
+    let path_parts: Vec<&str> = clean_path.split('/').collect();
+    if path_parts.is_empty() {
+        return Err("Invalid asset path".to_string());
+    }
+    let first_component = path_parts[0];
+    if first_component != ".images" && first_component != ".audio" {
+        return Err("Asset path must start with .images or .audio".to_string());
+    }
+
+    let base = get_papercache_dir()?;
+    let mut target = base.clone();
+    for comp in clean_path.split('/') {
+        if !comp.is_empty() && comp != "." && comp != ".." {
+            target.push(comp);
+        } else if comp == ".." {
+            return Err("Path traversal detected".to_string());
+        }
+    }
+
+    // Verify the resolved path is within base without creating any directories
+    let canonical_base = base.canonicalize().map_err(|e| e.to_string())?;
+    if !target.exists() {
+        return Err("Asset file not found".to_string());
+    }
+    let canonical_target = target.canonicalize().map_err(|e| e.to_string())?;
+    if !canonical_target.starts_with(&canonical_base) {
+        return Err("Path traversal detected".to_string());
+    }
+
+    let file_path = canonical_target;
     let bytes = tokio::fs::read(&file_path).await.map_err(|e| e.to_string())?;
 
     let ext = file_path

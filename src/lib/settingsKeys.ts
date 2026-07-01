@@ -24,6 +24,7 @@ export const SETTINGS_KEYS = {
   SHORTCUT_REF: 'papercache-shortcut-ref',
   SHORTCUT_SETTINGS: 'papercache-shortcut-settings',
   SHORTCUT_NEWNOTE_INAPP: 'papercache-shortcut-newnote-inapp',
+  SHORTCUT_VOICE_MEMO: 'papercache-shortcut-voice-memo',
   LAUNCH_STARTUP: 'papercache-launch-startup',
   NOTIFIED_REMINDERS: 'papercache_notified',
 } as const
