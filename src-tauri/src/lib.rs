@@ -178,6 +178,7 @@ pub fn run() {
             commands::keychain::safe_storage_encrypt,
             commands::keychain::safe_storage_decrypt,
             commands::ai::openai_chat,
+            commands::ai::openai_transcribe,
             commands::shortcuts::update_global_shortcut,
             commands::shortcuts::pause_shortcuts,
             commands::shortcuts::resume_shortcuts,

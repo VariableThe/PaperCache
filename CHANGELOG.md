@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Voice Memo Plugin & Floating Overlay**: Press and hold `Command+Shift+M` from anywhere to record voice notes. When PaperCache is hidden or unfocused, a floating bottom-left waveform pillbox indicator displays your live recording status.
+- **Custom Waveform Player & AI Restructuring**: Voice notes feature sleek audio playback pillboxes with animated waveforms, live gray slanted transcriptions, and automatic restructuring into structured action items using your configured AI model and PaperCache slash commands.
+
+
+### Fixed
+- **Voice Memo Transcription Priority & Responsiveness**: Fixed an issue where recording a voice note with an OpenRouter API key configured resulted in `401 Unauthorized` errors because the app always attempted Whisper API transcription before AI restructuring. Voice memos now prioritize the natural Web Speech API transcription directly and send it to your configured AI model (`openAIChat`) to format PaperCache slash commands.
+- **Voice Panel Focus Trapping & Editor Layout**: Fixed an issue where clicking inside the voice memo result box caused the app container to force focus away, while large result blocks squished the note editor. Added click propagation stopping and maximum panel height limits so you can easily type under voice notes, delete notes, and interact with the editor normally.
+- **Asset Reading (`read_asset`) IPC Mapping**: Fixed an issue where reading saved voice note audio files or pasted images threw `invalid args 'path' for command 'read_asset'` due to a parameter key mismatch between the frontend and Tauri backend.
+- **Floating Overlay Visibility (`Command+Shift+M`)**: Fixed an issue where recording via global shortcut while the main app was hidden recorded audio in the background but failed to reveal the floating bottom-left waveform player and transcript result. The overlay indicator window now automatically shows and focuses when recording or processing voice notes.
+- **Push-to-Talk Race Condition & Audio Playback**: Fixed an issue where releasing `Command+Shift+M` immediately before microphone access resolved would ignore the release event. Also updated Content Security Policy (`media-src`) to allow recorded audio waveform pills to play smoothly.
+- **macOS Microphone Permission (`Info.plist`)**: Added `NSMicrophoneUsageDescription` in the macOS app bundle `Info.plist` so macOS CoreAudio properly grants microphone access instead of silently blocking audio recording.
+- **Push-to-Talk Press & Release Recording**: Fixed an issue where holding `Command+Shift+M` immediately stopped recording due to keyboard auto-repeat events. Replaced unnecessary Stop button with seamless press-to-record and release-to-stop behavior.
+- **Audio & Transcription Error Display**: Resolved 0-byte audio creation on rapid shortcut release and ensured explicit error messages appear in the transcript block if API keys or endpoints fail. Also ensured the voice memo plugin is enabled by default for all users.
 
 ## [v0.5.9] - 2026-07-01
 

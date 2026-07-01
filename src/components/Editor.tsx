@@ -115,6 +115,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
           highlightActiveLine: false,
           highlightActiveLineGutter: false,
           highlightSpecialChars: false,
+          lintKeymap: false,
         }}
       />
     </div>

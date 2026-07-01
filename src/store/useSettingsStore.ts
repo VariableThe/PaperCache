@@ -13,6 +13,7 @@ export interface SettingsState {
   symColor: string
   aiColor: string
   mathColor: string
+  memoEnabled: boolean
 
   setSettings: (
     settings:
@@ -35,6 +36,7 @@ export const useSettingsStore = create<SettingsState>()(
       symColor: '#ff0000',
       aiColor: '#8b5cf6',
       mathColor: '#10b981',
+      memoEnabled: true,
 
       setSettings: (settings) =>
         set((state) => ({

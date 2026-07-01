@@ -2,6 +2,74 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-07-01 (Web Speech API Transcription Priority & UI Responsiveness Fix)
+**Change:** fix(memo): prioritize Web Speech API live transcription over Whisper API fallback to avoid 401 Unauthorized errors with OpenRouter API keys, and stop click propagation in MemoVoicePanel to prevent focus trapping and editor squishing.
+
+**Details/Why:**
+When the user recorded a voice note, `MemoVoicePanel` previously always attempted to call Whisper (`openaiTranscribe`) first whenever an API key was configured. If the configured API key was for OpenRouter (`sk-or-v1-...`), the request failed with `401 Unauthorized: Incorrect API key provided`, overwriting the natural Web Speech API transcription with a large error message and skipping AI command restructuring (`openAIChat`). Furthermore, clicking inside the voice memo results panel caused the main app container to steal focus back to CodeMirror, while unbounded panel height squished the editor, making it feel frozen and blocking note deletion or editing. Updated `MemoVoicePanel` to use the Web Speech API transcription directly without invoking Whisper (unless Web Speech API captured nothing), added event propagation stopping to keep focus stable, and capped panel max-height to ensure the editor remains fully accessible.
+
+**Files changed:** `src/components/MemoVoicePanel.tsx`, `src/App.css`, `AUDIT_LOG.md`, `CHANGELOG.md`.
+
+---
+
+## 2026-07-01 (IPC Parameter Key Mapping Fix for `read_asset`)
+**Change:** fix(api): map `assetPath` argument to `{ path: assetPath }` in `tauriApi.readAsset`
+
+**Details/Why:**
+The Tauri Rust backend command `pub async fn read_asset(path: String)` expects an argument object keyed by `path`. The frontend wrapper in `src/api.ts` was passing `{ assetPath }`, resulting in a Tauri IPC error (`invalid args 'path' for command 'read_asset': command read_asset missing required key path`) whenever the app attempted to load saved voice recordings or image assets. Updated `src/api.ts` to pass `{ path: assetPath }`.
+
+**Files changed:** `src/api.ts`, `AUDIT_LOG.md`, `CHANGELOG.md`.
+
+---
+
+## 2026-07-01 (Voice Memo Overlay Visibility, Race Conditions & CSP Fixes)
+**Change:** fix(memo): show overlay window before recording/processing, fix early release race condition before getUserMedia resolves, update CSP `media-src` to permit local audio playback, and ensure processing/error states stay visible
+
+**Details/Why:**
+1. **Overlay Window Visibility (`MemoVoicePanel.tsx`)**: When recording started via global shortcut while the main app was hidden, the floating `voice-indicator` window received the recording event but remained hidden (`visible: false` in `tauri.conf.json`). Added `getCurrentWindow().show()` when starting recording or entering processing/done states when `isOverlay` is true so the user always sees the live indicator and playback pill.
+2. **Push-to-Talk Race Condition**: If the user released `Cmd+Shift+M` before `getUserMedia` finished initializing, `trigger-voice-memo-release` ignored the release because `panelStateRef.current` was still `'idle'`. Removed early returns from release handlers and added delay scheduling so quick taps reliably capture audio and stop recording cleanly.
+3. **Audio Playback CSP (`tauri.conf.json`)**: Updated Content Security Policy to include `media-src 'self' data: blob: file: https:;` and expanded `img-src`/`connect-src` so recorded audio pills can load and play without browser CSP blocks.
+
+**Files changed:** `src/components/MemoVoicePanel.tsx`, `src-tauri/tauri.conf.json`, `AUDIT_LOG.md`, `CHANGELOG.md`.
+
+---
+
+## 2026-07-01 (Voice Memo macOS Audio Permission, IPC Listener Stability & Default State Fix)
+**Change:** fix(memo): add `NSMicrophoneUsageDescription` in `Info.plist`, eliminate IPC listener re-registration race conditions using stable refs, ensure `memoEnabled` defaults to true, and require window focus before intercepting shortcuts
+
+**Details/Why:**
+1. **macOS Microphone Permission (`Info.plist`)**: Created `src-tauri/Info.plist` containing `NSMicrophoneUsageDescription` and configured `"infoPlist": "Info.plist"` in `tauri.conf.json`. Without this explicit plist description, macOS CoreAudio / TCC blocks WKWebView `getUserMedia` requests.
+2. **IPC Event Listener Stability & Race Conditions**: Replaced stateful `panelState` dependencies in `MemoVoicePanel.tsx` with stable `panelStateRef` and `isRecordingRequestedRef`. This prevents event listeners from unregistering and dropping `trigger-voice-memo-release` events over IPC when transitioning from idle to recording. Added explicit error rendering card when microphone access fails instead of silently returning to idle.
+3. **Default State & Window Focus Routing**: Updated `useSettingsStore` and added an auto-upgrade in `App.tsx` so voice memos are enabled by default (`memoEnabled: true`). Updated `shortcuts.rs` so that if `main_win` is unfocused or hidden while the user holds `Cmd+Shift+M`, recording routes to the bottom-left floating overlay window.
+
+**Files changed:** `src-tauri/Info.plist` [NEW], `src-tauri/tauri.conf.json`, `src-tauri/src/commands/shortcuts.rs`, `src/store/useSettingsStore.ts`, `src/App.tsx`, `src/components/MemoVoicePanel.tsx`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-07-01 (Voice Memo Push-to-Talk Press/Release Fix & Stop Button Removal)
+**Change:** fix(memo): resolve global shortcut push-to-talk press vs release events (`Cmd+Shift+M`), remove unnecessary stop button, prevent empty audio blobs on quick release, and add explicit error reporting for AI transcription
+
+**Details/Why:**
+1. **Push-to-Talk Press & Release Handling**: Updated global shortcut registration (`shortcuts.rs`) to emit distinct `trigger-voice-memo-press` on key press and `trigger-voice-memo-release` on key release. Updated `MemoVoicePanel.tsx` to ignore keyboard auto-repeats while recording and stop recording upon key release.
+2. **Stop Button Removal**: Removed the `■ Stop` button from the recording pillbox since push-to-talk recording automatically stops when releasing `Cmd+Shift+M`.
+3. **Audio Integrity & Error Reporting**: Added `stopRecordingSafe` to ensure at least 400ms of audio is captured on rapid key release, preventing 0-byte unplayable audio blobs. Updated `openai_transcribe` base URL logic and added explicit frontend error display if transcription or AI interpretation fails.
+
+**Files changed:** `src-tauri/src/commands/shortcuts.rs`, `src/components/MemoVoicePanel.tsx`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-07-01 (Voice Memo Plugin & Floating Indicator Overlay)
+**Change:** feat(memo): implement voice memo plugin support with hold-to-record global shortcut (`Cmd+Shift+M`), custom waveform pillbox player, floating background overlay indicator, and AI restructuring
+
+**Details/Why:**
+1. **Hold-to-Record & Global Shortcut**: Registered `Cmd+Shift+M` global shortcut. Added floating overlay window (`voice-indicator`) that appears in the bottom-left corner when PaperCache is hidden or unfocused, displaying real-time recording waveform and status.
+2. **Custom Audio Pillbox & Waveform Player**: Replaced standard mic icon and default `<audio>` element with a custom sleek pillbox featuring a play/pause button (`AudioWaveformPill`) and dynamic CSS waveform animation (`.memo-waveform-visual`, `.memo-wave-bar`).
+3. **Transcription & AI Processing**: Captured speech is transcribed and rendered in gray slanted italic text (`.memo-gray-slanted`), then processed via user's configured AI model with PaperCache slash command context to produce structured action items inserted directly into the active note.
+
+**Files changed:** `src-tauri/Cargo.toml`, `src-tauri/tauri.conf.json`, `src-tauri/src/commands/ai.rs`, `src-tauri/src/commands/fs.rs`, `src-tauri/src/commands/shortcuts.rs`, `src-tauri/src/lib.rs`, `src/App.css`, `src/App.tsx`, `src/main.tsx`, `src/components/MemoVoicePanel.tsx` [NEW], `src/components/Editor.tsx`, `src/hooks/useGlobalHotkey.ts`, `src/Settings.tsx`, `src/store/useSettingsStore.ts`, `src/api.ts`, `src/types.d.ts`, `src/setupTests.ts`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
 **Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
 

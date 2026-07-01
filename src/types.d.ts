@@ -57,6 +57,7 @@ export interface ElectronAPI {
   onUpdateStatus: (callback: (payload: UpdateStatusPayload) => void) => () => void
   saveAsset: (dataBase64: string, ext: string, folder: string) => Promise<string>
   readAsset: (assetPath: string) => Promise<string>
+  openaiTranscribe: (filePath: string, baseUrl: string) => Promise<string>
 }
 
 declare global {

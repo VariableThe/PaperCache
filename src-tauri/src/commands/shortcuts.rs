@@ -15,7 +15,43 @@ impl Default for GlobalShortcutState {
     }
 }
 
-fn handle_shortcut_trigger(app: &AppHandle, action: &str) {
+fn handle_shortcut_trigger(app: &AppHandle, action: &str, state: ShortcutState) {
+    if action == "voice-memo" {
+        let event_name = if state == ShortcutState::Pressed {
+            "trigger-voice-memo-press"
+        } else {
+            "trigger-voice-memo-release"
+        };
+        let mut handled = false;
+        if let Some(main_win) = app.get_webview_window("main") {
+            if main_win.is_visible().unwrap_or(false) && main_win.is_focused().unwrap_or(false) {
+                let _ = main_win.emit(event_name, ());
+                handled = true;
+            }
+        }
+        if !handled {
+            if let Some(ind_win) = app.get_webview_window("voice-indicator") {
+                if state == ShortcutState::Pressed {
+                    if let Ok(Some(monitor)) = ind_win.current_monitor() {
+                        let size = monitor.size();
+                        let scale = monitor.scale_factor();
+                        let logical_height = size.height as f64 / scale;
+                        let x = 20.0;
+                        let y = logical_height - 350.0;
+                        let _ = ind_win.set_position(tauri::Position::Logical(tauri::LogicalPosition { x, y }));
+                    }
+                    let _ = ind_win.show();
+                }
+                let _ = ind_win.emit(event_name, ());
+            }
+        }
+        return;
+    }
+
+    if state != ShortcutState::Pressed {
+        return;
+    }
+
     if action == "new-note" {
         if let Some(window) = app.get_webview_window("main") {
             if !window.is_visible().unwrap_or(false) {
@@ -54,9 +90,7 @@ pub fn update_global_shortcut(
         let action_clone = action.clone();
         app.global_shortcut()
             .on_shortcut(shortcut, move |app, _shortcut, event| {
-                if event.state() == ShortcutState::Pressed {
-                    handle_shortcut_trigger(app, &action_clone);
-                }
+                handle_shortcut_trigger(app, &action_clone, event.state());
             })
             .map_err(|e| format!("Failed to register shortcut: {}", e))?;
     }
@@ -87,9 +121,7 @@ pub fn resume_shortcuts(app: AppHandle) -> Result<(), String> {
             let _ = app
                 .global_shortcut()
                 .on_shortcut(shortcut, move |app, _, event| {
-                    if event.state() == ShortcutState::Pressed {
-                        handle_shortcut_trigger(app, &action_clone);
-                    }
+                    handle_shortcut_trigger(app, &action_clone, event.state());
                 });
         }
     }

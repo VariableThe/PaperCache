@@ -14,16 +14,29 @@
     "macOSPrivateApi": true,
     "windows": [
       {
+        "label": "main",
         "title": "PaperCache",
         "width": 800,
         "height": 600,
         "decorations": false,
         "transparent": true,
         "shadow": true
+      },
+      {
+        "label": "voice-indicator",
+        "title": "Voice Memo",
+        "width": 420,
+        "height": 340,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "shadow": false
       }
     ],
     "security": {
-      "csp": "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';"
+      "csp": "default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: file: https:; media-src 'self' data: blob: file: https:; connect-src 'self' https: wss: data: blob: file:; font-src 'self' data: https:; object-src 'none'; base-uri 'none';"
     }
   },
   "bundle": {
@@ -37,7 +50,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["../notes/*"]
+    "resources": ["../notes/*"],
+    "macOS": {
+      "infoPlist": "Info.plist"
+    }
   },
   "plugins": {
     "updater": {

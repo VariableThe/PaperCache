@@ -1,15 +1,16 @@
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.tsx'
+import App, { VoiceIndicatorWindow } from './App.tsx'
 import Settings from './Settings.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 import { tauriApi } from './api'
 window.electronAPI = tauriApi
 
 // eslint-disable-next-line react-refresh/only-export-components
-function Root() {
+function MainRoot() {
   const [hash, setHash] = useState(window.location.hash)
   const [migrated, setMigrated] = useState(false)
 
@@ -67,6 +68,20 @@ function Root() {
       <ErrorBoundary>{hash === '#/settings' ? <Settings /> : <App />}</ErrorBoundary>
     </StrictMode>
   )
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+function Root() {
+  if (getCurrentWindow().label === 'voice-indicator') {
+    return (
+      <StrictMode>
+        <ErrorBoundary>
+          <VoiceIndicatorWindow />
+        </ErrorBoundary>
+      </StrictMode>
+    )
+  }
+  return <MainRoot />
 }
 
 createRoot(document.getElementById('root')!).render(<Root />)

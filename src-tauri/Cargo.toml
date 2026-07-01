@@ -18,7 +18,7 @@ tauri-plugin-updater = "2.0.0"
 tauri-plugin-global-shortcut = "2.0.0"
 tauri-plugin-dialog = "2.0.0"
 
-reqwest = { version = "0.11", features = ["json", "stream"] }
+reqwest = { version = "0.11", features = ["json", "stream", "multipart"] }
 tokio = { version = "1", features = ["full"] }
 keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
 serde = { version = "1", features = ["derive"] }

@@ -236,6 +236,13 @@ Type \`/\` in the editor for inline suggestions:
     if (window.electronAPI.updateGlobalShortcut) {
       window.electronAPI.updateGlobalShortcut('toggle', '', toggleShortcut)
     }
+    const voiceMemoShortcut = getShortcut(
+      SETTINGS_KEYS.SHORTCUT_VOICE_MEMO,
+      `${defaultMod}+Shift+M`
+    )
+    if (window.electronAPI.updateGlobalShortcut) {
+      window.electronAPI.updateGlobalShortcut('voice-memo', '', voiceMemoShortcut)
+    }
 
     // Listen for global new note shortcut
     let disposeNewNote: (() => void) | undefined

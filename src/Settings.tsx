@@ -10,6 +10,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   const [apiKey, setApiKey] = useState('')
   const [isApiKeySet, setIsApiKeySet] = useState(false)
   const [updateChecking, setUpdateChecking] = useState(false)
+  const [memoEnabled, setMemoEnabled] = useState(useSettingsStore.getState().memoEnabled)
 
   useEffect(() => {
     window.electronAPI.getApiKeyStatus().then((status) => {
@@ -138,6 +139,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
       symColor,
       aiColor,
       mathColor,
+      memoEnabled,
     })
 
     // Startup
@@ -433,6 +435,49 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           <div className="setting-group color-row">
             <label>AI Response Text</label>
             <input type="color" value={aiColor} onChange={(e) => setAiColor(e.target.value)} />
+          </div>
+        </section>
+
+        <section>
+          <h3>Plugins</h3>
+          <div
+            className="setting-group"
+            style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '6px' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%' }}>
+              <label style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <span
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600 }}
+                >
+                  <span>🎙</span> Memo — Voice Notes
+                </span>
+                <span style={{ fontSize: '11px', color: 'rgba(128,128,128,0.8)', fontWeight: 400 }}>
+                  Record voice, get a live transcript, and auto-convert speech into PaperCache
+                  commands
+                </span>
+              </label>
+              <input
+                id="settings-memo-toggle"
+                type="checkbox"
+                checked={memoEnabled}
+                onChange={(e) => setMemoEnabled(e.target.checked)}
+                style={{ width: 'auto', marginRight: 0, cursor: 'pointer' }}
+                aria-label="Enable Memo voice notes plugin"
+              />
+            </div>
+            {memoEnabled && (
+              <p
+                style={{
+                  fontSize: '11px',
+                  color: 'rgba(128,128,128,0.7)',
+                  margin: 0,
+                  padding: '4px 0 0',
+                }}
+              >
+                ⚠️ Requires an API key — Whisper is used for transcription and your configured model
+                interprets the result.
+              </p>
+            )}
           </div>
         </section>
 
