@@ -534,10 +534,9 @@ pub async fn save_asset(data_base64: String, ext: String, folder: String) -> Res
     let prefix = folder_name.trim_start_matches('.');
 
     // Generate unique filename with random suffix to avoid collisions
-    let random_suffix: u32 = {
-        use rand::Rng;
-        rand::thread_rng().gen()
-    };
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
+    let random_suffix: u32 = rng.gen();
     let filename = format!("{}_{}_{:08x}.{}", prefix, timestamp, random_suffix, clean_ext);
     let file_path = asset_dir.join(&filename);
 

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [v0.5.9] - 2026-07-01
+
+### Added
+- **Image Copy & Paste Support**: You can now copy any image and paste it directly into your notes. Pasted images are automatically saved locally in a hidden `.images` folder and rendered seamlessly inline as image cards.
+
+### Changed
+- **Consistent Glassmorphic Backgrounds**: Standardized background blur effects across modal overlays (Command+P Search and Command+T Timers menu) to ensure consistent visual aesthetics.
+- **Dynamic Typography in Timers**: Ensure the Timers menu respects custom font family selections made in App Settings.
+
+### Fixed
+- **Linux Compatibility (`glibc` version mismatch)**: Pinned GitHub Actions Linux runner to `ubuntu-22.04` across CI and release workflows instead of `ubuntu-latest` (Ubuntu 24.04). This ensures built Linux binaries and AppImages link against `glibc 2.35` so they can run out-of-the-box on Ubuntu 22.04 LTS, Debian 12, and other distributions without throwing `version glibc 2.38 not found` errors.
+
+
 ## [v0.5.8] - 2026-06-29
 
 ### Added

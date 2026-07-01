@@ -2,6 +2,29 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
+**Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
+
+**Details/Why:**
+1. **Version Bump**: Bumped application version to 0.5.9 across `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`. Added release note `notes/New Features in v0.5.9.md`.
+2. **Image Support**: Implemented image paste handler in `src/lib/editor/extensions.ts` which captures pasted images, saves them to `.images` directory via Tauri `save_asset` IPC command, and inserts markdown `![image](path)`. Rendered inline via `ImageWidget` in CodeMirror (`src/lib/editor/widgets.ts`, `markdownPlugin.ts`).
+3. **UI Consistency**: Standardized background blur styling across search modal and timers menu (`TimersPage.tsx`, `KeybindsModal.tsx`, `App.css`). Ensured timers menu adheres to custom app typography.
+4. **Product Scope Separation**: Extracted voice memo audio recording and floating indicator features into a dedicated standalone repository at `~/Projects/Memo` per user instruction.
+
+**Files changed:** `package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`, `src/api.ts`, `src/types.d.ts`, `src/App.css`, `src/components/KeybindsModal.tsx`, `src/components/TimersPage.tsx`, `src/lib/editor/extensions.ts`, `src/lib/editor/markdownPlugin.ts`, `src/lib/editor/widgets.ts`, `src/lib/editor/widgets.test.ts`, `src-tauri/src/lib.rs`, `src-tauri/src/commands/fs.rs`, `notes/New Features in v0.5.9.md` [NEW], `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-06-30 (Linux Runner Pinning for `glibc` Compatibility Fix)
+**Change:** fix(ci): pin Linux workflow runner to `ubuntu-22.04` across CI and release workflows to ensure `glibc 2.35` compatibility
+
+**Details/Why:**
+1. **Linux `glibc` Compatibility**: GitHub Actions updated `ubuntu-latest` to Ubuntu 24.04 LTS, which links built Tauri binaries and AppImages against `glibc 2.38`. When users on Ubuntu 22.04 LTS or Debian 12 attempted to launch the Linux AppImage or run the binary, the dynamic linker failed with `version glibc 2.38 not found`. Changed runner matrix from `ubuntu-latest` to `ubuntu-22.04` and updated conditional steps (`startsWith(matrix.os, 'ubuntu')`) so that compiled Linux artifacts target `glibc 2.35` and run seamlessly on Ubuntu 22.04 LTS and newer distros without requiring OS upgrades.
+
+**Files changed:** `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-06-29 (v0.5.8 Release: Custom Evaluator, Strict Mode, Dep Cleanup)
 **Change:** chore(release): bump version to 0.5.8; replace expr-eval with custom arithmetic evaluator; enable TypeScript strict mode; remove unused dependencies; fix any type in onEvent helper; add coverage thresholds
 
