@@ -1,5 +1,12 @@
 import { ViewPlugin, Decoration, EditorView, ViewUpdate } from '@codemirror/view'
 import { ColorWidget } from './widgets'
+import { isCursorInMatch, safeDecorationSet } from './pluginUtils'
+
+const reColor = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g
+const reDate = /\b(?:\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4})\b/g
+const reTime = /\b\d{2}:\d{2}(?::\d{2})?\b/g
+const reCurrency = /[$€£¥₹]\s*\d+(?:,\d{3})*(?:\.\d{1,2})?/g
+const reTag = /![a-zA-Z0-9_-]+/g
 
 export const formatPlugin = ViewPlugin.fromClass(
   class {
@@ -18,22 +25,17 @@ export const formatPlugin = ViewPlugin.fromClass(
     buildDeco(view: EditorView) {
       const decos: { from: number; to: number; deco: Decoration }[] = []
       const selectionRanges = view.state.selection.ranges
-      const isCursorInMatch = (start: number, end: number) => {
-        return selectionRanges.some(
-          (r: { from: number; to: number }) => r.from <= end && r.to >= start
-        )
-      }
 
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to)
         let match
 
         // Color Formats
-        const reColor = /#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b/g
+        reColor.lastIndex = 0
         while ((match = reColor.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -52,11 +54,11 @@ export const formatPlugin = ViewPlugin.fromClass(
         }
 
         // Date Formats (YYYY-MM-DD or DD-MM-YYYY)
-        const reDate = /\b(?:\d{4}-\d{2}-\d{2}|\d{2}-\d{2}-\d{4})\b/g
+        reDate.lastIndex = 0
         while ((match = reDate.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -72,11 +74,11 @@ export const formatPlugin = ViewPlugin.fromClass(
         }
 
         // Time Formats (HH:MM or HH:MM:SS)
-        const reTime = /\b\d{2}:\d{2}(?::\d{2})?\b/g
+        reTime.lastIndex = 0
         while ((match = reTime.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -92,11 +94,11 @@ export const formatPlugin = ViewPlugin.fromClass(
         }
 
         // Currency Formats
-        const reCurrency = /[$€£¥₹]\s*\d+(?:,\d{3})*(?:\.\d{1,2})?/g
+        reCurrency.lastIndex = 0
         while ((match = reCurrency.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -112,11 +114,11 @@ export const formatPlugin = ViewPlugin.fromClass(
         }
 
         // Tags (!tag)
-        const reTag = /![a-zA-Z0-9_-]+/g
+        reTag.lastIndex = 0
         while ((match = reTag.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -132,14 +134,7 @@ export const formatPlugin = ViewPlugin.fromClass(
         }
       }
 
-      try {
-        const ranges = decos.map((d) => d.deco.range(d.from, d.to))
-        return Decoration.set(ranges, true)
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('formatPlugin error:', e)
-        return Decoration.none
-      }
+      return safeDecorationSet(decos, 'formatPlugin')
     }
   },
   { decorations: (v) => v.decorations }

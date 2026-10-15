@@ -2,10 +2,38 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-07-02 (Comprehensive Code Quality, Performance, Accessibility & Bug Remediation)
+
+**Change:** fix: resolve broken default theme, duplicate AI settings sources of truth, macOS focus bounce, code duplication across editor plugins/note deletion, regex recompilation performance, graph cache unbounded growth, and UI accessibility issues
+
+**Details/Why:**
+
+1. **Bug Fixes**:
+   - Fixed invisible theme rendering on fresh install by changing default theme to `paper-light` and adding missing CSS classes and keyframes in `index.css`.
+   - Unified AI settings management via `useAIStore` as the single source of truth, removing direct raw `localStorage` writes from `Settings.tsx`.
+2. **Code Quality & Architecture**:
+   - Created centralized utilities: `pluginUtils.ts` (safe decoration updates, cursor matching), `noteUtils.ts` (confirmation dialogs and note deletion), and `logger.ts` (structured logging).
+   - Refactored `checkboxPlugin.ts`, `codeBlockPlugin.ts`, `formatPlugin.ts`, `markdownPlugin.ts`, `taskPlugin.ts`, `variablePlugin.ts`, and `plugins.ts` to eliminate copy-pasted `try/catch` and cursor matching logic.
+   - Refactored `NoteSearch.tsx` and `extensions.ts` to use `confirmAndDeleteNotes`.
+   - Replaced raw `console.error` logs across `src/` with structured `logger.error`.
+3. **Performance**:
+   - Hoisted regex literals across all editor plugins to prevent regex object re-creation on every keystroke.
+   - Implemented cache pruning and LRU eviction in `GraphView.tsx` (`nodePositionsCache`) to cap memory consumption.
+4. **Accessibility**:
+   - Added `role="dialog"`, `aria-modal="true"`, and `aria-label` attributes across modal containers (`App.tsx`, `TimersPage.tsx`, `RemindersPage.tsx`).
+   - Added descriptive `aria-label` attributes to icon-only buttons (`GraphView.tsx`, `TimersPage.tsx`, `RemindersPage.tsx`).
+   - Eliminated in-place array sorting mutation in `RemindersPage.tsx`.
+
+**Files changed:** `src/index.css`, `src/store/useSettingsStore.ts`, `src/store/useAIStore.ts`, `src/Settings.tsx`, `src-tauri/src/lib.rs`, `src/lib/logger.ts` [NEW], `src/lib/editor/pluginUtils.ts` [NEW], `src/lib/noteUtils.ts` [NEW], `src/lib/editor/checkboxPlugin.ts`, `src/lib/editor/codeBlockPlugin.ts`, `src/lib/editor/formatPlugin.ts`, `src/lib/editor/markdownPlugin.ts`, `src/lib/editor/taskPlugin.ts`, `src/lib/editor/variablePlugin.ts`, `src/lib/editor/plugins.ts`, `src/components/NoteSearch.tsx`, `src/lib/editor/extensions.ts`, `src/GraphView.tsx`, `src/App.tsx`, `src/components/TimersPage.tsx`, `src/components/RemindersPage.tsx`, `src/api.ts`, `src/components/ErrorBoundary.tsx`, `src/components/NoteTitleBar.tsx`, `src/hooks/useReminders.ts`, `src/hooks/useVariables.ts`, `src/lib/editor/VariableScope.ts`, `src/main.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
+
 **Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
 
 **Details/Why:**
+
 1. **Version Bump**: Bumped application version to 0.5.9 across `package.json`, `src-tauri/tauri.conf.json`, and `src-tauri/Cargo.toml`. Added release note `notes/New Features in v0.5.9.md`.
 2. **Image Support**: Implemented image paste handler in `src/lib/editor/extensions.ts` which captures pasted images, saves them to `.images` directory via Tauri `save_asset` IPC command, and inserts markdown `![image](path)`. Rendered inline via `ImageWidget` in CodeMirror (`src/lib/editor/widgets.ts`, `markdownPlugin.ts`).
 3. **UI Consistency**: Standardized background blur styling across search modal and timers menu (`TimersPage.tsx`, `KeybindsModal.tsx`, `App.css`). Ensured timers menu adheres to custom app typography.
@@ -16,9 +44,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-30 (Linux Runner Pinning for `glibc` Compatibility Fix)
+
 **Change:** fix(ci): pin Linux workflow runner to `ubuntu-22.04` across CI and release workflows to ensure `glibc 2.35` compatibility
 
 **Details/Why:**
+
 1. **Linux `glibc` Compatibility**: GitHub Actions updated `ubuntu-latest` to Ubuntu 24.04 LTS, which links built Tauri binaries and AppImages against `glibc 2.38`. When users on Ubuntu 22.04 LTS or Debian 12 attempted to launch the Linux AppImage or run the binary, the dynamic linker failed with `version glibc 2.38 not found`. Changed runner matrix from `ubuntu-latest` to `ubuntu-22.04` and updated conditional steps (`startsWith(matrix.os, 'ubuntu')`) so that compiled Linux artifacts target `glibc 2.35` and run seamlessly on Ubuntu 22.04 LTS and newer distros without requiring OS upgrades.
 
 **Files changed:** `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `CHANGELOG.md`, `AUDIT_LOG.md`.
@@ -26,9 +56,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-29 (v0.5.8 Release: Custom Evaluator, Strict Mode, Dep Cleanup)
+
 **Change:** chore(release): bump version to 0.5.8; replace expr-eval with custom arithmetic evaluator; enable TypeScript strict mode; remove unused dependencies; fix any type in onEvent helper; add coverage thresholds
 
 **Details/Why:**
+
 1. **Version Bump**: Bumped version to 0.5.8 across `package.json`, `package-lock.json`, `Cargo.toml`, `Cargo.lock`, and `tauri.conf.json`. Added release note `notes/New Features in v0.5.8.md`.
 2. **expr-eval Replacement**: `expr-eval` had a high-severity prototype pollution vulnerability (GHSA-8gw3-rxh4-v6jx, GHSA-jc85-fpwf-qm7x) with no fix available. Replaced with `src/lib/evaluator.ts` — a ~150-line recursive descent parser supporting `+`, `-`, `*`, `/`, `%`, `^`, parentheses, unary operators, and variable scope resolution. Includes 26 unit tests covering arithmetic, precedence, variables, and error cases. Removed `expr-eval` from `package.json`.
 3. **TypeScript Strict Mode**: Enabled `"strict": true` in `tsconfig.app.json`. Codebase was already compatible — zero new type errors.
@@ -41,9 +73,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-29 (CI Signing Key Sanitization Fix)
+
 **Change:** fix(ci): sanitize `TAURI_SIGNING_PRIVATE_KEY` before `tauri build` to strip trailing terminal prompt artifacts (`%`) or URL encoding
 
 **Details/Why:**
+
 1. **Secret Key Sanitization**: When copying private keys from macOS Zsh terminals without trailing newlines (`cat ~/.tauri/papercache.key`), Zsh appends an inverted `%` symbol at EOF. When pasted into GitHub repository secrets, this trailing `%` causes base64 decoding errors (`Invalid symbol 37, offset 348`). Added a pre-build workflow step in `.github/workflows/release.yml` to automatically strip trailing `%` symbols and decode URL encoding before running `tauri-action`.
 
 **Files changed:** `.github/workflows/release.yml`, `CHANGELOG.md`, `AUDIT_LOG.md`.
@@ -51,9 +85,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-29 (v0.5.7 Release: Auto-Update Overhaul, On-Demand Update Checks, and Build Fixes)
+
 **Change:** chore(release): bump version to 0.5.7; feat(updater): overhaul auto-update flow with real-time UI feedback ("Checking…"), toast notification with "Restart Now" button, and manifest configuration; fix(api): update `onEvent` listener helper to forward payloads to callbacks fixing TS2345 strict build error
 
 **Details/Why:**
+
 1. **Version Bump**: Bumped application version to 0.5.7 across `package.json`, `package-lock.json`, `Cargo.toml`, `Cargo.lock`, `tauri.conf.json`, `Settings.tsx`, and `setupTests.ts`, and added release note `notes/New Features in v0.5.7.md`.
 2. **Auto-Update & On-Demand Checks**: Overhauled Tauri updater mechanism to emit status events and prompt user for controlled restart when updates are ready. Added "Check for Updates" visual feedback in Settings.
 3. **Build Fix**: Fixed TS2345 error where `onEvent` discarded payload parameters, ensuring strict `tsc -b` compilation succeeds cleanly.
@@ -63,9 +99,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-29 (Security & Repo Hygiene Audit Fixes)
+
 **Change:** chore(ci): pin action references in `release.yml` to SHA digests; chore(repo): untrack build binary `PaperCache_aarch64.app.tar.gz` and update `.gitignore`; fix(rust): replace `#[allow(dead_code)]` with `#[cfg(not(target_os = "macos"))]` on debounce constants
 
 **Details/Why:**
+
 1. **Supply-Chain Security**: Pinned `actions/checkout`, `actions/setup-node`, `dtolnay/rust-toolchain`, and `tauri-apps/tauri-action` in `.github/workflows/release.yml` to immutable SHA digests to prevent action tag hijacking on write-privileged workflows.
 2. **Repository Hygiene**: Removed 7MB untracked build archive `PaperCache_aarch64.app.tar.gz` and added `*.app.tar.gz`, `dist/`, and `coverage/` patterns to `.gitignore`.
 3. **Rust Config Gating**: Gated `FOCUS_LOSS_DEBOUNCE_MS` in `src-tauri/src/lib.rs` with `#[cfg(not(target_os = "macos"))]` so it is cleanly excluded on macOS where it is not used, eliminating dead-code warnings without blanket suppressions.
@@ -73,10 +111,13 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 **Files changed:** `.github/workflows/release.yml`, `.gitignore`, `src-tauri/src/lib.rs`, `CHANGELOG.md`, `AUDIT_LOG.md`.
 
 ---
+
 ## 2026-06-29 (Code Quality Refactor & Test Suite)
+
 **Change:** refactor(shortcuts): extract helper to deduplicate global shortcut trigger logic; fix(timers): manage completion timeout lifecycle in store; test(editor): add comprehensive unit test suite for `VariableScope`
 
 **Details/Why:**
+
 1. **Shortcut Deduplication**: Extracted `handle_shortcut_trigger` helper in `src-tauri/src/commands/shortcuts.rs` to replace 16 lines of identical duplicate code across `update_global_shortcut` and `resume_shortcuts`.
 2. **Managed Timeout Lifecycle**: Replaced unmanaged 5-second `setTimeout` in `useTimerStore.ts` with a tracked Map of active timeouts aligned to `COMPLETED_TIMER_CLEANUP_MS` (10s), ensuring timers cleaned up early or removed explicitly do not trigger orphan state updates.
 3. **VariableScope Unit Tests**: Created `src/lib/editor/VariableScope.test.ts` testing global/note scope merging and debounced regex mathematical expression parsing (`/var x = ...`) using fake timers.
@@ -86,9 +127,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-29 (Security & Auto-Update Overhaul)
+
 **Change:** fix(security): pin third-party GitHub Action references in release workflow to immutable SHA-1 digests, disable persisted checkout credentials, and pass stable toolchain selector; fix(updater): overhaul Tauri auto-update mechanism to emit granular status events and require user-triggered restarts
 
 **Details/Why:**
+
 1. **Supply-Chain & CI Security**: Pinned `actions/checkout`, `dtolnay/rust-toolchain`, `actions/setup-node`, and `tauri-apps/tauri-action` to immutable SHA-1 commit hashes in `.github/workflows/release.yml`. Disabled persisted checkout credentials (`persist-credentials: false`) so read-only clones do not store auth tokens. Explicitly passed `toolchain: stable` to `rust-toolchain` action since pinned SHA references do not inherit default branch selectors.
 2. **Updater Artifact Configuration**: Enabled `"createUpdaterArtifacts": "v1Compatible"` in `tauri.conf.json` and added `updaterJsonPreferNsis: true` to `release.yml` to ensure manifest generation (`latest.json`) functions properly for both v1 and v2 clients.
 3. **Event-Driven Update Flow**: Refactored `check_for_updates` in `system.rs` to emit `update-status` events (`checking`, `available`, `downloading`, `ready`, `error`, `up-to-date`) instead of executing opaque silent updates. Added a user-triggered `restart_app` command.
@@ -100,9 +143,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-29 (Code Quality Cleanup)
+
 **Change:** refactor: code quality cleanup — dead code, boilerplate, types, constants, AI comments; fix: address PR review findings — listener leak, type contracts, dead ref, stale guard, cfg scope, shortcut loop, timer constant
 
 **Details/Why:**
+
 1. **Dead Code Removal**: Removed `resumeTimer` no-op stub from useTimerStore; removed `onSwipeGesture` (ignored callback) from api.ts and types; removed `themePreset`/`setThemePreset` from useAppStore (duplicated in useSettingsStore, all consumers used the latter); removed `prevNotesRef` from useReminders (assigned but never read).
 2. **Boilerplate Consolidation**: `useAppStore.ts` — consolidated 9 setters into `booleanSetter`/`simpleSetter` helpers; `api.ts` — extracted 5×8-line identical listener patterns into shared `onEvent` helper; `KeybindsModal.tsx` — replaced 9 parallel `useState`/`getShortcut` calls with data-driven config array; `useSettingsStore.ts` — removed 11 redundant individual setters (use `setSettings` instead).
 3. **Rust Fixes**: Fixed clippy `needless_borrows_for_generic_args` in `notifications.rs`; added doc-commented `[lints.rust] unexpected_cfgs = "allow"` for objc crate macro warnings.
@@ -116,9 +161,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-28 (v0.5.6 Release: Keybinds Modal, Shortcut Mappings, Timer Auto-Delete, and Graph Link Refinement)
+
 **Change:** chore(release): bump version to 0.5.6; feat(shortcuts): add dedicated keybinds settings modal and update global hotkeys (`Cmd+R` for tasks, `Cmd+T` for timers); feat(timers): auto-delete expired timers after 5 seconds; feat(graph): support standard markdown links and wikilinks
 
 **Details/Why:**
+
 1. **Version Bump**: Bumped application version to 0.5.6 across `package.json`, `Cargo.toml`, `tauri.conf.json`, and added release notes file `New Features in v0.5.6.md`.
 2. **Keybinds Settings Panel**: Created `ShortcutInput.tsx` as a shared component and `KeybindsModal.tsx` as a dedicated settings panel for remapping shortcuts, accessible via Settings. Added new storage keys in `settingsKeys.ts` and updated `useGlobalHotkey.ts` to dynamically match keyboard events against customizable shortcut settings. Refined UI layout so keycaps are centered horizontally and the container/buttons match the main Settings window.
 3. **Keybind Updates**: Updated default shortcuts so `Cmd+R` opens Tasks/Reminders and `Cmd+T` opens the countdown Timers panel, aligning with user navigation habits. Preserved cleared shortcuts via `getShortcut` helper distinguishing `null` from `''`. Dynamically generated the shortcuts reference note (`Cmd+/`) and added recording guards in `useGlobalHotkey.ts` and `ShortcutInput.tsx`. Persisted toggle shortcut changes in `Settings.tsx`.
@@ -130,9 +177,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-27 (API Key Persistence & Graph View Fixes)
+
 **Change:** fix(ai): fix API key saving/clearing logic and macOS keychain credential updating; fix(graph): prevent `fg.graphData` crashes when opening or closing Graph View
 
 **Details/Why:**
+
 1. **API Key Persistence**: When opening Settings, `apiKey` state initialized to empty string `''`. Clicking "Save Settings" after changing other preferences unintentionally took the `else` branch (`await window.electronAPI.setApiKey('')`), erasing existing keys from the OS keyring. Updated `saveSettings` to only save when `apiKey.trim()` is non-empty, and only clear when `!isApiKeySet`. Added an explicit "Clear Key" UI button next to the password input field when an API key is set.
 2. **Keyring Credential Updating**: In `src-tauri/src/commands/keychain.rs`, calling `set_password` on an existing keychain entry could fail on macOS. Updated `set_api_key` to delete any existing credential before setting the new password.
 3. **Graph View Crash Fixes**: Merged comprehensive defensive checks (`typeof fg.method === 'function'`) and ref caching into `GraphView.tsx` to prevent `fg.graphData is not a function` crashes when unmounting or toggling Graph View via `Cmd+G`.
@@ -142,9 +191,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-27 (Graph View Bugfix)
+
 **Change:** fix(graph): prevent `e.graphData is not a function` crash on unmount and replace setInterval
 
 **Details/Why:**
+
 1. When navigating to a note from Graph View (`onNodeClick`), the unmounting sequence destroyed internal `react-force-graph-3d` methods on `fgRef.current` before `GraphView`'s effect cleanup ran. Calling `fg.graphData()` threw a TypeError (`e.graphData is not a function`). Added defensive `typeof fg.graphData === 'function'` verification before invocation and introduced `graphDataRef` as a safe fallback cache for node positions.
 2. Replaced the active `setInterval` loop in `GraphView.tsx` with a chained `setTimeout` pattern to comply with project timer guidelines (`No setInterval in renderer or main process`).
 
@@ -153,9 +204,11 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-27 (v0.5.5 Release & Smart Onboarding)
+
 **Change:** chore(release): bump version to 0.5.5; implement smart onboarding and release notes routing
 
 **Details/Why:**
+
 1. Bumped application version from 0.5.3 to 0.5.5 across `package.json`, `src-tauri/Cargo.toml`, and `src-tauri/tauri.conf.json`.
 2. Implemented smart onboarding routing: detected brand new installations vs existing user upgrades in `run_onboarding` (`fs.rs`). For new installs, release notes (`New Features in v0.5.5.md`) are suppressed and cleaned up so users open directly into a clean `Welcome.md`. For upgrading users, the release note is copied and opened automatically on startup via `checkVersion` (`App.tsx`).
 3. Consolidated settings UI by removing duplicate "Check for updates" option from System settings, keeping it inside the new About menu.
@@ -167,6 +220,7 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 ---
 
 ## 2026-06-27 (Lockfile Sync)
+
 **Change:** build(deps): move @emnapi WASM fallbacks to devDependencies for deterministic lockfile resolution across OS targets
 
 **Details/Why:**
@@ -177,10 +231,12 @@ When `@emnapi/core` and `@emnapi/runtime` were listed under `optionalDependencie
 ---
 
 ## 2026-06-27 (Update)
+
 **Change:** fix: resolve TypeScript strict build errors in GraphView and setupTests
 
 **Details/Why:**
 Resolved production build (`npm run tauri build` / `tsc -b`) failures caused by strict typing mismatches:
+
 1. **`ForceGraphMethods` Typing (`GraphView.tsx`)** — Configured `ForceGraphInstance` to extend `ForceGraphMethods` imported from `react-force-graph-3d`, enabling type-safe calls to `d3Force`, `strength`, `d3ReheatSimulation`, and `cameraPosition`.
 2. **Ref Variance (`GraphView.tsx`)** — Casted `<ForceGraph3D>` ref prop to resolve strict `MutableRefObject` variance mismatch.
 3. **Mock Contract (`setupTests.ts`)** — Added missing `onUpdateReady` mock implementation to `window.electronAPI` in unit test environment setup.
@@ -190,6 +246,7 @@ Resolved production build (`npm run tauri build` / `tsc -b`) failures caused by 
 ---
 
 ## 2026-06-27
+
 **Change:** fix: address audit findings — ESC logic, IPC types, update UX, mutex safety, ESLint (PR #68)
 
 **Details/Why:**
@@ -209,6 +266,7 @@ Full-pass code-quality audit surfaced several correctness bugs and robustness is
 ---
 
 ## 2026-06-25
+
 **Change:** fix: switch autostart from LaunchAgent to LoginItem (AppleScript)
 
 **Details/Why:**
@@ -259,6 +317,7 @@ Two bug fixes for window state and settings reliability:
 ---
 
 ## 2026-06-24 - (Uncommitted)
+
 **Change:** feat: graph view rebuilt, Windows focus-loss fix, Cmd+/ shortcuts, welcome revamp (v0.5.3)
 
 **Details/Why:**
@@ -287,6 +346,7 @@ Major graph view overhaul and cross-platform fixes:
 ---
 
 ## 2026-06-24 - Native Notifications, Timers, DSL Engine, WebGL Graph
+
 **Change:** feat: native notifications, timers, DSL regex engine, WebGL graph with folder attraction
 
 **Details/Why:**
@@ -305,6 +365,7 @@ Implemented four major platform features as requested:
 ---
 
 ## 2026-06-24 - (Uncommitted)
+
 **Change:** feat: add slash command autosuggest, auto-open new features note, and tag action menu for v0.5.2
 
 **Details/Why:**
@@ -313,6 +374,7 @@ Implemented a ghost-text inline autosuggest widget for slash commands to reduce 
 ---
 
 ## 2026-06-23 - (Uncommitted)
+
 **Change:** fix: shift all keybinds to Alt and disable window auto-hide
 
 **Details/Why:**
@@ -321,6 +383,7 @@ Changed default keybindings across the application from `Ctrl/Cmd` to `Alt` to p
 ---
 
 ## 2026-06-23 - a250dce8a
+
 **Change:** feat: enable auto-updates on startup and add manual check button
 
 **Details/Why:**
@@ -328,6 +391,7 @@ Changed default keybindings across the application from `Ctrl/Cmd` to `Alt` to p
 ---
 
 ## 2026-06-23 - 1b84df0ff
+
 **Change:** fix: remaining 5 issues from user plan
 
 **Details/Why:**
@@ -335,6 +399,7 @@ Changed default keybindings across the application from `Ctrl/Cmd` to `Alt` to p
 ---
 
 ## 2026-06-23 - 5ca20d975
+
 **Change:** style: run prettier on App.css
 
 **Details/Why:**
@@ -342,6 +407,7 @@ Changed default keybindings across the application from `Ctrl/Cmd` to `Alt` to p
 ---
 
 ## 2026-06-23 - b38393e16
+
 **Change:** fix: final v0.5.0-beta fixes and pipeline repair
 
 **Details/Why:**
@@ -349,20 +415,25 @@ Changed default keybindings across the application from `Ctrl/Cmd` to `Alt` to p
 ---
 
 ## 2026-06-23 - c10990f77
+
 **Change:** Merge pull request #43 from VariableThe/feature/tauri-migration
 
 **Details/Why:**
 fix: ignore legacy Electron window-state.json files when loading notes
+
 ---
 
 ## 2026-06-23 - d88a88329
+
 **Change:** Merge pull request #42 from VariableThe/VariableThe-patch-4
 
 **Details/Why:**
 Update README.md
+
 ---
 
 ## 2026-06-23 - cdaf5c781
+
 **Change:** Update README.md
 
 **Details/Why:**
@@ -370,6 +441,7 @@ Update README.md
 ---
 
 ## 2026-06-23 - 4a166b557
+
 **Change:** fix: ignore legacy Electron window-state.json files when loading notes
 
 **Details/Why:**
@@ -377,13 +449,16 @@ Update README.md
 ---
 
 ## 2026-06-23 - f89eb6d10
+
 **Change:** Merge pull request #41 from VariableThe/feature/tauri-migration
 
 **Details/Why:**
 chore: ignore window-state.json
+
 ---
 
 ## 2026-06-23 - 5608178b2
+
 **Change:** chore: ignore window-state.json
 
 **Details/Why:**
@@ -391,13 +466,16 @@ chore: ignore window-state.json
 ---
 
 ## 2026-06-23 - 666ede05c
+
 **Change:** Merge pull request #40 from VariableThe/feature/tauri-migration
 
 **Details/Why:**
 chore: documentation and CI/CD fixes
+
 ---
 
 ## 2026-06-23 - f8f51faf9
+
 **Change:** ci: fix Homebrew Cask auto-update logic for Tauri artifact names
 
 **Details/Why:**
@@ -405,6 +483,7 @@ chore: documentation and CI/CD fixes
 ---
 
 ## 2026-06-23 - 2b941c48e
+
 **Change:** docs: remove zoom shortcuts from README
 
 **Details/Why:**
@@ -412,13 +491,16 @@ chore: documentation and CI/CD fixes
 ---
 
 ## 2026-06-23 - f72b83a8b
+
 **Change:** Merge pull request #39 from VariableThe/feature/tauri-migration
 
 **Details/Why:**
 v0.5.0-beta: Tauri Migration
+
 ---
 
 ## 2026-06-23 - 35be397a1
+
 **Change:** docs: add TAURI_MIGRATION.md
 
 **Details/Why:**
@@ -426,6 +508,7 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-23 - ffc9f57a0
+
 **Change:** v0.5.0-beta: Tauri Migration
 
 **Details/Why:**
@@ -433,6 +516,7 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-23 - be279b7c1
+
 **Change:** fix: shortcut input styling, prevent Escape from closing app, prevent window drift
 
 **Details/Why:**
@@ -440,6 +524,7 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-23 - 666e275e8
+
 **Change:** fix: enable macOSPrivateApi to fix black corners on transparent windows
 
 **Details/Why:**
@@ -447,6 +532,7 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-23 - f30b20ed3
+
 **Change:** fix: remove invalid Objective-C selector call causing panic on launch
 
 **Details/Why:**
@@ -454,6 +540,7 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-23 - 8db08c783
+
 **Change:** fix: resolve window cascading and shadow glitches, update performance audit
 
 **Details/Why:**
@@ -461,13 +548,16 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-23 - 587fd7369
+
 **Change:** Merge pull request #38 from VariableThe/fix/ts-build-errors
 
 **Details/Why:**
 fix: remove beta from version to fix Windows MSI bundle error
+
 ---
 
 ## 2026-06-23 - ecb47f5cd
+
 **Change:** fix: remove beta from version to fix Windows MSI bundle error
 
 **Details/Why:**
@@ -475,13 +565,16 @@ fix: remove beta from version to fix Windows MSI bundle error
 ---
 
 ## 2026-06-23 - 39f484c62
+
 **Change:** Merge pull request #37 from VariableThe/fix/ts-build-errors
 
 **Details/Why:**
 fix: resolve TS build errors related to expr-eval and vitest
+
 ---
 
 ## 2026-06-23 - af869e4b7
+
 **Change:** fix: resolve TS build errors related to expr-eval and vitest
 
 **Details/Why:**
@@ -489,13 +582,16 @@ fix: resolve TS build errors related to expr-eval and vitest
 ---
 
 ## 2026-06-23 - 7e85f4ce3
+
 **Change:** Merge pull request #36 from VariableThe/fix/github-action-tauri
 
 **Details/Why:**
 Fix/GitHub action tauri
+
 ---
 
 ## 2026-06-23 - abeb0577f
+
 **Change:** fix: add tauri script for github action
 
 **Details/Why:**
@@ -503,6 +599,7 @@ Fix/GitHub action tauri
 ---
 
 ## 2026-06-22 - c8218a284
+
 **Change:** fix: resolve eslint and clippy warnings
 
 **Details/Why:**
@@ -510,6 +607,7 @@ Fix/GitHub action tauri
 ---
 
 ## 2026-06-22 - f1364165e
+
 **Change:** chore: clean up orphaned files and co-locate tests
 
 **Details/Why:**
@@ -517,6 +615,7 @@ Fix/GitHub action tauri
 ---
 
 ## 2026-06-22 - 09ad105b5
+
 **Change:** docs: fix stale Electron references in features.md and CONTRIBUTING.md
 
 **Details/Why:**
@@ -524,13 +623,16 @@ Fix/GitHub action tauri
 ---
 
 ## 2026-06-22 - a5922693c
+
 **Change:** Merge pull request #35 from VariableThe/chore/tauri-docs-v0.5.0
 
 **Details/Why:**
 v0.5.0-beta: Tauri Migration
+
 ---
 
 ## 2026-06-22 - de4350a24
+
 **Change:** fix: regenerate package-lock.json from scratch for CI sync
 
 **Details/Why:**
@@ -538,6 +640,7 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-22 - 5397fb511
+
 **Change:** fix: sync package-lock.json for CI
 
 **Details/Why:**
@@ -545,6 +648,7 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-22 - 16f4b76ba
+
 **Change:** v0.5.0-beta: Tauri Migration
 
 **Details/Why:**
@@ -552,13 +656,16 @@ v0.5.0-beta: Tauri Migration
 ---
 
 ## 2026-06-22 - b9755fd9f
+
 **Change:** Merge pull request #34 from VariableThe/fix/package-lock-sync
 
 **Details/Why:**
 fix: synchronize package-lock for cross-platform builds
+
 ---
 
 ## 2026-06-22 - 821b3e2ed
+
 **Change:** fix: synchronize package-lock for cross-platform builds
 
 **Details/Why:**
@@ -566,13 +673,16 @@ fix: synchronize package-lock for cross-platform builds
 ---
 
 ## 2026-06-22 - 3e506c424
+
 **Change:** Merge pull request #33 from VariableThe/chore/clean-dependencies
 
 **Details/Why:**
 chore: clean up orphaned and unused dev dependencies
+
 ---
 
 ## 2026-06-22 - 2c767c3c2
+
 **Change:** chore: clean up orphaned and unused dev dependencies
 
 **Details/Why:**
@@ -580,13 +690,16 @@ chore: clean up orphaned and unused dev dependencies
 ---
 
 ## 2026-06-22 - c0977f663
+
 **Change:** Merge pull request #32 from VariableThe/docs-gatekeeper-warning
 
 **Details/Why:**
 Docs: Improve macOS Gatekeeper warning
+
 ---
 
 ## 2026-06-22 - 333f8f2ed
+
 **Change:** docs: improve macos gatekeeper warning
 
 **Details/Why:**
@@ -594,13 +707,16 @@ Docs: Improve macOS Gatekeeper warning
 ---
 
 ## 2026-06-22 - 93be431df
+
 **Change:** Merge pull request #31 from VariableThe/update-screenshots
 
 **Details/Why:**
 Docs: Update README with new feature showcase screenshots
+
 ---
 
 ## 2026-06-22 - e0673321f
+
 **Change:** docs: update readme with new feature showcase screenshots
 
 **Details/Why:**
@@ -608,13 +724,16 @@ Docs: Update README with new feature showcase screenshots
 ---
 
 ## 2026-06-22 - b381cdb5d
+
 **Change:** Merge pull request #30 from VariableThe/fix-onboarding-update
 
 **Details/Why:**
 Fix: Force-update onboarding docs for existing users
+
 ---
 
 ## 2026-06-22 - 32a2a8734
+
 **Change:** fix: forcefully update markdown onboarding for existing users
 
 **Details/Why:**
@@ -622,13 +741,16 @@ Fix: Force-update onboarding docs for existing users
 ---
 
 ## 2026-06-22 - 6dfaeaece
+
 **Change:** Merge pull request #29 from VariableThe/chore-update-philosophy
 
 **Details/Why:**
 Docs: Ground the core philosophy and add Antinote origin story
+
 ---
 
 ## 2026-06-22 - 5f66af8d2
+
 **Change:** docs: ground philosophy and add antinote origin story
 
 **Details/Why:**
@@ -636,13 +758,16 @@ Docs: Ground the core philosophy and add Antinote origin story
 ---
 
 ## 2026-06-22 - 5260e4630
+
 **Change:** Merge pull request #28 from VariableThe/fix-onboarding-openrouter
 
 **Details/Why:**
 Docs: Add OpenRouter API key link to onboarding
+
 ---
 
 ## 2026-06-22 - fdaddb5c2
+
 **Change:** docs: add openrouter api key link to onboarding
 
 **Details/Why:**
@@ -650,13 +775,16 @@ Docs: Add OpenRouter API key link to onboarding
 ---
 
 ## 2026-06-22 - 078b47c26
+
 **Change:** Merge pull request #27 from VariableThe/VariableThe-patch-3
 
 **Details/Why:**
 Update PERFORMANCE_AUDIT.md
+
 ---
 
 ## 2026-06-22 - e4395c76b
+
 **Change:** Update PERFORMANCE_AUDIT.md
 
 **Details/Why:**
@@ -664,13 +792,16 @@ Update PERFORMANCE_AUDIT.md
 ---
 
 ## 2026-06-22 - eca60354f
+
 **Change:** Merge pull request #26 from VariableThe/VariableThe-patch-2
 
 **Details/Why:**
 Update OS version in performance audit documentation
+
 ---
 
 ## 2026-06-22 - 21228254f
+
 **Change:** Update OS version in performance audit documentation
 
 **Details/Why:**
@@ -678,13 +809,16 @@ Update OS version in performance audit documentation
 ---
 
 ## 2026-06-22 - fc3f0456b
+
 **Change:** Merge pull request #25 from VariableThe/VariableThe-patch-1
 
 **Details/Why:**
 Update PERFORMANCE_AUDIT.md
+
 ---
 
 ## 2026-06-22 - 01e468fc6
+
 **Change:** Update PERFORMANCE_AUDIT.md
 
 **Details/Why:**
@@ -692,13 +826,16 @@ Update PERFORMANCE_AUDIT.md
 ---
 
 ## 2026-06-22 - 235790b27
+
 **Change:** Merge pull request #24 from VariableThe/fix-release-sync-step
 
 **Details/Why:**
 CI: Remove redundant npm version sync step
+
 ---
 
 ## 2026-06-22 - 6b4a79e6e
+
 **Change:** ci: remove unnecessary npm version sync step
 
 **Details/Why:**
@@ -706,13 +843,16 @@ CI: Remove redundant npm version sync step
 ---
 
 ## 2026-06-22 - 8da45c35a
+
 **Change:** Merge pull request #23 from VariableThe/fix-release-workflow
 
 **Details/Why:**
 CI: Strictly sync release tags with package.json
+
 ---
 
 ## 2026-06-22 - 87184535f
+
 **Change:** ci: read release version strictly from package.json
 
 **Details/Why:**
@@ -720,13 +860,16 @@ CI: Strictly sync release tags with package.json
 ---
 
 ## 2026-06-22 - 716e5ae44
+
 **Change:** Merge pull request #22 from VariableThe/release-0.4.0
 
 **Details/Why:**
 Release v0.4.0
+
 ---
 
 ## 2026-06-22 - 8d5c23bfd
+
 **Change:** chore: regenerate package-lock.json to fix emnapi CI error
 
 **Details/Why:**
@@ -734,6 +877,7 @@ Release v0.4.0
 ---
 
 ## 2026-06-22 - b8652d603
+
 **Change:** chore: sync package-lock.json
 
 **Details/Why:**
@@ -741,6 +885,7 @@ Release v0.4.0
 ---
 
 ## 2026-06-22 - 036276ec8
+
 **Change:** chore: release v0.4.0 with updated docs and onboarding
 
 **Details/Why:**
@@ -748,13 +893,16 @@ Release v0.4.0
 ---
 
 ## 2026-06-22 - 1a4a4ad3c
+
 **Change:** Merge pull request #21 from VariableThe/update-security-md
 
 **Details/Why:**
 docs: simplify security policy
+
 ---
 
 ## 2026-06-22 - 0b7db023a
+
 **Change:** docs: simplify security policy
 
 **Details/Why:**
@@ -762,13 +910,16 @@ docs: simplify security policy
 ---
 
 ## 2026-06-22 - c576b17ac
+
 **Change:** Merge pull request #20 from VariableThe/add-llms-txt
 
 **Details/Why:**
 docs: add llms.txt for AI context
+
 ---
 
 ## 2026-06-22 - 6e1258bff
+
 **Change:** docs: add llms.txt for AI context
 
 **Details/Why:**
@@ -776,13 +927,16 @@ docs: add llms.txt for AI context
 ---
 
 ## 2026-06-22 - 67bbcd757
+
 **Change:** Merge pull request #19 from VariableThe/feat/shortcut-recorder
 
 **Details/Why:**
 feat: UI improvements and recording bug fixes
+
 ---
 
 ## 2026-06-22 - da51cfe31
+
 **Change:** ci: automate release on push to main
 
 **Details/Why:**
@@ -790,13 +944,16 @@ feat: UI improvements and recording bug fixes
 ---
 
 ## 2026-06-22 - a6ac8a560
+
 **Change:** Merge pull request #18 from VariableThe/feat/shortcut-recorder
 
 **Details/Why:**
 feat: interactive shortcut recorder in settings
+
 ---
 
 ## 2026-06-22 - 6dd614a2c
+
 **Change:** feat: render shortcut keys as squircles and pause global shortcuts while recording
 
 **Details/Why:**
@@ -804,6 +961,7 @@ feat: interactive shortcut recorder in settings
 ---
 
 ## 2026-06-22 - 9211ca184
+
 **Change:** feat: use symbols for shortcut display
 
 **Details/Why:**
@@ -811,6 +969,7 @@ feat: interactive shortcut recorder in settings
 ---
 
 ## 2026-06-22 - fe4be4635
+
 **Change:** feat: replace text inputs with interactive shortcut recorder in settings
 
 **Details/Why:**
@@ -818,13 +977,16 @@ feat: interactive shortcut recorder in settings
 ---
 
 ## 2026-06-22 - ca42baa1f
+
 **Change:** Merge pull request #17 from VariableThe/fix/internal-link-overwrite
 
 **Details/Why:**
 fix: prevent linked notes from being overwritten with old state
+
 ---
 
 ## 2026-06-22 - 2d3e14887
+
 **Change:** fix: completely remount CodeMirror on note change to prevent state overwrites
 
 **Details/Why:**
@@ -832,6 +994,7 @@ fix: prevent linked notes from being overwritten with old state
 ---
 
 ## 2026-06-21 - d808eb150
+
 **Change:** docs: add core philosophy
 
 **Details/Why:**
@@ -839,13 +1002,16 @@ fix: prevent linked notes from being overwritten with old state
 ---
 
 ## 2026-06-21 - b1883cc4b
+
 **Change:** Merge pull request #16 from VariableThe/feat/production-hardening
 
 **Details/Why:**
 chore: final cleanup and lint fixes
+
 ---
 
 ## 2026-06-21 - d280c6e06
+
 **Change:** docs: add ko-fi support link
 
 **Details/Why:**
@@ -853,6 +1019,7 @@ chore: final cleanup and lint fixes
 ---
 
 ## 2026-06-21 - 950ccff30
+
 **Change:** chore: final cleanup and lint fixes
 
 **Details/Why:**
@@ -860,13 +1027,16 @@ chore: final cleanup and lint fixes
 ---
 
 ## 2026-06-21 - 73535a6c9
+
 **Change:** Merge pull request #15 from VariableThe/feat/production-hardening
 
 **Details/Why:**
 feat: Production readiness & security hardening
+
 ---
 
 ## 2026-06-21 - a2f80e74b
+
 **Change:** fix: support closing Tasks and Graph view with Escape key
 
 **Details/Why:**
@@ -874,6 +1044,7 @@ feat: Production readiness & security hardening
 ---
 
 ## 2026-06-21 - 840eec732
+
 **Change:** ui: normalize fonts across the app according to settings and adjust weights
 
 **Details/Why:**
@@ -881,6 +1052,7 @@ feat: Production readiness & security hardening
 ---
 
 ## 2026-06-21 - 02b1c6660
+
 **Change:** ui: adjust Graph View font and hide node labels on zoom out
 
 **Details/Why:**
@@ -888,6 +1060,7 @@ feat: Production readiness & security hardening
 ---
 
 ## 2026-06-21 - 2e7655406
+
 **Change:** fix: import autoUpdater as CJS default export
 
 **Details/Why:**
@@ -895,6 +1068,7 @@ feat: Production readiness & security hardening
 ---
 
 ## 2026-06-21 - e300f4a93
+
 **Change:** chore: bump version to 0.2.10
 
 **Details/Why:**
@@ -902,6 +1076,7 @@ feat: Production readiness & security hardening
 ---
 
 ## 2026-06-21 - 74d96589f
+
 **Change:** 0.1.18
 
 **Details/Why:**
@@ -909,6 +1084,7 @@ feat: Production readiness & security hardening
 ---
 
 ## 2026-06-21 - 20cf69f10
+
 **Change:** chore: address PR review feedback and fix dev build
 
 **Details/Why:**
@@ -916,15 +1092,16 @@ feat: Production readiness & security hardening
 ---
 
 ## 2026-06-21 - e28566e9c
+
 **Change:** fix: apply CodeRabbit auto-fixes
 
 **Details/Why:**
 Fixed 5 file(s) based on 7 unresolved review comments.
 
-Co-authored-by: CodeRabbit <noreply@coderabbit.ai>
----
+## Co-authored-by: CodeRabbit <noreply@coderabbit.ai>
 
 ## 2026-06-21 - 1e7f47682
+
 **Change:** chore: Sync package-lock.json
 
 **Details/Why:**
@@ -932,6 +1109,7 @@ Co-authored-by: CodeRabbit <noreply@coderabbit.ai>
 ---
 
 ## 2026-06-21 - cf9770dda
+
 **Change:** feat: Production readiness & security hardening
 
 **Details/Why:**
@@ -939,13 +1117,16 @@ Co-authored-by: CodeRabbit <noreply@coderabbit.ai>
 ---
 
 ## 2026-06-21 - ecdf6781d
+
 **Change:** Merge pull request #14 from VariableThe/docs/update-demo-images
 
 **Details/Why:**
 docs: update README with new demo images
+
 ---
 
 ## 2026-06-21 - 75d828c6e
+
 **Change:** docs: update README with new demo images
 
 **Details/Why:**
@@ -953,13 +1134,16 @@ docs: update README with new demo images
 ---
 
 ## 2026-06-21 - 45f617909
+
 **Change:** Merge pull request #13 from VariableThe/fix-agent-rule-violations
 
 **Details/Why:**
 Fix agent rule violations
+
 ---
 
 ## 2026-06-21 - 8c43d0303
+
 **Change:** fix: resolve tasks toggle listener leak and rename menu button
 
 **Details/Why:**
@@ -967,22 +1151,25 @@ Fix agent rule violations
 ---
 
 ## 2026-06-20 - 375b5a7ed
+
 **Change:** fix: apply CodeRabbit auto-fixes
 
 **Details/Why:**
 Fixed 3 file(s) based on 2 unresolved review comments.
 
-Co-authored-by: CodeRabbit <noreply@coderabbit.ai>
----
+## Co-authored-by: CodeRabbit <noreply@coderabbit.ai>
 
 ## 2026-06-21 - 8d028e67e
+
 **Change:** Merge pull request #12 from VariableThe/fix-agent-rule-violations
 
 **Details/Why:**
 fix: resolve architecture rule violations from AGENTS.md
+
 ---
 
 ## 2026-06-21 - 369b454ed
+
 **Change:** fix: resolve architecture rule violations from AGENTS.md
 
 **Details/Why:**
@@ -990,13 +1177,16 @@ fix: resolve architecture rule violations from AGENTS.md
 ---
 
 ## 2026-06-20 - f2aed06f6
+
 **Change:** Merge pull request #11 from VariableThe/feature/component-refactor-and-math-fixes
 
 **Details/Why:**
 CI/CD Pipeline Refactoring and Test Type Fixes
+
 ---
 
 ## 2026-06-20 - b04e33035
+
 **Change:** Refactor release.yml to use matrix strategy, sync version, and auto-update homebrew tap
 
 **Details/Why:**
@@ -1004,13 +1194,16 @@ CI/CD Pipeline Refactoring and Test Type Fixes
 ---
 
 ## 2026-06-20 - a8d4f0f5a
+
 **Change:** Merge pull request #10 from VariableThe/feature/component-refactor-and-math-fixes
 
 **Details/Why:**
 Refactor App.tsx, fix MathEvaluator, and optimize bundles
+
 ---
 
 ## 2026-06-20 - 0e655854c
+
 **Change:** Fix mock view annotations in widgets.test.ts
 
 **Details/Why:**
@@ -1018,6 +1211,7 @@ Refactor App.tsx, fix MathEvaluator, and optimize bundles
 ---
 
 ## 2026-06-20 - 91e2eb1b8
+
 **Change:** Fix inline bugs and verify math evaluator stability
 
 **Details/Why:**
@@ -1025,6 +1219,7 @@ Refactor App.tsx, fix MathEvaluator, and optimize bundles
 ---
 
 ## 2026-06-20 - 408790d6f
+
 **Change:** Refactor App components, fix math logic, and fix build typescript errors
 
 **Details/Why:**
@@ -1032,6 +1227,7 @@ Refactor App.tsx, fix MathEvaluator, and optimize bundles
 ---
 
 ## 2026-06-20 - 1c30cf59a
+
 **Change:** Update LICENSE
 
 **Details/Why:**
@@ -1039,13 +1235,16 @@ Refactor App.tsx, fix MathEvaluator, and optimize bundles
 ---
 
 ## 2026-06-20 - ef84064e7
+
 **Change:** Merge pull request #9 from VariableThe/perf-optimizations
 
 **Details/Why:**
 perf: optimize mathjs lazy loading and debouncing
+
 ---
 
 ## 2026-06-20 - 9aee209e3
+
 **Change:** fix: resolve TS catch clause type and useVariables race condition
 
 **Details/Why:**
@@ -1053,6 +1252,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - b4b60d4dd
+
 **Change:** perf: optimize mathjs lazy loading and debouncing
 
 **Details/Why:**
@@ -1060,6 +1260,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - ebb422316
+
 **Change:** docs: add comprehensive project rules for agents
 
 **Details/Why:**
@@ -1067,6 +1268,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - 99a0aad69
+
 **Change:** chore: add agent rules to prevent direct pushes to main
 
 **Details/Why:**
@@ -1074,6 +1276,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - 6e5fb4cf0
+
 **Change:** feat: interactive hex color pills and DD-MM-YYYY date support
 
 **Details/Why:**
@@ -1081,6 +1284,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - d6d58ca2b
+
 **Change:** style: change default number highlighting color to pastel blue
 
 **Details/Why:**
@@ -1088,6 +1292,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - f33d06863
+
 **Change:** fix: memory leak in power IPC listeners
 
 **Details/Why:**
@@ -1095,6 +1300,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - 6b6d2d1aa
+
 **Change:** docs: link performance audit in README
 
 **Details/Why:**
@@ -1102,6 +1308,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - f801f04ae
+
 **Change:** Update performance audit status
 
 **Details/Why:**
@@ -1109,6 +1316,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - 3a329cadb
+
 **Change:** Fix performance and battery issues
 
 **Details/Why:**
@@ -1116,6 +1324,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - 4cecf985d
+
 **Change:** Merge branch 'fix/settings-tests'
 
 **Details/Why:**
@@ -1123,6 +1332,7 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - 21d9321ec
+
 **Change:** docs: refresh features list
 
 **Details/Why:**
@@ -1130,13 +1340,16 @@ perf: optimize mathjs lazy loading and debouncing
 ---
 
 ## 2026-06-20 - f64087625
+
 **Change:** Merge pull request #8 from VariableThe/fix/settings-tests
 
 **Details/Why:**
 test: fix broken settings tests
+
 ---
 
 ## 2026-06-20 - 7644dfd24
+
 **Change:** test: fix broken tests after UI and safe storage updates
 
 **Details/Why:**
@@ -1144,13 +1357,16 @@ test: fix broken settings tests
 ---
 
 ## 2026-06-20 - f51dff1b0
+
 **Change:** Merge pull request #7 from VariableThe/fix/openrouter-defaults-and-settings
 
 **Details/Why:**
 fix: updated openrouter defaults and settings window
+
 ---
 
 ## 2026-06-20 - f4be61061
+
 **Change:** fix: updated openrouter defaults and made settings window track main window bounds
 
 **Details/Why:**
@@ -1158,6 +1374,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - e90bccf1e
+
 **Change:** 0.1.17
 
 **Details/Why:**
@@ -1165,6 +1382,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 5cbe87b02
+
 **Change:** Add GH_TOKEN to package script
 
 **Details/Why:**
@@ -1172,6 +1390,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 2121cd375
+
 **Change:** 0.1.16
 
 **Details/Why:**
@@ -1179,6 +1398,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - c73f2eede
+
 **Change:** Fix final two TS errors
 
 **Details/Why:**
@@ -1186,6 +1406,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 9b085b431
+
 **Change:** 0.1.15
 
 **Details/Why:**
@@ -1193,6 +1414,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - d00d16399
+
 **Change:** Remove exactOptionalPropertyTypes
 
 **Details/Why:**
@@ -1200,6 +1422,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 1ee93519b
+
 **Change:** 0.1.14
 
 **Details/Why:**
@@ -1207,6 +1430,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 0c10d9836
+
 **Change:** 0.1.13
 
 **Details/Why:**
@@ -1214,6 +1438,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 7782afbff
+
 **Change:** Disable strict mode to fix build
 
 **Details/Why:**
@@ -1221,6 +1446,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 1ba8687a0
+
 **Change:** 0.1.12
 
 **Details/Why:**
@@ -1228,6 +1454,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 24c247e24
+
 **Change:** Change npm ci to npm install
 
 **Details/Why:**
@@ -1235,6 +1462,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 21053d058
+
 **Change:** 0.1.11
 
 **Details/Why:**
@@ -1242,6 +1470,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 290e1a5f6
+
 **Change:** Fix GH Actions node version and runner
 
 **Details/Why:**
@@ -1249,6 +1478,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - e8467aece
+
 **Change:** 0.1.10
 
 **Details/Why:**
@@ -1256,6 +1486,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 26422cf47
+
 **Change:** Update package-lock
 
 **Details/Why:**
@@ -1263,6 +1494,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 1b28deff8
+
 **Change:** 0.1.9
 
 **Details/Why:**
@@ -1270,6 +1502,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 2d46b7513
+
 **Change:** Refactor App.tsx, move to zustand, and update code quality (#6)
 
 **Details/Why:**
@@ -1277,6 +1510,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 0cd6242dd
+
 **Change:** 0.1.8
 
 **Details/Why:**
@@ -1284,6 +1518,7 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 955b8ea1a
+
 **Change:** 0.1.7
 
 **Details/Why:**
@@ -1291,13 +1526,16 @@ fix: updated openrouter defaults and settings window
 ---
 
 ## 2026-06-20 - 05a2010eb
+
 **Change:** Merge pull request #5 from VariableThe/feature/tasks
 
 **Details/Why:**
 feat: Add Tasks feature
+
 ---
 
 ## 2026-06-20 - e36a94c72
+
 **Change:** feat: Add Tasks feature, onboard docs, and updates
 
 **Details/Why:**
@@ -1305,13 +1543,16 @@ feat: Add Tasks feature
 ---
 
 ## 2026-06-15 - c0d1328e5
+
 **Change:** Merge pull request #4 from VariableThe/feature/currency-and-open-note
 
 **Details/Why:**
 feat: persist last open note and add currency pills
+
 ---
 
 ## 2026-06-15 - 65084de03
+
 **Change:** feat: persist last open note and add currency pills
 
 **Details/Why:**
@@ -1319,13 +1560,16 @@ feat: persist last open note and add currency pills
 ---
 
 ## 2026-06-13 - e0524dff5
+
 **Change:** Merge pull request #3 from VariableThe/feature/checkbox
 
 **Details/Why:**
 Feature/checkbox
+
 ---
 
 ## 2026-06-13 - 20c31c489
+
 **Change:** style: fix prettier formatting issues
 
 **Details/Why:**
@@ -1333,6 +1577,7 @@ Feature/checkbox
 ---
 
 ## 2026-06-13 - 28fe0eb6d
+
 **Change:** fix: add author field for linux deb build
 
 **Details/Why:**
@@ -1340,6 +1585,7 @@ Feature/checkbox
 ---
 
 ## 2026-06-13 - e0f2d4a5c
+
 **Change:** feat: add interactive checkbox feature
 
 **Details/Why:**
@@ -1347,13 +1593,16 @@ Feature/checkbox
 ---
 
 ## 2026-06-08 - 205494cdf
+
 **Change:** Merge pull request #2 from blackfang007/add-windows-ci
 
 **Details/Why:**
 Add Windows CI testing
+
 ---
 
 ## 2026-06-07 - 2439b4490
+
 **Change:** Apply Prettier formatting
 
 **Details/Why:**
@@ -1361,6 +1610,7 @@ Add Windows CI testing
 ---
 
 ## 2026-06-07 - 29ab65d25
+
 **Change:** Fix workflow formatting
 
 **Details/Why:**
@@ -1368,13 +1618,16 @@ Add Windows CI testing
 ---
 
 ## 2026-06-07 - 17a1f3754
+
 **Change:** Merge pull request #1 from blackfang007/fix-windows-line-endings
 
 **Details/Why:**
 Add .gitattributes for consistent line endings across platforms
+
 ---
 
 ## 2026-06-05 - a5dc15ec7
+
 **Change:** Add Windows CI testing
 
 **Details/Why:**
@@ -1382,6 +1635,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-05 - 6dfaed51e
+
 **Change:** Add .gitattributes for consistent line endings
 
 **Details/Why:**
@@ -1389,6 +1643,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-02 - 58c70415e
+
 **Change:** Add empty line before horizontal rule demo and bump to 0.1.5
 
 **Details/Why:**
@@ -1396,6 +1651,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-02 - 69acb2415
+
 **Change:** Add horizontal rule demo and update copy button text in intro notes
 
 **Details/Why:**
@@ -1403,6 +1659,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-02 - 6262b4f51
+
 **Change:** Fix Prettier errors in CSS
 
 **Details/Why:**
@@ -1410,6 +1667,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-02 - 1bea6a335
+
 **Change:** Fix ESLint and Prettier errors
 
 **Details/Why:**
@@ -1417,6 +1675,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-02 - 80f03f8e2
+
 **Change:** Bump version to 0.1.3
 
 **Details/Why:**
@@ -1424,6 +1683,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-02 - a19d034ef
+
 **Change:** Fix --- rendering and update commands
 
 **Details/Why:**
@@ -1431,6 +1691,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-06-01 - e7e3f2679
+
 **Change:** feat: shortcuts and hr support
 
 **Details/Why:**
@@ -1438,6 +1699,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 86f0fd727
+
 **Change:** chore: bump version to v0.1.1
 
 **Details/Why:**
@@ -1445,6 +1707,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 775dfc378
+
 **Change:** fix: run prettier on markdown files to fix CI
 
 **Details/Why:**
@@ -1452,6 +1715,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 997d87551
+
 **Change:** fix: use new logo files for menu bar tray icon and clean up old ones
 
 **Details/Why:**
@@ -1459,6 +1723,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 308669a44
+
 **Change:** docs: rename screenshots, update README layout and add features doc
 
 **Details/Why:**
@@ -1466,6 +1731,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - d84628d6b
+
 **Change:** style: fix prettier formatting errors
 
 **Details/Why:**
@@ -1473,6 +1739,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - e85b37c91
+
 **Change:** chore: resize icon to 512x512 for electron-builder
 
 **Details/Why:**
@@ -1480,6 +1747,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 4b9813f10
+
 **Change:** 0.1.0
 
 **Details/Why:**
@@ -1487,6 +1755,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - ad9a895db
+
 **Change:** feat: add format and color recognition, tag support, and new logos
 
 **Details/Why:**
@@ -1494,6 +1763,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - bfe6db4cb
+
 **Change:** fix: use npm install instead of npm ci in github actions to avoid cross-platform lockfile mismatches
 
 **Details/Why:**
@@ -1501,6 +1771,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 8ca13f0c1
+
 **Change:** fix: update Node.js version in CI and sync lockfile
 
 **Details/Why:**
@@ -1508,6 +1779,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - bbc42a3d0
+
 **Change:** fix: vite config typescript errors
 
 **Details/Why:**
@@ -1515,6 +1787,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 35bc61bea
+
 **Change:** style: run prettier to fix formatting for CI
 
 **Details/Why:**
@@ -1522,6 +1795,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 952804642
+
 **Change:** fix: relax strict ESLint rules to unblock CI
 
 **Details/Why:**
@@ -1529,6 +1803,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 77509f754
+
 **Change:** build: add support for Linux builds (AppImage and deb)
 
 **Details/Why:**
@@ -1536,6 +1811,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 53cc97759
+
 **Change:** chore: implement tests, formatters, and address feedback
 
 **Details/Why:**
@@ -1543,6 +1819,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - a59a0fc4b
+
 **Change:** Bump version to 0.0.1
 
 **Details/Why:**
@@ -1550,6 +1827,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 1c0442269
+
 **Change:** Enhance default tutorial notes with explicit examples and code snippets explanation
 
 **Details/Why:**
@@ -1557,6 +1835,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 50e884dfe
+
 **Change:** Add launch at startup setting
 
 **Details/Why:**
@@ -1564,6 +1843,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - b8ef7e0d2
+
 **Change:** Auto-hide on blur and ignore dialogs
 
 **Details/Why:**
@@ -1571,6 +1851,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 2afa3a306
+
 **Change:** Permanently render window across all workspaces to fully prevent jumping
 
 **Details/Why:**
@@ -1578,6 +1859,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 12f683101
+
 **Change:** Fix window positioning across monitors and prevent space jumping
 
 **Details/Why:**
@@ -1585,6 +1867,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - d50451293
+
 **Change:** Fix export dialog import and stop window centering on focus
 
 **Details/Why:**
@@ -1592,6 +1875,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - abc7ee851
+
 **Change:** Update default toggle shortcut and improve active workspace pulling
 
 **Details/Why:**
@@ -1599,6 +1883,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 27b34ddf5
+
 **Change:** Add toggle shortcut setting and fix window spawning on active workspace
 
 **Details/Why:**
@@ -1606,6 +1891,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 19ec34f3a
+
 **Change:** Rename antipaper to papercache
 
 **Details/Why:**
@@ -1613,6 +1899,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 0f104dd90
+
 **Change:** updating readme
 
 **Details/Why:**
@@ -1620,6 +1907,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 28cbe7161
+
 **Change:** Update install instructions
 
 **Details/Why:**
@@ -1627,6 +1915,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - f4ff65571
+
 **Change:** Add MIT License
 
 **Details/Why:**
@@ -1634,6 +1923,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - ef1abfe3a
+
 **Change:** Update README.md
 
 **Details/Why:**
@@ -1641,6 +1931,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - eeb97b067
+
 **Change:** Configure mac package build and update icon
 
 **Details/Why:**
@@ -1648,6 +1939,7 @@ Add .gitattributes for consistent line endings across platforms
 ---
 
 ## 2026-05-31 - 07093fd44
+
 **Change:** Initial commit of PaperCache
 
 **Details/Why:**

@@ -4,6 +4,7 @@ import { useAppStore, type Note } from '../store/useAppStore'
 import { SETTINGS_KEYS } from '../lib/settingsKeys'
 import { parseAllTasks } from '../lib/taskUtils'
 import type { ReminderPayload } from '../types'
+import { logger } from '../lib/logger'
 
 let scheduleToken = 0
 
@@ -47,8 +48,7 @@ export function useReminders() {
     window.electronAPI
       .scheduleReminders(pending)
       .then(() => {})
-      // eslint-disable-next-line no-console
-      .catch((e) => console.error('Failed to schedule reminders', e))
+      .catch((e) => logger.error('Failed to schedule reminders', e))
   }, [notes])
 
   useEffect(() => {

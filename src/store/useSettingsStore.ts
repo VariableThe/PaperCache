@@ -24,7 +24,7 @@ export interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      themePreset: 'grid-light',
+      themePreset: 'paper-light',
       fontFamily: "'JetBrains Mono', monospace",
       showRulings: true,
       bgType: 'color',

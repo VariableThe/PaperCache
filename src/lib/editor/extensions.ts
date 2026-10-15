@@ -5,13 +5,14 @@ import { search } from '@codemirror/search'
 import { markdown } from '@codemirror/lang-markdown'
 import { syntaxHighlighting } from '@codemirror/language'
 import { insertTab, indentLess } from '@codemirror/commands'
-import { confirm } from '@tauri-apps/plugin-dialog'
+import { confirmAndDeleteNotes } from '../noteUtils'
 
 import { mdHighlighting } from './matchers'
 import { numberPlugin, symbolPlugin, aiPlugin, mathPlugin, decomposedPlugins } from './plugins'
 import { ghostTextPlugin, acceptGhostTextCommand } from './inlineSuggestion'
 import { useAIStore } from '../../store/useAIStore'
-import { useAppStore, type Note } from '../../store/useAppStore'
+import { useAppStore } from '../../store/useAppStore'
+import { logger } from '../logger'
 
 export function useEditorExtensions() {
   const { apiBaseUrl, apiModel, aiSystemPrompt } = useAIStore()
@@ -21,25 +22,7 @@ export function useEditorExtensions() {
     const state = useAppStore.getState()
     const note = state.notes[state.currentNoteIndex]
     if (note) {
-      if (note.id.startsWith('commands/')) {
-        alert('Files in the commands folder cannot be deleted.')
-        return true
-      }
-      const doDelete = async () => {
-        await window.electronAPI.setDialogOpen(true)
-        const confirmed = await confirm('Delete this note?', {
-          title: 'PaperCache',
-          kind: 'warning',
-        })
-        await window.electronAPI.setDialogOpen(false)
-        if (confirmed) {
-          window.electronAPI.deleteNote(note.id)
-          state.setNotes((prev: Note[]) => prev.filter((n: Note) => n.id !== note.id))
-          if (state.currentNoteIndex >= state.notes.length - 1)
-            state.setCurrentNoteIndex(Math.max(0, state.notes.length - 2))
-        }
-      }
-      doDelete()
+      confirmAndDeleteNotes(note.id)
     }
     return true
   }
@@ -301,8 +284,7 @@ export function useEditorExtensions() {
                         selection: { anchor: from + insertText.length },
                       })
                     } catch (err) {
-                      // eslint-disable-next-line no-console
-                      console.error('Failed to save image asset', err)
+                      logger.error('Failed to save image asset', err)
                       // Replace placeholder with error message
                       view.dispatch({
                         changes: {

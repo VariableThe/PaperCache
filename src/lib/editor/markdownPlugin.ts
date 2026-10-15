@@ -2,6 +2,25 @@ import { ViewPlugin, Decoration, EditorView, ViewUpdate, WidgetType } from '@cod
 import type { SyntaxNode } from '@lezer/common'
 import { syntaxTree } from '@codemirror/language'
 import { ContextWidget, ImageWidget } from './widgets'
+import { isCursorInMatch, safeDecorationSet } from './pluginUtils'
+
+const reImage = /!\[(.*?)\]\((.*?)\)/g
+const reHighlight = /==(.*?)==/g
+const reList = /^(\s*)\*\s+/gm
+const reHeading = /^#{1,6}\s+/gm
+const reLink = /\[(.*?)\]\((.*?)\)/g
+const reCtx = /^\/(ctx|context)\b/gm
+
+class HrWidget extends WidgetType {
+  eq() {
+    return true
+  }
+  toDOM() {
+    const hr = document.createElement('hr')
+    hr.className = 'cm-hr'
+    return hr
+  }
+}
 
 export const markdownPlugin = ViewPlugin.fromClass(
   class {
@@ -20,12 +39,6 @@ export const markdownPlugin = ViewPlugin.fromClass(
     buildDeco(view: EditorView) {
       const decos: { from: number; to: number; deco: Decoration }[] = []
       const selectionRanges = view.state.selection.ranges
-      const isCursorInMatch = (start: number, end: number) => {
-        return selectionRanges.some(
-          (r: { from: number; to: number }) => r.from <= end && r.to >= start
-        )
-      }
-
       const linkRanges: { from: number; to: number }[] = []
 
       for (const { from, to } of view.visibleRanges) {
@@ -33,7 +46,7 @@ export const markdownPlugin = ViewPlugin.fromClass(
         let match
 
         // Image / Audio Embeds (![alt](path))
-        const reImage = /!\[(.*?)\]\((.*?)\)/g
+        reImage.lastIndex = 0
         while ((match = reImage.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
@@ -42,7 +55,7 @@ export const markdownPlugin = ViewPlugin.fromClass(
           const altText = match[1]!
           const assetPath = match[2]!.trim()
 
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -54,12 +67,12 @@ export const markdownPlugin = ViewPlugin.fromClass(
         }
 
         // ==Highlight==
-        const reHighlight = /==(.*?)==/g
+        reHighlight.lastIndex = 0
         while ((match = reHighlight.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
           if (start + 2 <= end - 2) {
-            if (!isCursorInMatch(start, end)) {
+            if (!isCursorInMatch(selectionRanges, start, end)) {
               decos.push({ from: start, to: start + 2, deco: Decoration.replace({}) })
               decos.push({ from: end - 2, to: end, deco: Decoration.replace({}) })
             }
@@ -72,27 +85,27 @@ export const markdownPlugin = ViewPlugin.fromClass(
         }
 
         // Lists
-        const reList = /^(\s*)\*\s+/gm
+        reList.lastIndex = 0
         while ((match = reList.exec(text)) !== null) {
           const start = from + match.index + match[1]!.length
           const end = start + 1
-          if (!isCursorInMatch(start, end + 1)) {
+          if (!isCursorInMatch(selectionRanges, start, end + 1)) {
             decos.push({ from: start, to: end, deco: Decoration.replace({}) })
           }
         }
 
         // Headings
-        const reHeading = /^#{1,6}\s+/gm
+        reHeading.lastIndex = 0
         while ((match = reHeading.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({ from: start, to: end, deco: Decoration.replace({}) })
           }
         }
 
         // Links
-        const reLink = /\[(.*?)\]\((.*?)\)/g
+        reLink.lastIndex = 0
         while ((match = reLink.exec(text)) !== null) {
           const start = from + match.index
           if (start > 0 && view.state.doc.sliceString(start - 1, start) === '!') {
@@ -116,7 +129,7 @@ export const markdownPlugin = ViewPlugin.fromClass(
             linkPath = linkPath.substring(4).trim()
           }
 
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({ from: start, to: textStart, deco: Decoration.replace({}) })
             decos.push({ from: urlStart, to: urlEnd, deco: Decoration.replace({}) })
           }
@@ -143,11 +156,11 @@ export const markdownPlugin = ViewPlugin.fromClass(
         }
 
         // Context Command (/ctx, /context)
-        const reCtx = /^\/(ctx|context)\b/gm
+        reCtx.lastIndex = 0
         while ((match = reCtx.exec(text)) !== null) {
           const start = from + match.index
           const end = start + match[0].length
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -171,7 +184,7 @@ export const markdownPlugin = ViewPlugin.fromClass(
             if (parent) {
               const start = parent.from
               const end = parent.to
-              if (!isCursorInMatch(start, end)) {
+              if (!isCursorInMatch(selectionRanges, start, end)) {
                 decos.push({ from: node.from, to: node.to, deco: Decoration.replace({}) })
               }
             }
@@ -180,21 +193,12 @@ export const markdownPlugin = ViewPlugin.fromClass(
           if (node.type.name === 'HorizontalRule') {
             const start = node.from
             const end = node.to
-            if (!isCursorInMatch(start, end)) {
+            if (!isCursorInMatch(selectionRanges, start, end)) {
               decos.push({
                 from: start,
                 to: end,
                 deco: Decoration.replace({
-                  widget: new (class extends WidgetType {
-                    eq() {
-                      return true
-                    }
-                    toDOM() {
-                      const hr = document.createElement('hr')
-                      hr.className = 'cm-hr'
-                      return hr
-                    }
-                  })(),
+                  widget: new HrWidget(),
                 }),
               })
             }
@@ -202,14 +206,7 @@ export const markdownPlugin = ViewPlugin.fromClass(
         },
       })
 
-      try {
-        const ranges = decos.map((d) => d.deco.range(d.from, d.to))
-        return Decoration.set(ranges, true)
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('markdownPlugin error:', e)
-        return Decoration.none
-      }
+      return safeDecorationSet(decos, 'markdownPlugin')
     }
   },
   { decorations: (v) => v.decorations }

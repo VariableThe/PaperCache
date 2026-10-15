@@ -1,12 +1,10 @@
 import { useAppStore, type Note } from '../store/useAppStore'
 import { getFolderColor } from '../utils'
-import { confirm } from '@tauri-apps/plugin-dialog'
+import { confirmAndDeleteNotes } from '../lib/noteUtils'
 import { useState } from 'react'
 
 export function NoteSearch() {
   const notes = useAppStore((state) => state.notes)
-  const setNotes = useAppStore((state) => state.setNotes)
-  const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
   const setCurrentNoteIndex = useAppStore((state) => state.setCurrentNoteIndex)
   const showNoteSearch = useAppStore((state) => state.showNoteSearch)
   const setShowNoteSearch = useAppStore((state) => state.setShowNoteSearch)
@@ -80,31 +78,7 @@ export function NoteSearch() {
               if (!tag) return
               const matchNotes = notes.filter(tagMatch(tag))
               if (tagActionMenuIndex === 0) {
-                const doDelete = async () => {
-                  const notesToDelete = matchNotes
-                  await window.electronAPI.setDialogOpen(true)
-                  const confirmed = await confirm(
-                    `Delete ${notesToDelete.length} notes containing tag ${tag}?`,
-                    { title: 'PaperCache', kind: 'warning' }
-                  )
-                  await window.electronAPI.setDialogOpen(false)
-                  if (confirmed) {
-                    for (const n of notesToDelete) {
-                      if (!n.id.startsWith('commands/')) {
-                        await window.electronAPI.deleteNote(n.id)
-                      }
-                    }
-                    setNotes((prev) =>
-                      prev.filter(
-                        (n) =>
-                          !notesToDelete.some(
-                            (del) => del.id === n.id && !del.id.startsWith('commands/')
-                          )
-                      )
-                    )
-                  }
-                }
-                doDelete()
+                confirmAndDeleteNotes(matchNotes.map((n) => n.id))
               } else if (tagActionMenuIndex === 1) {
                 const doExport = async () => {
                   const notesToExport = matchNotes
@@ -143,30 +117,10 @@ export function NoteSearch() {
                   setShowNoteActionMenu(false)
                   return
                 }
-                const doDelete = async () => {
-                  await window.electronAPI.setDialogOpen(true)
-                  const confirmed = await confirm('Delete this note?', {
-                    title: 'PaperCache',
-                    kind: 'warning',
-                  })
-                  await window.electronAPI.setDialogOpen(false)
-                  if (confirmed) {
-                    window.electronAPI.deleteNote(selNote.id).then((success) => {
-                      if (success) {
-                        setNotes((prev) => prev.filter((note) => note.id !== selNote.id))
-                        const selIdx = notes.findIndex((n) => n.id === selNote.id)
-                        const newIdx =
-                          currentNoteIndex >= selIdx && currentNoteIndex > 0
-                            ? currentNoteIndex - 1
-                            : currentNoteIndex
-                        setCurrentNoteIndex(newIdx)
-                        setShowNoteSearch(false)
-                        setShowNoteActionMenu(false)
-                      }
-                    })
-                  }
-                }
-                doDelete()
+                confirmAndDeleteNotes(selNote.id, () => {
+                  setShowNoteSearch(false)
+                  setShowNoteActionMenu(false)
+                })
               } else if (actionMenuIndex === 1) {
                 const blob = new Blob([selNote.content], { type: 'text/markdown' })
                 const url = URL.createObjectURL(blob)
@@ -262,30 +216,7 @@ export function NoteSearch() {
                 setActiveTag(null)
                 if (!tag) return
                 const notesToDelete = notes.filter(tagMatch(tag))
-                await window.electronAPI.setDialogOpen(true)
-                const confirmed = await confirm(
-                  `Delete ${notesToDelete.length} notes containing tag ${tag}?`,
-                  { title: 'PaperCache', kind: 'warning' }
-                )
-                await window.electronAPI.setDialogOpen(false)
-                if (confirmed) {
-                  for (const n of notesToDelete) {
-                    if (!n.id.startsWith('commands/')) {
-                      await window.electronAPI.deleteNote(n.id)
-                    }
-                  }
-                  setNotes((prev) =>
-                    prev.filter(
-                      (n) =>
-                        !notesToDelete.some(
-                          (del) => del.id === n.id && !del.id.startsWith('commands/')
-                        )
-                    )
-                  )
-                  if (notesToDelete.some((n) => n.id === notes[currentNoteIndex]?.id)) {
-                    setCurrentNoteIndex(0)
-                  }
-                }
+                confirmAndDeleteNotes(notesToDelete.map((n) => n.id))
               }}
             >
               Delete All
@@ -424,30 +355,10 @@ export function NoteSearch() {
                           setShowNoteActionMenu(false)
                           return
                         }
-                        const doDelete = async () => {
-                          await window.electronAPI.setDialogOpen(true)
-                          const confirmed = await confirm('Delete this note?', {
-                            title: 'PaperCache',
-                            kind: 'warning',
-                          })
-                          await window.electronAPI.setDialogOpen(false)
-                          if (confirmed) {
-                            window.electronAPI.deleteNote(n.id).then((success) => {
-                              if (success) {
-                                setNotes((prev) => prev.filter((note) => note.id !== n.id))
-                                const selIdx = notes.findIndex((note) => note.id === n.id)
-                                const newIdx =
-                                  currentNoteIndex >= selIdx && currentNoteIndex > 0
-                                    ? currentNoteIndex - 1
-                                    : currentNoteIndex
-                                setCurrentNoteIndex(newIdx)
-                                setShowNoteSearch(false)
-                                setShowNoteActionMenu(false)
-                              }
-                            })
-                          }
-                        }
-                        doDelete()
+                        confirmAndDeleteNotes(n.id, () => {
+                          setShowNoteSearch(false)
+                          setShowNoteActionMenu(false)
+                        })
                       }}
                     >
                       Delete

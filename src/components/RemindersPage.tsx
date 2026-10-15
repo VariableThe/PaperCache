@@ -57,7 +57,7 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
   })
 
   // Sort: Overdue first, then soonest, then no target
-  reminders.sort((a, b) => {
+  const sortedReminders = [...reminders].sort((a, b) => {
     if (a.targetMs && b.targetMs) return a.targetMs - b.targetMs
     if (a.targetMs) return -1
     if (b.targetMs) return 1
@@ -95,6 +95,9 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Tasks"
       style={{
         position: 'absolute',
         top: 0,
@@ -122,6 +125,7 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
         <h2 style={{ margin: 0, fontWeight: 700, color: textColor }}>Tasks</h2>
         <button
           onClick={onClose}
+          aria-label="Close Tasks"
           style={{
             background: 'none',
             border: 'none',
@@ -190,7 +194,7 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
               margin: '0 auto',
             }}
           >
-            {reminders.map((rem, idx) => {
+            {sortedReminders.map((rem, idx) => {
               const isOverdue = !rem.done && rem.targetMs && rem.targetMs < now
               const isImminent =
                 !rem.done &&
@@ -225,6 +229,8 @@ export const RemindersPage: React.FC<RemindersPageProps> = ({
                   }}
                 >
                   <span
+                    role="button"
+                    aria-label={rem.done ? 'Mark task incomplete' : 'Mark task complete'}
                     onClick={(e) => {
                       e.stopPropagation() // Prevent navigation
                       const from = rem.matchIndex

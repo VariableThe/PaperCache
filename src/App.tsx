@@ -243,6 +243,9 @@ function App() {
 
       {showSettingsModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Settings Modal"
           onClick={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',
@@ -262,6 +265,9 @@ function App() {
 
       {showKeybindsModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Keybinds Modal"
           onClick={(e) => e.stopPropagation()}
           style={{
             position: 'fixed',

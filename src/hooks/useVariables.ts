@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
 import { useVariableStore } from '../store/useVariableStore'
 import { evaluate } from '../lib/evaluator'
+import { logger } from '../lib/logger'
 
 export function useVariables() {
   const notes = useAppStore((state) => state.notes)
@@ -21,8 +22,7 @@ export function useVariables() {
           try {
             globals[name] = evaluate(varMatch[2]!, globals)
           } catch (e) {
-            // eslint-disable-next-line no-console
-            console.error(`useVariables evaluation error for ${name}:`, e)
+            logger.error(`useVariables evaluation error for ${name}:`, e)
             globals[name] = varMatch[2]!.trim()
           }
         }

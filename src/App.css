@@ -541,6 +541,23 @@ body {
   background-attachment: local;
 }
 
+.grid-light {
+  --bg-color: #ffffff;
+  --text-color: #2c2c2c;
+  --header-height: 32px;
+  --cm-padding: 8px 32px;
+  --line-height: 20px;
+  --font-size: 14px;
+}
+
+.show-rulings.grid-light .cm-scroller {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-attachment: local;
+}
+
 .blueprint {
   --bg-color: #0b458c;
   --text-color: #ffffff;
@@ -1191,4 +1208,13 @@ body {
 .timer-progress-fill.timer-progress-done {
   background: #10b981;
   width: 100% !important;
+}
+
+@keyframes graph-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

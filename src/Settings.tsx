@@ -3,6 +3,8 @@ import { getVersion } from '@tauri-apps/api/app'
 import { SETTINGS_KEYS, getShortcut } from './lib/settingsKeys'
 import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
+import { useAIStore } from './store/useAIStore'
+import { logger } from './lib/logger'
 import { ShortcutInput } from './components/ShortcutInput'
 import './Settings.css'
 
@@ -26,16 +28,10 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
-  const [apiBaseUrl, setApiBaseUrl] = useState(
-    localStorage.getItem(SETTINGS_KEYS.API_BASE_URL) || 'https://openrouter.ai/api/v1'
-  )
-  const [apiModel, setApiModel] = useState(
-    localStorage.getItem(SETTINGS_KEYS.API_MODEL) || 'nvidia/nemotron-3-super-120b-a12b:free'
-  )
-  const [aiSystemPrompt, setAiSystemPrompt] = useState(
-    localStorage.getItem(SETTINGS_KEYS.AI_SYSTEM_PROMPT) ||
-      'Please provide a short and concise answer.'
-  )
+  const initialAI = useAIStore.getState()
+  const [apiBaseUrl, setApiBaseUrl] = useState(initialAI.apiBaseUrl)
+  const [apiModel, setApiModel] = useState(initialAI.apiModel)
+  const [aiSystemPrompt, setAiSystemPrompt] = useState(initialAI.aiSystemPrompt)
 
   // Shortcuts
   const isHyprland = useAppStore((state) => state.isHyprland)
@@ -107,9 +103,10 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   const [mathColor, setMathColor] = useState(initialSettings.mathColor)
 
   const saveSettings = async () => {
-    localStorage.setItem(SETTINGS_KEYS.API_BASE_URL, apiBaseUrl)
-    localStorage.setItem(SETTINGS_KEYS.API_MODEL, apiModel)
-    localStorage.setItem(SETTINGS_KEYS.AI_SYSTEM_PROMPT, aiSystemPrompt)
+    const aiStore = useAIStore.getState()
+    aiStore.setApiBaseUrl(apiBaseUrl)
+    aiStore.setApiModel(apiModel)
+    aiStore.setAiSystemPrompt(aiSystemPrompt)
 
     if (apiKey.trim()) {
       try {
@@ -120,8 +117,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           alert('Failed to save API key securely. Check console.')
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to save API key:', err)
+        logger.error('Failed to save API key:', err)
         alert(`Failed to save API key securely: ${err}`)
       }
     }
@@ -212,8 +208,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
                       setIsApiKeySet(false)
                       setApiKey('')
                     } catch (err) {
-                      // eslint-disable-next-line no-console
-                      console.error('Failed to clear key:', err)
+                      logger.error('Failed to clear key:', err)
                     }
                   }}
                   style={{
@@ -385,6 +380,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
               <label>Theme Preset</label>
               <select value={themePreset} onChange={(e) => setThemePreset(e.target.value)}>
                 <option value="paper-light">Paper Light</option>
+                <option value="grid-light">Grid Light</option>
                 <option value="grid-dark">Grid Dark</option>
                 <option value="blueprint">Blueprint</option>
               </select>

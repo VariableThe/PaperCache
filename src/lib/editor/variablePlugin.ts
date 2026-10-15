@@ -1,6 +1,7 @@
 import { ViewPlugin, Decoration, EditorView, ViewUpdate } from '@codemirror/view'
 import { VariableWidget } from './widgets'
 import { scopeChangedEffect, getScope } from './VariableScope'
+import { isCursorInMatch, safeDecorationSet } from './pluginUtils'
 
 export const variablePlugin = ViewPlugin.fromClass(
   class {
@@ -22,11 +23,6 @@ export const variablePlugin = ViewPlugin.fromClass(
     buildDeco(view: EditorView) {
       const decos: { from: number; to: number; deco: Decoration }[] = []
       const selectionRanges = view.state.selection.ranges
-      const isCursorInMatch = (start: number, end: number) => {
-        return selectionRanges.some(
-          (r: { from: number; to: number }) => r.from <= end && r.to >= start
-        )
-      }
 
       const scope = getScope()
       const scopeKeys = Object.keys(scope).sort((a, b) => b.length - a.length)
@@ -49,7 +45,7 @@ export const variablePlugin = ViewPlugin.fromClass(
           if (line.text.trim().startsWith('/var') || line.text.trim().startsWith('/globvar'))
             continue
 
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -65,14 +61,7 @@ export const variablePlugin = ViewPlugin.fromClass(
         }
       }
 
-      try {
-        const ranges = decos.map((d) => d.deco.range(d.from, d.to))
-        return Decoration.set(ranges, true)
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('variablePlugin error:', e)
-        return Decoration.none
-      }
+      return safeDecorationSet(decos, 'variablePlugin')
     }
   },
   { decorations: (v) => v.decorations }

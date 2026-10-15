@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen } from '@tauri-apps/api/event'
 import type { ElectronAPI, ReminderPayload } from './types'
+import { logger } from './lib/logger'
 
 const onEvent = <T>(name: string, callback: (payload: T) => void) => {
   let unlisten: (() => void) | undefined
@@ -24,8 +25,7 @@ export const tauriApi: ElectronAPI = {
     try {
       return await invoke('get_notes')
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to get notes', e)
+      logger.error('Failed to get notes', e)
       return []
     }
   },

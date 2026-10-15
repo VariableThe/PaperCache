@@ -66,6 +66,7 @@ function TimerItem({ timer, onRemove }: TimerItemProps) {
             className="timer-btn timer-btn-remove"
             onClick={() => onRemove(timer.id)}
             title="Remove"
+            aria-label="Remove timer"
           >
             ×
           </button>
@@ -152,7 +153,14 @@ export function TimersPage({ onClose }: TimersPageProps) {
 
   return (
     <div className="timers-overlay" style={{ fontFamily }} onClick={onClose}>
-      <div className="timers-panel" style={{ fontFamily }} onClick={(e) => e.stopPropagation()}>
+      <div
+        className="timers-panel"
+        style={{ fontFamily }}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Timers"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="timers-header">
           <h2 style={{ margin: 0, color: 'var(--text-color)', fontWeight: 700, fontSize: 17 }}>
             <svg
@@ -178,7 +186,7 @@ export function TimersPage({ onClose }: TimersPageProps) {
             </svg>
             Timers
           </h2>
-          <button className="timers-close-btn" onClick={onClose}>
+          <button className="timers-close-btn" onClick={onClose} aria-label="Close Timers">
             Close (Esc)
           </button>
         </div>

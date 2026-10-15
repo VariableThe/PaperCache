@@ -1,6 +1,7 @@
 import { ViewPlugin, Decoration, EditorView, ViewUpdate, type PluginValue } from '@codemirror/view'
 import { ReminderWidget } from './widgets'
 import { getTaskPrefixRegex, getFullTaskLineRegex, normalizeDateString } from '../taskUtils'
+import { isCursorInMatch, safeDecorationSet } from './pluginUtils'
 
 export const taskPlugin = ViewPlugin.fromClass(
   class {
@@ -20,11 +21,6 @@ export const taskPlugin = ViewPlugin.fromClass(
     buildDeco(view: EditorView) {
       const decos: { from: number; to: number; deco: Decoration }[] = []
       const selectionRanges = view.state.selection.ranges
-      const isCursorInMatch = (start: number, end: number) => {
-        return selectionRanges.some(
-          (r: { from: number; to: number }) => r.from <= end && r.to >= start
-        )
-      }
 
       for (const { from, to } of view.visibleRanges) {
         const text = view.state.doc.sliceString(from, to)
@@ -46,7 +42,7 @@ export const taskPlugin = ViewPlugin.fromClass(
             if (normalized && new Date(normalized).getTime() < Date.now()) isOverdue = true
           }
 
-          if (!isCursorInMatch(start, end)) {
+          if (!isCursorInMatch(selectionRanges, start, end)) {
             decos.push({
               from: start,
               to: end,
@@ -76,14 +72,7 @@ export const taskPlugin = ViewPlugin.fromClass(
         }
       }
 
-      try {
-        const ranges = decos.map((d) => d.deco.range(d.from, d.to))
-        return Decoration.set(ranges, true)
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('taskPlugin buildDeco error:', e)
-        return Decoration.none
-      }
+      return safeDecorationSet(decos, 'taskPlugin')
     }
   },
   { decorations: (v) => v.decorations }

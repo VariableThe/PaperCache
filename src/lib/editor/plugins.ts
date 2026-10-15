@@ -35,6 +35,10 @@ export const symbolPlugin = ViewPlugin.fromClass(
 )
 
 import { Decoration } from '@codemirror/view'
+import { safeDecorationSet } from './pluginUtils'
+
+const reAi = /\u200B[^\u200B]*?\u200C/g
+const reMath = /\u200B[^\n]*/g
 
 export const aiPlugin = ViewPlugin.fromClass(
   class {
@@ -50,23 +54,16 @@ export const aiPlugin = ViewPlugin.fromClass(
     buildDeco(view: EditorView) {
       const decos: { from: number; to: number; deco: Decoration }[] = []
       const docStr = view.state.doc.toString()
-      const re = /\u200B[^\u200B]*?\u200C/g
+      reAi.lastIndex = 0
       let match
-      while ((match = re.exec(docStr)) !== null) {
+      while ((match = reAi.exec(docStr)) !== null) {
         decos.push({
           from: match.index,
           to: match.index + match[0].length,
           deco: Decoration.mark({ class: 'cm-custom-ai' }),
         })
       }
-      try {
-        const ranges = decos.map((d) => d.deco.range(d.from, d.to))
-        return Decoration.set(ranges, true)
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to set AI decorations:', e)
-        return Decoration.none
-      }
+      return safeDecorationSet(decos, 'aiPlugin')
     }
   },
   { decorations: (v) => v.decorations }
@@ -86,9 +83,9 @@ export const mathPlugin = ViewPlugin.fromClass(
     buildDeco(view: EditorView) {
       const decos: { from: number; to: number; deco: Decoration }[] = []
       const docStr = view.state.doc.toString()
-      const re = /\u200B[^\n]*/g
+      reMath.lastIndex = 0
       let match
-      while ((match = re.exec(docStr)) !== null) {
+      while ((match = reMath.exec(docStr)) !== null) {
         const textAfter = docStr.slice(match.index + 1)
         const nextB = textAfter.indexOf('\u200B')
         const nextC = textAfter.indexOf('\u200C')
@@ -103,14 +100,7 @@ export const mathPlugin = ViewPlugin.fromClass(
           })
         }
       }
-      try {
-        const ranges = decos.map((d) => d.deco.range(d.from, d.to))
-        return Decoration.set(ranges, true)
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to set Math decorations:', e)
-        return Decoration.none
-      }
+      return safeDecorationSet(decos, 'mathPlugin')
     }
   },
   { decorations: (v) => v.decorations }

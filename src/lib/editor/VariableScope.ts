@@ -3,6 +3,7 @@ import { StateEffect } from '@codemirror/state'
 import { useVariableStore } from '../../store/useVariableStore'
 import { evaluate } from '../evaluator'
 import { MathEvaluator } from './MathEvaluator'
+import { logger } from '../logger'
 
 const SCOPE_DEBOUNCE_MS = 300
 
@@ -34,8 +35,7 @@ export class VariableScope {
           const val = evaluate(varMatch[2]!, mergedScope)
           newScope[name] = val
         } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error(`VariableScope evaluation error for ${name}:`, e)
+          logger.error(`VariableScope evaluation error for ${name}:`, e)
           newScope[name] = varMatch[2]!.trim()
         }
 

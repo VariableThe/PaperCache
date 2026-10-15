@@ -144,6 +144,10 @@ export default function GraphView({
       if (!data || !data.nodes) return
       data.nodes.forEach((node: GraphNode) => {
         if (node.x != null && node.y != null) {
+          if (nodePositionsCache.size >= 2000) {
+            const firstKey = nodePositionsCache.keys().next().value
+            if (firstKey) nodePositionsCache.delete(firstKey)
+          }
           nodePositionsCache.set(node.id, { x: node.x, y: node.y })
         }
       })
@@ -155,6 +159,15 @@ export default function GraphView({
   }, [])
 
   const graphData = useMemo(() => {
+    const activeIds = new Set(notes.map((n) => n.id))
+    if (nodePositionsCache.size > 1000) {
+      for (const key of nodePositionsCache.keys()) {
+        if (!activeIds.has(key)) {
+          nodePositionsCache.delete(key)
+        }
+      }
+    }
+
     const nodes: GraphNode[] = notes.map((n) => {
       const isAuto = /^\d+\.md$/.test(n.id)
       let title = n.id.replace(/\.md$/, '')
@@ -393,148 +406,147 @@ export default function GraphView({
   }, [onClose, showSearch])
 
   return (
-    <>
-      <style>{`@keyframes graph-fade-in { from { opacity: 0; } to { opacity: 1; } }`}</style>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Graph View"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: bgColor,
+        zIndex: GRAPH_Z_INDEX,
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'inherit',
+        animation: 'graph-fade-in 0.25s ease',
+      }}
+    >
       <div
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: bgColor,
-          zIndex: GRAPH_Z_INDEX,
+          padding: '20px',
           display: 'flex',
-          flexDirection: 'column',
-          fontFamily: 'inherit',
-          animation: 'graph-fade-in 0.25s ease',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: `1px solid ${textColor}22`,
+          position: 'relative',
+          zIndex: 2,
+          gap: 12,
         }}
       >
-        <div
+        {showSearch ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
+            <input
+              ref={searchRef}
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value)
+                setSearchIndex(0)
+              }}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search notes…"
+              style={{
+                flex: 1,
+                background: `${textColor}11`,
+                border: `1px solid ${textColor}33`,
+                borderRadius: 6,
+                padding: '6px 10px',
+                color: textColor,
+                fontSize: 14,
+                outline: 'none',
+                fontFamily: 'inherit',
+              }}
+            />
+            <span style={{ fontSize: 12, color: textColor, opacity: 0.5, whiteSpace: 'nowrap' }}>
+              {searchResults.length > 0
+                ? `${searchIndex + 1}/${searchResults.length}`
+                : searchQuery
+                  ? '0 matches'
+                  : ''}
+            </span>
+          </div>
+        ) : (
+          <h2 style={{ margin: 0, color: textColor, fontWeight: 700, fontFamily: 'inherit' }}>
+            Graph View
+            <sup
+              style={{
+                fontSize: 10,
+                marginLeft: 6,
+                opacity: 0.45,
+                fontWeight: 400,
+                verticalAlign: 'super',
+              }}
+            >
+              WebGL
+            </sup>
+          </h2>
+        )}
+        <button
+          onClick={() => {
+            if (showSearch) {
+              setShowSearch(false)
+              setSearchQuery('')
+            } else {
+              onClose()
+            }
+          }}
+          aria-label={showSearch ? 'Close Search' : 'Close Graph View'}
           style={{
-            padding: '20px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            borderBottom: `1px solid ${textColor}22`,
-            position: 'relative',
-            zIndex: 2,
-            gap: 12,
+            background: 'transparent',
+            border: 'none',
+            color: textColor,
+            cursor: 'pointer',
+            fontSize: '14px',
+            opacity: 0.7,
+            fontFamily: 'inherit',
+            whiteSpace: 'nowrap',
           }}
         >
-          {showSearch ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1 }}>
-              <input
-                ref={searchRef}
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setSearchIndex(0)
-                }}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Search notes…"
-                style={{
-                  flex: 1,
-                  background: `${textColor}11`,
-                  border: `1px solid ${textColor}33`,
-                  borderRadius: 6,
-                  padding: '6px 10px',
-                  color: textColor,
-                  fontSize: 14,
-                  outline: 'none',
-                  fontFamily: 'inherit',
-                }}
-              />
-              <span style={{ fontSize: 12, color: textColor, opacity: 0.5, whiteSpace: 'nowrap' }}>
-                {searchResults.length > 0
-                  ? `${searchIndex + 1}/${searchResults.length}`
-                  : searchQuery
-                    ? '0 matches'
-                    : ''}
-              </span>
-            </div>
-          ) : (
-            <h2 style={{ margin: 0, color: textColor, fontWeight: 700, fontFamily: 'inherit' }}>
-              Graph View
-              <sup
-                style={{
-                  fontSize: 10,
-                  marginLeft: 6,
-                  opacity: 0.45,
-                  fontWeight: 400,
-                  verticalAlign: 'super',
-                }}
-              >
-                WebGL
-              </sup>
-            </h2>
-          )}
-          <button
-            onClick={() => {
-              if (showSearch) {
-                setShowSearch(false)
-                setSearchQuery('')
-              } else {
-                onClose()
-              }
-            }}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              color: textColor,
-              cursor: 'pointer',
-              fontSize: '14px',
-              opacity: 0.7,
-              fontFamily: 'inherit',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {showSearch ? 'Esc' : 'Close (Esc)'}
-          </button>
-        </div>
-
-        <div style={{ flex: 1, overflow: 'hidden' }}>
-          <Suspense
-            fallback={
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  color: textColor,
-                  opacity: 0.5,
-                }}
-              >
-                Loading graph…
-              </div>
-            }
-          >
-            <ForceGraph3D
-              ref={fgRef as never}
-              graphData={graphData}
-              numDimensions={2}
-              nodeLabel="name"
-              nodeColor={(node) =>
-                (node as GraphNode).folder
-                  ? getFolderColor((node as GraphNode).folder)
-                  : accentColor
-              }
-              linkColor={() => `${textColor}55`}
-              backgroundColor={bgColor}
-              onNodeClick={(node: object) => handleNodeClick(node as GraphNode)}
-              onNodeDragEnd={(node: object) => handleNodeDragEnd(node as GraphNode)}
-              nodeThreeObject={nodeThreeObject}
-              nodeRelSize={NODE_REL_SIZE}
-              linkWidth={LINK_WIDTH}
-              linkOpacity={LINK_OPACITY}
-              enableNodeDrag={true}
-              enableNavigationControls={true}
-              showNavInfo={false}
-            />
-          </Suspense>
-        </div>
+          {showSearch ? 'Esc' : 'Close (Esc)'}
+        </button>
       </div>
-    </>
+
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        <Suspense
+          fallback={
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                color: textColor,
+                opacity: 0.5,
+              }}
+            >
+              Loading graph…
+            </div>
+          }
+        >
+          <ForceGraph3D
+            ref={fgRef as never}
+            graphData={graphData}
+            numDimensions={2}
+            nodeLabel="name"
+            nodeColor={(node) =>
+              (node as GraphNode).folder ? getFolderColor((node as GraphNode).folder) : accentColor
+            }
+            linkColor={() => `${textColor}55`}
+            backgroundColor={bgColor}
+            onNodeClick={(node: object) => handleNodeClick(node as GraphNode)}
+            onNodeDragEnd={(node: object) => handleNodeDragEnd(node as GraphNode)}
+            nodeThreeObject={nodeThreeObject}
+            nodeRelSize={NODE_REL_SIZE}
+            linkWidth={LINK_WIDTH}
+            linkOpacity={LINK_OPACITY}
+            enableNodeDrag={true}
+            enableNavigationControls={true}
+            showNavInfo={false}
+          />
+        </Suspense>
+      </div>
+    </div>
   )
 }

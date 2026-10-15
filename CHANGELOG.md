@@ -7,57 +7,83 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Centralized Logger & Utilities**: Added structured logger (`logger.ts`), editor plugin utilities (`pluginUtils.ts`), and centralized note utility (`noteUtils.ts`) for consistent dialog confirmation and state-safe deletion.
+
+### Changed
+
+- **Performance Optimizations**: Hoisted regex literals across editor plugins (`markdownPlugin`, `formatPlugin`, `checkboxPlugin`, `taskPlugin`, `variablePlugin`, `plugins.ts`) to avoid regex recompilation on every keystroke. Added cache eviction and pruning to `GraphView` node positions cache to prevent unbounded memory growth.
+- **Accessibility Improvements**: Added ARIA labels, `role="dialog"`, and `aria-modal="true"` attributes across modal dialogs (`App.tsx`, `TimersPage.tsx`, `RemindersPage.tsx`) and icon-only buttons (`GraphView.tsx`).
+
+### Fixed
+
+- **Theme Rendering Bug**: Fixed invisible theme rendering on fresh installs by defaulting to `paper-light` and adding missing keyframes and CSS classes in `index.css`.
+- **AI Settings Source of Truth**: Unified AI settings storage via `useAIStore`, eliminating duplicate direct localStorage writes in `Settings.tsx`.
+- **In-Place Array Mutations**: Fixed in-place array mutation in `RemindersPage.tsx` during task reminder sorting.
 
 ## [v0.5.9] - 2026-07-01
 
 ### Added
+
 - **Image Copy & Paste Support**: You can now copy any image and paste it directly into your notes. Pasted images are automatically saved locally in a hidden `.images` folder and rendered seamlessly inline as image cards.
 
 ### Changed
+
 - **Consistent Glassmorphic Backgrounds**: Standardized background blur effects across modal overlays (Command+P Search and Command+T Timers menu) to ensure consistent visual aesthetics.
 - **Dynamic Typography in Timers**: Ensure the Timers menu respects custom font family selections made in App Settings.
 
 ### Fixed
-- **Linux Compatibility (`glibc` version mismatch)**: Pinned GitHub Actions Linux runner to `ubuntu-22.04` across CI and release workflows instead of `ubuntu-latest` (Ubuntu 24.04). This ensures built Linux binaries and AppImages link against `glibc 2.35` so they can run out-of-the-box on Ubuntu 22.04 LTS, Debian 12, and other distributions without throwing `version glibc 2.38 not found` errors.
 
+- **Linux Compatibility (`glibc` version mismatch)**: Pinned GitHub Actions Linux runner to `ubuntu-22.04` across CI and release workflows instead of `ubuntu-latest` (Ubuntu 24.04). This ensures built Linux binaries and AppImages link against `glibc 2.35` so they can run out-of-the-box on Ubuntu 22.04 LTS, Debian 12, and other distributions without throwing `version glibc 2.38 not found` errors.
 
 ## [v0.5.8] - 2026-06-29
 
 ### Added
+
 - **Custom Arithmetic Evaluator**: Replaced `expr-eval` (high-severity prototype pollution vulnerability, no fix available) with a new custom recursive-descent arithmetic evaluator supporting `+`, `-`, `*`, `/`, `%`, `^`, parentheses, unary operators, and variable scope resolution. Zero external dependencies and 2KB vs ~15KB.
 - **TypeScript Strict Mode**: Enabled `"strict": true` in `tsconfig.app.json`, enabling `strictNullChecks`, `strictFunctionTypes`, `noImplicitAny`, and all other strict-family checks across the entire codebase.
 - **Coverage Thresholds**: Added minimum coverage thresholds to vitest config (statements 65%, branches 50%, functions 55%, lines 65%) to prevent silent coverage regression.
 
 ### Changed
+
 - **API Type Safety**: Made `onEvent` helper generic `<T>` instead of using `any` for the payload parameter, ensuring proper type propagation to all event callbacks.
 
 ### Removed
+
 - **Unused Dependencies**: Removed `@tauri-apps/plugin-fs`, `@tauri-apps/plugin-shell`, `@emnapi/core`, and `@emnapi/runtime` (4 packages) from `package.json`.
 
 ### Security
+
 - **expr-eval Vulnerability Fixed**: Removed `expr-eval` (GHSA-8gw3-rxh4-v6jx, GHSA-jc85-fpwf-qm7x — prototype pollution & unsafe function evaluation) and replaced with a custom evaluator that does not use `eval` or `Function` constructors and is not susceptible to prototype pollution.
 
 ### Fixed
+
 - **Release Signing Key Sanitization**: Added automated workflow sanitization to strip trailing terminal prompt EOF symbols (`%`) or URL-encoding artifacts from `TAURI_SIGNING_PRIVATE_KEY` during CI builds.
 
 ## [v0.5.7] - 2026-06-29
 
 ### Added
+
 - **Contextual Auto-Update UI**: When checking for updates in Settings, visual feedback is now displayed ("Checking…"). When an update is downloaded and ready, a persistent toast notification appears with a prominent "Restart Now" button so users can restart when convenient rather than experiencing unexpected application restarts.
 
 ### Changed
+
 - **Code Quality & Test Reliability**: Refactored global shortcut registration to remove duplicate event handling logic in the backend. Improved countdown timer cleanup reliability by properly tracking and clearing async timeouts when timers complete or are removed. Added comprehensive unit tests for inline DSL variable evaluation (`VariableScope`).
 
 ### Fixed
+
 - **Updater Artifact Manifest Generation**: Fixed an issue where auto-updates failed due to missing or improperly configured updater manifests (`latest.json`) in GitHub release assets.
 - **CI Workflow Hardening**: Disabled persisted checkout credentials in GitHub Actions release workflow and explicitly specified the stable Rust toolchain selector.
 
 ## [v0.5.6] - 2026-06-28
 
 ### Added
+
 - **Dedicated Keybinds Settings Panel**: Added a sleek, high-contrast dark modal accessible from Settings (`Cmd+Shift+S`) to view and remap all application shortcuts with live recording. Designed with rich typography, glassmorphic cards, and fixed-width input buttons for perfectly vertically aligned shortcut columns.
 
 ### Changed
+
 - **Updated Default Shortcut Mappings**: Shifted the Reminders/Tasks view shortcut to `Cmd+R` and Timers panel shortcut to `Cmd+T`.
 - **Timer Auto-Deletion**: Expired countdown timers are now automatically removed from the active list 5 seconds after completing, keeping the UI clean. Timer completion notifications and auto-cleanup now function globally even when the Timers panel is closed.
 - **Enhanced Graph View Link Parsing**: Extended 3D Graph View link detection to support standard markdown links (`[Note](Note.md)`) and wikilinks (`[[Note]]`) alongside the existing `/file` syntax, and added z-axis forces for improved 3D layout stability.
@@ -66,16 +92,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Rust Lint Cleanup**: Fixed clippy warnings in notifications.rs; documented suppressions for legacy objc crate macro warnings.
 
 ### Security
+
 - **CI Supply-Chain Protection**: Pinned all third-party GitHub Action references in release workflow (`release.yml`) to immutable SHA-1 digests to protect release signing keys against supply-chain attacks.
 - **Repository Hygiene**: Removed committed release build artifacts (`*.app.tar.gz`) from repository tracking and updated `.gitignore` to prevent leaking build binaries into git history.
 
 ## [v0.5.5] - 2026-06-27
 
 ### Added
+
 - **Smart Onboarding & New Features Note Routing**: Brand new installations now cleanly launch directly into `Welcome.md` without copying or showing release note files. Existing users upgrading from previous versions will automatically receive the release notes file and be taken directly to the `New Features in v0.5.5.md` note upon opening the app.
 - **Settings Bug Report & About Menu**: Added a "Submit a Bug Report" button under System settings linking directly to the GitHub issue creation form. Added a dedicated "About" section displaying the app logo, current version number, update checker, Ko-fi support link, and a thank you message.
 
 ### Fixed
+
 - **API Key Persistence & Clearing**: Fixed an issue where clicking "Save Settings" without re-entering an API key unintentionally cleared existing keys from the OS keyring. Added an explicit "Clear Key" button and defensive trimming before saving credentials securely. Also improved macOS keyring replacement logic to prevent duplicate item errors.
 - **Graph View crash on navigation & toggle**: Fixed `fg.graphData is not a function` TypeError when navigating to notes or toggling Graph View (`Cmd+G`) by adding defensive checks before invoking ref methods on component unmount and falling back to a ref cache. Also replaced `setInterval` with a chained `setTimeout` loop.
 - **Windows Onboarding File Linking & Generation**: Fixed a bug on Windows where backslashes in generated note IDs caused internal `/file` links in `Welcome.md` to fail and create duplicate empty notes. Normalized note ID generation across Rust and TypeScript to consistently use forward slashes on all platforms, and ensured onboarding template files regenerate correctly on application updates.
@@ -94,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v0.5.3] - 2026-06-24
 
 ### Added
+
 - **Redesigned Graph View**: Nodes are now flat `CircleGeometry` with `depthWrite: true` and `renderOrder: 1` in the transparent pass, cleanly occluding edges behind them. Always-visible canvas-based text labels positioned below each node.
 - **Cmd+F Fuzzy Search in Graph**: Press `Cmd+F` in graph view to search note names by fuzzy character matching. Navigate with arrow keys, confirm with Enter to fly the camera to the matching node.
 - **Folder Clustering**: Notes sharing a folder are weakly attracted to a shared centroid via forceX/forceY at 0.008 strength, producing subtle visual grouping without breaking the unified cluster.
@@ -108,6 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WebGL Graph View**: The Graph View has been rewritten using Three.js WebGL via `react-force-graph-3d`. Notes in the same folder are attracted to shared centroid positions via custom `d3-force` simulation rules, causing them to cluster together naturally. The graph is lazy-loaded to avoid impacting editor startup time.
 
 ### Changed
+
 - **Cmd+Shift+N Behavior**: The global new-note shortcut no longer hides the app if it's already visible. It only shows the window when hidden. The shortcut always creates a new note regardless.
 - **Node Circle Size**: Increased from radius 8 to 12, with labels shifted and scaled accordingly.
 - **Windows Focus-Loss Debounce**: Hiding on focus loss now uses a 200ms debounce to prevent accidental hide when clicking the title bar for drag or resize.
@@ -115,6 +146,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Graph Controls**: OrbitControls configured with `enableRotate = false`, `LEFT = PAN`, `MIDDLE = DOLLY` for a pure 2D navigation experience.
 
 ### Fixed
+
 - Fixed edges/lines showing through circle nodes by making circle meshes render in the transparent pass after links.
 - Fixed graph view opening inside the shortcut handler (removed stale `showGraphView` setter call from version check effect).
 - Fixed blank graph issue on re-open by caching node positions at component unmount.
@@ -124,11 +156,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v0.5.2] - 2026-06-24
 
 ### Added
+
 - **Slash Command Autosuggest**: Added an inline ghost text autosuggest widget for slash commands (e.g., `/check`, `/ai`). Pressing `Tab` instantly completes the command without interrupting typing flow.
 - **Auto-Open Version Notes**: Upon updating, PaperCache now automatically opens a summary note detailing the new features in the latest release and silently cleans up previous version notes from the workspace.
 - **Tag Context Menu**: Right-clicking a tag pill now reveals a beautifully styled inline action menu allowing users to easily delete all notes under that tag, or export them concatenated together into a single Markdown file directly via native system dialogs.
 
 ### Fixed
+
 - Fixed an issue where the unified search view layout could overlap with the context menu or hide important tag management options.
 - The `/task-done` command has been streamlined down to `/check` for clarity and better UX alignment.
 
@@ -137,27 +171,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v0.5.0-beta] - 2026-06-23
 
 ### Highlights
+
 - 🚀 Migrated from Electron to Tauri
 - ⚡ Automatic updates
 - 🪟 Improved window behavior
 - 🐞 Major stability improvements
 
 ### Added
+
 - **Auto-Updates**: The app now checks for updates silently in the background on startup. A "Check for Updates Now" button was also added to the Settings menu.
 
 ### Changed
+
 - **Tauri Migration**: PaperCache has been fully migrated from Electron to Tauri, reducing memory usage, startup time, and application size while preserving existing workflows.
 - The macOS distribution format is now `.tar.gz` and `.app` to circumvent strict macOS 14 runner restrictions with `osascript`. The Homebrew Cask automation pulls the `.tar.gz` bundle.
 - **Keybindings**: Changed default global and internal keybindings from `Ctrl/Cmd` to `Alt` to prevent conflicts with terminal emulators and OS shortcuts.
 - **Window Behavior**: Disabled the "hide on focus loss" behavior so the application acts as a standard window, fixing global shortcut limitations on Wayland compositors (like Hyprland).
 
 ### Fixed
+
 - Addressed multiple edge-cases with `CodeMirror` state overwrites causing typed text to disappear or duplicate.
 - Fixed a bug where entering an empty string for the OpenAI API Key would incorrectly register as a valid key. The system now safely deletes the credentials.
 - Improved window behavior and consistency across Windows, macOS, and Linux.
 - The `Quit` action now gracefully emits the proper shutdown events rather than force-killing the process, preventing data loss.
 
 ### Performance
+
 - Eliminated scroll jank across the app by replacing broad CSS `transition: all` rules with targeted color and opacity transitions.
 - Abstracted redundant window focus and visibility checks to speed up global shortcut responsiveness.
 
@@ -166,31 +205,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [v0.4.0] - 2026-06-22
 
 ### Highlights
+
 - ⌨️ Global Shortcut Recorder
 - ✅ Tasks Integration
 - 🧠 State Management Refactor
 - 🏎️ MathJS Optimization
 
 ### Added
+
 - **Global Shortcut Recorder**: Added a UI in Settings to record custom keybindings for toggling the app and creating new notes.
 - **Tasks Integration**: Support for inline checkboxes and a dedicated Tasks view.
 - Added support for interactive hex color pills and currency formatting.
 - The application now persists and reopens the last active note on startup.
 
 ### Changed
+
 - **State Management**: Migrated the core frontend architecture to `Zustand` for cleaner, slice-based state management.
 - Normalized font stacks and refined typography weights for improved readability across themes.
 
 ### Fixed
+
 - Fixed an issue where internal wiki links (`[[link]]`) would accidentally overwrite adjacent text on auto-complete.
 - Resolved race conditions in variable evaluation (`useVariables`).
 - Fixed the Settings window so that it properly tracks the bounds of the main window.
 
 ### Performance
+
 - **MathJS Optimization**: Implemented dynamic lazy-loading and debounced evaluations, dramatically reducing idle CPU usage and startup overhead.
 - Fixed a memory leak involving power state IPC listeners that drained battery on macOS.
 
 ### Security
+
 - **Production Hardening**: Removed unsafe `eval` usage in math processing.
 - Restricted Tauri IPC scopes to only authorized directories (e.g. `~/.papercache`).
 
@@ -205,17 +250,21 @@ _This version was not released._
 ## [v0.2.0] - 2026-06-20
 
 ### Highlights
+
 - 🧮 Core mathematical evaluation logic
 - 📏 Horizontal rules and styling
 
 ### Added
+
 - Implemented core mathematical evaluation logic and inline widgets.
 - Added horizontal rules (`---`) styling and custom colors for math results.
 
 ### Changed
+
 - Improved the default onboarding tutorial notes with deeper feature explanations.
 
 ### Fixed
+
 - Fixed Prettier formatting mismatches that were breaking the CI pipeline.
 - Fixed an issue with window spawning on the wrong active workspace.
 
@@ -224,9 +273,11 @@ _This version was not released._
 ## [v0.1.0] - 2026-05-31
 
 ### Highlights
+
 - 🎉 Initial Release of PaperCache!
 
 ### Added
+
 - **Initial Release** of PaperCache.
 - Global hotkey launcher with floating markdown editor.
 - Live markdown rendering with inline math and variables.

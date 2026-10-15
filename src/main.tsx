@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import Settings from './Settings.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary.tsx'
+import { logger } from './lib/logger'
 
 import { tauriApi } from './api'
 window.electronAPI = tauriApi
@@ -30,8 +31,7 @@ function Root() {
             localStorage.removeItem('papercache-apikey')
           }
         } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to migrate plain API key', e)
+          logger.error('Failed to migrate plain API key', e)
         }
       }
 
@@ -50,8 +50,7 @@ function Root() {
             }
           }
         } catch (e) {
-          // eslint-disable-next-line no-console
-          console.error('Failed to migrate secure API key', e)
+          logger.error('Failed to migrate secure API key', e)
         }
       }
 

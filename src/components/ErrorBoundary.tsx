@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { logger } from '../lib/logger'
 
 interface Props {
   children?: ReactNode
@@ -19,8 +20,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // eslint-disable-next-line no-console
-    console.error('Uncaught error:', error, errorInfo)
+    logger.error('Uncaught error:', error, errorInfo)
   }
 
   public render() {
