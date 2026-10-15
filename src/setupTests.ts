@@ -87,7 +87,8 @@ if (typeof window !== 'undefined') {
     onUpdateStatus: vi.fn().mockReturnValue(() => {}),
     saveAsset: vi.fn().mockResolvedValue('/.images/test.png'),
     readAsset: vi.fn().mockResolvedValue('data:image/png;base64,'),
-  } as ElectronAPI
+    openaiTranscribe: vi.fn().mockResolvedValue('test transcript'),
+  } as unknown as ElectronAPI
 }
 
 afterEach(() => {

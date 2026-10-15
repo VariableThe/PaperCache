@@ -11,6 +11,7 @@ import { useAppStore } from './store/useAppStore'
 import { useSettingsStore } from './store/useSettingsStore'
 import { useTimerStore } from './store/useTimerStore'
 import { listen } from '@tauri-apps/api/event'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 
 import { useNoteStorage } from './hooks/useNoteStorage'
 import { useVariables } from './hooks/useVariables'
@@ -21,12 +22,22 @@ import { NoteSearch } from './components/NoteSearch'
 import { MainActionMenu } from './components/MainActionMenu'
 import { NoteTitleBar } from './components/NoteTitleBar'
 import { Editor, type EditorRef } from './components/Editor'
+import { MemoVoicePanel } from './components/MemoVoicePanel'
 import Settings from './Settings'
 
 const TOAST_TIMEOUT_MS = 5000
 const MODAL_Z_INDEX = 9999
 const KEYBINDS_Z_INDEX = 10000
 const TOAST_Z_INDEX = 99999
+
+export function VoiceIndicatorWindow() {
+  const dummyEditorRef = useRef<EditorRef | null>(null)
+  return (
+    <div className="memo-overlay-root">
+      <MemoVoicePanel editorRef={dummyEditorRef} isOverlay={true} />
+    </div>
+  )
+}
 
 function App() {
   const notes = useAppStore((state) => state.notes)
@@ -49,6 +60,7 @@ function App() {
 
   const { themePreset, fontFamily, showRulings, bgType, bgColor, bgImage, textColor, numColor } =
     useSettingsStore()
+  const memoEnabled = useSettingsStore((state) => state.memoEnabled)
 
   const editorRef = useRef<EditorRef>(null)
 
@@ -58,6 +70,10 @@ function App() {
   useGlobalHotkey()
 
   useEffect(() => {
+    if (localStorage.getItem('papercache-memo-v1-enabled') !== 'true') {
+      useSettingsStore.getState().setSettings({ memoEnabled: true })
+      localStorage.setItem('papercache-memo-v1-enabled', 'true')
+    }
     window.electronAPI.checkForUpdates()
     window.electronAPI.restoreWindowState()
     window.electronAPI.isHyprland().then((isHyp) => {
@@ -155,6 +171,43 @@ function App() {
     checkVersion()
   }, [notes, setCurrentNoteIndex])
 
+  useEffect(() => {
+    let unlisten: (() => void) | undefined
+    listen<{ text: string }>('insert-voice-note', async (event) => {
+      const text = event.payload.text
+      try {
+        await getCurrentWindow().show()
+        await getCurrentWindow().setFocus()
+      } catch {
+        /* ignore */
+      }
+      if (editorRef.current?.view) {
+        const view = editorRef.current.view
+        const { from } = view.state.selection.main
+        const insertText = '\n' + text + '\n'
+        view.dispatch({ changes: { from, to: from, insert: insertText } })
+        view.focus()
+      } else {
+        const { notes, currentNoteIndex, setNotes } = useAppStore.getState()
+        const note = notes[currentNoteIndex]
+        if (note) {
+          setNotes(
+            notes.map((n, idx) =>
+              idx === currentNoteIndex ? { ...n, content: n.content + '\n' + text + '\n' } : n
+            )
+          )
+        }
+      }
+    })
+      .then((fn) => {
+        unlisten = fn
+      })
+      .catch(() => {})
+    return () => {
+      if (unlisten) unlisten()
+    }
+  }, [])
+
   const containerStyle: React.CSSProperties = {
     fontFamily: fontFamily,
     '--font-family': fontFamily,
@@ -183,6 +236,7 @@ function App() {
     >
       <NoteTitleBar />
 
+      {memoEnabled && <MemoVoicePanel editorRef={editorRef} />}
       {showRemindersView && (
         <RemindersPage
           notes={notes}
