@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **Note save loss on quick note switching**: Fixed a bug where edits made within the 500 ms autosave debounce window were silently lost when switching notes before the timer fired. Pending edits are now flushed to disk on note switch and app close instead of being discarded.
 
+### Removed
+- **Misleading Voice Memo shortcut**: Removed the "Hold to Record Voice Memo" entry from the shortcuts/keybinds UI. Voice memo recording was previously removed from the app, so the shortcut was a dead control that did nothing.
+
 ## [v0.5.9] - 2026-07-01
 
 ### Added

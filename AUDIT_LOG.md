@@ -2,6 +2,16 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Health cleanup: remove misleading Voice Memo shortcut)
+**Change:** fix(desktop): remove dead "Hold to Record Voice Memo" shortcut from the keybinds UI
+
+**Details/Why:**
+1. Voice memo recording was previously removed from the app (extracted to a separate project), but the shortcuts/keybinds modal still listed a "Hold to Record Voice Memo" entry (default `Mod+Shift+M`) with no backing feature, so pressing it did nothing. Removed the entry from `KeybindsModal.tsx` and the `SHORTCUT_VOICE_MEMO` key from `settingsKeys.ts`. This is the "label disabled features honestly / remove broken behavior" health cleanup.
+
+**Files changed:** `src/components/KeybindsModal.tsx`, `src/lib/settingsKeys.ts`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Google Drive adapter + canonical-serialization spec clarification)
 **Change:** feat(sync): add config-gated Google Drive adapter; pin canonical JSON byte-level rules
 
