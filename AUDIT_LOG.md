@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Shared sync protocol: spec, reference implementation, fixtures)
+**Change:** feat(sync): define the versioned cross-platform sync protocol with a Rust reference core and pinned compatibility fixtures
+
+**Details/Why:**
+1. **Spec**: Added `docs/sync-protocol.md` defining format version 1 of the single sync contract shared by desktop and Android. It specifies stable vault/note/device/revision identities, immutable content-addressed revision records with `parent_rev` ancestry and `content_hash`, a rebuildable `index.json`, deletion tombstones, deterministic conflict handling (fork branches preserved as conflict copies; head chosen by smallest `rev_id`, never by `mtime`), and a provider-agnostic sync directory layout.
+2. **Reference implementation**: Added `src-tauri/src/sync/` (`hash.rs`, `revision.rs`, `index.rs`, `vault.rs`, `mod.rs`, `tests.rs`) implementing canonical serialization + `rev_id`, index rebuild, conflict detection, and idempotent replay. Added `sha2` and `uuid` dependencies.
+3. **Fixtures**: Added `sync/fixtures/` with a `vault.json`, three pinned `records/*.json` (upsert → rename + concurrent edit fork), an expected `index.json`, and the note body. The canonical form and `rev_id` are pinned by `canonical_form_is_pinned_to_fixtures`.
+
+**Files changed:** `docs/sync-protocol.md` [NEW], `src-tauri/src/sync/*` [NEW], `sync/fixtures/*` [NEW], `src-tauri/Cargo.toml`, `src-tauri/src/lib.rs`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Desktop reliability: fix note save loss on note switch)
 **Change:** fix(editor): flush debounced save on note switch and unmount instead of discarding it
 

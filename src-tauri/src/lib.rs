@@ -3,6 +3,7 @@
 extern crate objc;
 
 mod commands;
+mod sync;
 #[cfg(target_os = "macos")]
 mod macos;
 mod tray;

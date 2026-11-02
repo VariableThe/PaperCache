@@ -28,6 +28,8 @@ aes-gcm = "0.10"
 rand = "0.8"
 base64 = "0.22"
 tauri-plugin-notification = "2.0.0-rc.5"
+sha2 = "0.10"
+uuid = { version = "1", features = ["v4"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 cocoa = "0.25"
