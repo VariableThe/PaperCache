@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Safe-storage key handling**: PaperCache now creates a master encryption key only when the OS keyring confirms that no key exists. Keyring access failures are surfaced instead of replacing the key and making existing encrypted data unreadable.
 
 ## [v0.5.9] - 2026-07-01
 

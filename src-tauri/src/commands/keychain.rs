@@ -3,7 +3,7 @@ use aes_gcm::{
     Aes256Gcm, Key, Nonce,
 };
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
-use keyring::Entry;
+use keyring::{Entry, Error as KeyringError};
 use rand::RngCore;
 
 const SERVICE_NAME: &str = "com.variablethe.papercache";
@@ -21,8 +21,8 @@ pub fn set_api_key(key: String) -> Result<bool, String> {
         }
     }
     match entry.delete_credential() {
-        Ok(_) => {},
-        Err(keyring::Error::NoEntry) => {},
+        Ok(_) => {}
+        Err(keyring::Error::NoEntry) => {}
         Err(e) => return Err(format!("Failed to delete existing API key: {}", e)),
     }
     entry
@@ -49,21 +49,32 @@ pub fn get_api_key() -> Result<String, String> {
         .map_err(|e| format!("Failed to get API key: {}", e))
 }
 
+fn decode_master_key(encoded_key: String) -> Result<Key<Aes256Gcm>, String> {
+    let key_bytes = BASE64
+        .decode(encoded_key)
+        .map_err(|e| format!("Failed to decode master key: {}", e))?;
+    if key_bytes.len() != 32 {
+        return Err("Invalid master key length".to_string());
+    }
+    Ok(*Key::<Aes256Gcm>::from_slice(&key_bytes))
+}
+
+/// Returns `Ok(None)` only when the keyring confirms no master key exists.
+fn read_master_key(result: Result<String, KeyringError>) -> Result<Option<Key<Aes256Gcm>>, String> {
+    match result {
+        Ok(encoded_key) => decode_master_key(encoded_key).map(Some),
+        Err(KeyringError::NoEntry) => Ok(None),
+        Err(error) => Err(format!("Failed to read master key from keyring: {}", error)),
+    }
+}
+
 fn get_or_generate_master_key() -> Result<Key<Aes256Gcm>, String> {
     let entry = Entry::new(SERVICE_NAME, "safe_storage_master_key")
         .map_err(|e| format!("Failed to access keyring: {}", e))?;
 
-    match entry.get_password() {
-        Ok(encoded_key) => {
-            let key_bytes = BASE64
-                .decode(encoded_key)
-                .map_err(|e| format!("Failed to decode master key: {}", e))?;
-            if key_bytes.len() != 32 {
-                return Err("Invalid master key length".to_string());
-            }
-            Ok(*Key::<Aes256Gcm>::from_slice(&key_bytes))
-        }
-        Err(_) => {
+    match read_master_key(entry.get_password())? {
+        Some(key) => Ok(key),
+        None => {
             let mut key_bytes = [0u8; 32];
             OsRng.fill_bytes(&mut key_bytes);
             let encoded_key = BASE64.encode(key_bytes);
@@ -72,6 +83,30 @@ fn get_or_generate_master_key() -> Result<Key<Aes256Gcm>, String> {
                 .map_err(|e| format!("Failed to store master key: {}", e))?;
             Ok(*Key::<Aes256Gcm>::from_slice(&key_bytes))
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::read_master_key;
+    use keyring::Error as KeyringError;
+
+    #[test]
+    fn missing_master_key_allows_generation() {
+        assert!(read_master_key(Err(KeyringError::NoEntry))
+            .expect("missing key should be handled")
+            .is_none());
+    }
+
+    #[test]
+    fn keyring_failures_do_not_look_like_missing_keys() {
+        let error = read_master_key(Err(KeyringError::Invalid(
+            "mock".to_string(),
+            "keyring unavailable".to_string(),
+        )))
+        .expect_err("a keyring failure must be surfaced");
+
+        assert!(error.contains("Failed to read master key from keyring"));
     }
 }
 
