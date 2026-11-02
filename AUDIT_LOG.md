@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Android offline app: Kotlin/Compose/Room, debug APK built)
+**Change:** feat(android): add offline-first Android app and build a debug APK
+
+**Details/Why:**
+1. **App**: Added `mobile/android/` (Kotlin + Jetpack Compose + Room + Material 3). Implements the offline slice: note list + search, create/edit/rename, durable autosave (`Autosave` helper with debounce + flush-on-navigate, mirroring the desktop `useDebouncedSave` fix), Room persistence with a stable `noteId` (UUID) separate from the renameable `path`, tags, and undoable trash (soft-delete + restore + hard delete). Markdown is preserved byte-for-byte (plain editor, no stripping). Honest offline/"sync not configured" status.
+2. **Toolchain**: Installed user-space (no sudo): Temurin JDK 17 at `~/jdk17`, Android SDK 35 (platforms/android-35 + build-tools 35.0.0) at `~/Android/Sdk`, Gradle 8.9. Raised Gradle HTTP timeouts in `gradle.properties` for the slow network.
+3. **Build & test**: `assembleDebug` succeeds; APK at `mobile/android/app/build/outputs/apk/debug/app-debug.apk` (16 MB). `AutosaveTest` (3 tests) passes via `testDebugUnitTest`. No emulator/device testing (none available).
+
+**Files changed:** `mobile/android/` [NEW: settings/build Gradle files, `gradle.properties`, `gradle-wrapper.properties`, manifest, resources, `MainActivity.kt`, `data/{Note,NoteDao,AppDatabase,NoteRepository}.kt`, `util/Autosave.kt`, `ui/{NoteViewModel,NoteListScreen,EditorScreen,TrashScreen}.kt`, `ui/theme/Theme.kt`, `AutosaveTest.kt`], `docs/implementation-status.md` [NEW], `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Desktop reliability: external note reconciliation on window focus)
 **Change:** feat(desktop): reconcile in-memory notes with on-disk changes on window focus without overwriting unsaved buffers
 
