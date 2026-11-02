@@ -2,6 +2,17 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Google Drive adapter + canonical-serialization spec clarification)
+**Change:** feat(sync): add config-gated Google Drive adapter; pin canonical JSON byte-level rules
+
+**Details/Why:**
+1. **Drive adapter**: Added `src-tauri/src/sync/drive.rs` — an OAuth-bearer Drive client (`exchange_code`, `refresh_access_token`, `list`, `get`, conditional `put` with `If-Match`/revision, `delete`) that is explicitly gated on publisher config (`client_id`/`client_secret`/`refresh_token`) and refuses to act when unconfigured (no fake sync). Endpoints are injectable for mock tests. Mock tests cover refresh, bearer+multipart upload, and the 412 revision-conflict path.
+2. **Spec**: Clarified `docs/sync-protocol.md` §3 with byte-level canonical-JSON rules (snake_case order, `null`-not-omitted, `/`/non-ASCII never escaped, lowercase `op`) and mandated RFC 3339 UTC millisecond `created_at`; added §11 capturing the deferred design decisions (losing-branch content location, Byzantine-safety, identical-content conflicts, assets).
+
+**Files changed:** `src-tauri/src/sync/drive.rs` [NEW], `src-tauri/src/sync/mod.rs`, `docs/sync-protocol.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Sync hardening: review-driven correctness + security fixes, Nextcloud adapter)
 **Change:** fix(sync): tombstone-race, conflict wiring, atomicity, corruption tolerance, symlink safety; add Nextcloud WebDAV adapter
 

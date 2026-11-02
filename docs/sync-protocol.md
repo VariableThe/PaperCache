@@ -99,10 +99,23 @@ Field semantics:
 
 `rev_id = sha256(canonical_json(record_without_rev_id))`.
 
-`canonical_json` is the UTF-8 encoding of `serde_json::to_string` of a struct with
-the field order shown above, with no map-key reordering (all fields are fixed
-struct fields, so ordering is deterministic). Implementations in other languages
-MUST reproduce this byte-for-byte (see fixtures).
+`canonical_json` is the UTF-8 encoding of the record (with `rev_id` excluded),
+serialized with the following **byte-level** rules. Any implementation must
+reproduce these exactly to obtain the same `rev_id`:
+
+- Field names are `snake_case` and appear in this exact order:
+  `format_version`, `note_id`, `parent_rev`, `op`, `path`, `old_path`,
+  `content_hash`, `content_length`, `device_id`, `created_at`.
+- `op` is lowercase (`upsert`, `rename`, `delete`).
+- `null` fields are present, never omitted.
+- Compact: no whitespace between tokens.
+- Strings are escaped exactly as `serde_json` does: `"` and `\` are escaped as
+  `\"` and `\\`; control characters (U+0000..U+001F) are escaped as `\uXXXX`;
+  `/` is NOT escaped; non-ASCII characters are emitted raw as UTF-8 (never
+  `\uXXXX`). An implementation MUST NOT escape `/` or non-ASCII characters.
+- `created_at` MUST be RFC 3339 UTC with millisecond precision, e.g.
+  `2026-01-01T00:00:00.000Z`. It is hashed into `rev_id`, so a divergent
+  timestamp format produces a divergent `rev_id`.
 
 ## 4. Sync directory layout
 
@@ -256,3 +269,24 @@ migration/copy process, never several sync loops fighting over one vault.
 5. A delete is a durable tombstone and is not undone by a stale offline replay.
 6. Concurrent edits fork; both sides are preserved as conflict copies.
 7. `mtime`/`created_at` are never used to pick a winner.
+
+## 11. Deferred design decisions
+
+The following are open and intentionally deferred (to resolve before any live
+sync is enabled). They do not block the offline slice:
+
+1. **Losing-branch content location.** Records carry only `content_hash`, not
+   the bytes; `notes/<path>.md` holds only the winning branch. The current rule
+   is that a device that detects a fork preserves its own pushed bytes as a
+   conflict copy (`conflicts/<note_id>/<rev_id>.md`) at push time. A complete
+   solution needs an explicit decision on whether to also keep content-addressed
+   blobs so a third device can reconstruct any losing branch.
+2. **Byzantine-safe conflict resolution.** The deterministic smallest-`rev_id`
+   (tombstone-first) rule is convergent for trusted peers but not Byzantine-safe
+   (`device_id`/`created_at` are hashed into `rev_id`). Assumption: trusted
+   peers; conflicts are surfaced for human resolution.
+3. **Identical-content concurrent edits.** Two devices writing identical bytes
+   still fork (distinct attribution) and produce a byte-identical conflict copy.
+   Optional: suppress the conflict when `content_hash` matches the winner.
+4. **Assets (§8).** Asset transfer and content-addressed `.images/`/`.audio/`
+   handling are specified but not implemented.

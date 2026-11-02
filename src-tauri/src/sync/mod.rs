@@ -1,3 +1,4 @@
+pub mod drive;
 pub mod engine;
 pub mod hash;
 pub mod index;
