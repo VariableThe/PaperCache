@@ -27,6 +27,18 @@ Branch: `feat/mobile-sync-mcp` (based on `origin/main` @ `09e492a`, v0.5.9).
    reconcile, never overwrites the active unsaved buffer; tested.
 5. `feat(android): offline-first Android app` — Kotlin/Compose/Room app under
    `mobile/android/` (see below).
+6. `feat(sync): folder-provider sync engine` — storage layer (records, portable
+   notes, rebuildable index, outbox, conflict copies) + tests.
+7. `fix(sync): review-driven hardening` — two P8 round-table reviews applied:
+   tombstone-race fix, conflict wiring, atomic writes, corruption tolerance,
+   symlink safety, format-version checks.
+8. `feat(sync): Nextcloud WebDAV adapter` — list/get/put-with-If-Match/delete/
+   mkdir + Login Flow v2, mock-tested.
+9. `feat(sync): Google Drive adapter` — OAuth bearer, refresh, list/get/
+   conditional-put/delete, config-gated, mock-tested.
+10. `feat(sync): desktop sync commands` — `sync_init_folder`/`sync_push_note`/
+    `sync_pull_notes` exposed via Tauri.
+11. `fix(desktop): remove misleading Voice Memo shortcut` — health cleanup.
 
 ## Feature matrix
 
@@ -70,9 +82,9 @@ testing was performed (no emulator available); build-only validation reported.
 
 | Provider | Status |
 | --- | --- |
-| Syncthing ("sync through a folder") | Specified; adapter **not started** |
-| Nextcloud (WebDAV, Login Flow v2) | Specified; adapter **not started** |
-| Google Drive (drive.file scope) | Specified; adapter **not started** |
+| Syncthing ("sync through a folder") | Folder engine implemented (no UI) |
+| Nextcloud (WebDAV, Login Flow v2) | Adapter implemented + mock-tested (not live) |
+| Google Drive (drive.file scope) | Adapter implemented + mock-tested (not live) |
 
 No provider is wired to real credentials. No live sync has been run (per the
 authorization boundary: the user has not authorized access to their server).
@@ -83,8 +95,8 @@ authorization boundary: the user has not authorized access to their server).
 | --- | --- |
 | Save-loss fix | Done + tested |
 | External-file reconciliation (window focus) | Done + tested |
-| Matching sync adapter (desktop side) | **Not started** |
-| Health cleanup (misleading copy / disabled-feature labels) | **Not started** |
+| Matching sync adapter (desktop side) | Engine + Tauri commands done; frontend note-id/head mapping loop not wired |
+| Health cleanup (misleading copy / disabled-feature labels) | Voice Memo shortcut removed; broader pass partial |
 
 ### MCP
 
@@ -101,7 +113,7 @@ authorization boundary: the user has not authorized access to their server).
 | Suite | Result |
 | --- | --- |
 | Desktop Vitest | 97 passed (13 files) |
-| Sync protocol (Rust `cargo test sync::`) | 7 passed |
+| Sync protocol + engine (Rust `cargo test sync::`) | 29 passed |
 | MCP (Vitest) | 17 passed |
 | Android unit (Autosave) | 3 passed |
 
