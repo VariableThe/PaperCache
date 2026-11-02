@@ -14,6 +14,18 @@ This log tracks all significant changes, updates, and versions in the PaperCache
 
 ---
 
+## 2026-11-02 (Desktop MCP server: local stdio interface for the vault)
+**Change:** feat(mcp): add a read-only-by-default local stdio MCP server for the PaperCache vault
+
+**Details/Why:**
+1. **Server**: Added a standalone Node/TypeScript package in `mcp/` using the official `@modelcontextprotocol/sdk`. It exposes bounded `list_notes`, `search_notes`, and `read_note` tools, with opt-in write tools (`create_note`, `update_note` with an SHA-256 content-hash precondition, and recoverable `trash_note`) gated behind `PAPERCACHE_MCP_WRITE=1`.
+2. **Security**: Enforces vault scoping (canonicalized root), path-traversal/backslash/NUL rejection, and symlink boundary checks on read and write. Note contents are treated as opaque untrusted data. No network listener and no keychain access.
+3. **Tests**: Added `mcp/test/vault.test.ts` (17 tests) covering traversal/symlink rejection, bounds, the hash precondition, and recoverable trash, using temporary fixture vaults.
+
+**Files changed:** `mcp/` [NEW: `package.json`, `tsconfig.json`, `vitest.config.ts`, `src/index.ts`, `src/vault.ts`, `test/vault.test.ts`, `README.md`], `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Desktop reliability: fix note save loss on note switch)
 **Change:** fix(editor): flush debounced save on note switch and unmount instead of discarding it
 
