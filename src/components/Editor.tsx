@@ -3,6 +3,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { ViewUpdate } from '@codemirror/view'
 import { useAppStore } from '../store/useAppStore'
 import { useSettingsStore } from '../store/useSettingsStore'
+import { useDebouncedSave } from '../hooks/useDebouncedSave'
 
 import { useEditorExtensions } from '../lib/editor/extensions'
 import { MathEvaluator } from '../lib/editor/MathEvaluator'
@@ -40,23 +41,26 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
     },
   }))
 
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { schedule, flush } = useDebouncedSave<{ id: string; content: string }>(
+    ({ id, content }) => {
+      window.electronAPI.saveNote(id, content)
+    },
+    SAVE_DEBOUNCE_MS
+  )
 
   const handleEditorChange = useCallback(
     (val: string, viewUpdate?: ViewUpdate) => {
+      if (activeNote.id) {
+        schedule({ id: activeNote.id, content: val })
+      }
+
       setNotes((prevNotes) => {
         const updatedNotes = [...prevNotes]
         if (updatedNotes[currentNoteIndex]) {
-          const note = updatedNotes[currentNoteIndex]
           updatedNotes[currentNoteIndex] = {
-            ...note,
+            ...updatedNotes[currentNoteIndex],
             content: val,
           }
-
-          if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
-          saveTimeoutRef.current = setTimeout(() => {
-            window.electronAPI.saveNote(note.id, val)
-          }, SAVE_DEBOUNCE_MS)
         }
         return updatedNotes
       })
@@ -68,7 +72,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
         }
       }
     },
-    [currentNoteIndex, setNotes]
+    [activeNote.id, currentNoteIndex, setNotes, schedule]
   )
 
   const extensions = useEditorExtensions()
@@ -85,9 +89,11 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
 
   useEffect(() => {
     return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+      // Flush (not drop) any pending debounced save when the active note
+      // changes, so edits made within the debounce window are never lost.
+      flush()
     }
-  }, [currentNoteIndex])
+  }, [currentNoteIndex, flush])
 
   useEffect(() => {
     if (editorRef.current?.view) {

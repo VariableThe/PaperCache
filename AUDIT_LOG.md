@@ -2,6 +2,17 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Desktop reliability: fix note save loss on note switch)
+**Change:** fix(editor): flush debounced save on note switch and unmount instead of discarding it
+
+**Details/Why:**
+1. **Save-loss bug**: `Editor.tsx` scheduled a 500 ms `setTimeout` for `save_note` and cleared that timer in a `[currentNoteIndex]` cleanup effect whenever the active note changed. Any keystrokes made within the 500 ms window were therefore dropped when the user switched notes (or closed the app) before the timer fired. Extracted the debounce logic into a new `useDebouncedSave` hook (`src/hooks/useDebouncedSave.ts`) that keeps the latest pending item and exposes a `flush()` which commits it synchronously. `Editor.tsx` now calls `flush()` on note switch and the hook flushes on unmount, so an unsaved buffer is never discarded.
+2. **Regression coverage**: Added `src/hooks/useDebouncedSave.test.ts` covering flush-on-switch, flush-on-unmount, debounce collapse, and no-op flush behavior.
+
+**Files changed:** `src/hooks/useDebouncedSave.ts` [NEW], `src/hooks/useDebouncedSave.test.ts` [NEW], `src/components/Editor.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
 **Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
 

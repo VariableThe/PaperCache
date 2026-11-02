@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Note save loss on quick note switching**: Fixed a bug where edits made within the 500 ms autosave debounce window were silently lost when switching notes before the timer fired. Pending edits are now flushed to disk on note switch and app close instead of being discarded.
 
 ## [v0.5.9] - 2026-07-01
 
