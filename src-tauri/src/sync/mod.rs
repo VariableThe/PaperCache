@@ -1,3 +1,4 @@
+pub mod engine;
 pub mod hash;
 pub mod index;
 pub mod revision;

@@ -2,6 +2,17 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Sync engine: folder-provider storage layer)
+**Change:** feat(sync): add folder-provider sync engine (records, portable notes, index, outbox)
+
+**Details/Why:**
+1. **Engine**: Added `src-tauri/src/sync/engine.rs`, a provider-agnostic sync-root implementation of the `docs/sync-protocol.md` layout: vault init (idempotent, mismatch-rejecting), immutable record read/write (idempotent by `rev_id`), portable Markdown notes under `notes/`, rebuildable `index.json`, conflict-copy storage, and a durable outbox. `push_note` verifies the content hash, writes the record + note, and rebuilds the index; `pull` reads records and rebuilds the index.
+2. **Tests**: 7 new tests cover vault idempotency/mismatch, record idempotency, portable-note push + index rebuild, content-hash mismatch rejection, delete tombstones, path-traversal rejection, and outbox dedup.
+
+**Files changed:** `src-tauri/src/sync/engine.rs` [NEW], `src-tauri/src/sync/mod.rs`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Android offline app: Kotlin/Compose/Room, debug APK built)
 **Change:** feat(android): add offline-first Android app and build a debug APK
 
