@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef } from 'react'
 export interface DebouncedSave<T> {
   schedule: (item: T) => void
   flush: () => void
+  isDirty: () => boolean
 }
 
 export function useDebouncedSave<T>(
@@ -40,6 +41,8 @@ export function useDebouncedSave<T>(
     }
   }, [])
 
+  const isDirty = useCallback(() => pendingRef.current !== null, [])
+
   const schedule = useCallback(
     (item: T) => {
       pendingRef.current = item
@@ -65,5 +68,5 @@ export function useDebouncedSave<T>(
     }
   }, [])
 
-  return { schedule, flush }
+  return { schedule, flush, isDirty }
 }

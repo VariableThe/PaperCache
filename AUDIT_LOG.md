@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Desktop reliability: external note reconciliation on window focus)
+**Change:** feat(desktop): reconcile in-memory notes with on-disk changes on window focus without overwriting unsaved buffers
+
+**Details/Why:**
+1. **Reconciliation**: The app previously loaded notes once on mount and never reconciled with files changed externally. Added a window-focus handler in `useNoteStorage.ts` that re-reads notes and reconciles via a new pure `reconcileNotes` helper.
+2. **Unsaved-buffer safety**: The active note is never overwritten when it has a pending unsaved edit. `useDebouncedSave` now exposes `isDirty()`, `Editor.tsx` tracks dirty state in the store, and `reconcileNotes` keeps the local buffer (surfacing a warning toast) when a dirty note changed or was deleted externally.
+3. **Tests**: Added `src/lib/reconcileNotes.test.ts` (7 cases) covering adopt-external, preserve-dirty, clean-overwrite, delete-while-dirty, drop-deleted, add-new, and no-op.
+
+**Files changed:** `src/lib/reconcileNotes.ts` [NEW], `src/lib/reconcileNotes.test.ts` [NEW], `src/hooks/useDebouncedSave.ts`, `src/hooks/useNoteStorage.ts`, `src/components/Editor.tsx`, `src/store/useAppStore.ts`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Shared sync protocol: spec, reference implementation, fixtures)
 **Change:** feat(sync): define the versioned cross-platform sync protocol with a Rust reference core and pinned compatibility fixtures
 

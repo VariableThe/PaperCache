@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **External note reconciliation on window focus**: The app now re-reads notes from disk when the window regains focus and reconciles in-memory state with external changes (files edited or added outside the app). An active note with unsaved edits is never overwritten; the local version is kept and the conflict is surfaced as a warning toast.
+
 ### Fixed
 - **Note save loss on quick note switching**: Fixed a bug where edits made within the 500 ms autosave debounce window were silently lost when switching notes before the timer fired. Pending edits are now flushed to disk on note switch and app close instead of being discarded.
 

@@ -35,6 +35,7 @@ interface AppState {
   showSettingsModal: boolean
   showKeybindsModal: boolean
   isRecordingShortcut: boolean
+  isEditorDirty: boolean
 
   setNotes: (notes: Note[] | ((prev: Note[]) => Note[])) => void
   setCurrentNoteIndex: (index: number) => void
@@ -56,6 +57,7 @@ interface AppState {
   setShowSettingsModal: (show: boolean) => void
   setShowKeybindsModal: (show: boolean) => void
   setIsRecordingShortcut: (isRecording: boolean) => void
+  setIsEditorDirty: (isDirty: boolean) => void
 }
 
 export const useAppStore = create<AppState>((set) => {
@@ -89,6 +91,7 @@ export const useAppStore = create<AppState>((set) => {
     showSettingsModal: false,
     showKeybindsModal: false,
     isRecordingShortcut: false,
+    isEditorDirty: false,
 
     setNotes: (notes) =>
       set((state) => ({
@@ -128,5 +131,6 @@ export const useAppStore = create<AppState>((set) => {
     setShowSettingsModal: simpleSetter('showSettingsModal'),
     setShowKeybindsModal: simpleSetter('showKeybindsModal'),
     setIsRecordingShortcut: simpleSetter('isRecordingShortcut'),
+    setIsEditorDirty: simpleSetter('isEditorDirty'),
   }
 })

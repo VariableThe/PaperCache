@@ -22,6 +22,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
   const notes = useAppStore((state) => state.notes)
   const setNotes = useAppStore((state) => state.setNotes)
   const currentNoteIndex = useAppStore((state) => state.currentNoteIndex)
+  const setIsEditorDirty = useAppStore((state) => state.setIsEditorDirty)
   const activeNote = notes[currentNoteIndex] || { id: '', content: '', mtime: 0 }
 
   const themePreset = useSettingsStore((state) => state.themePreset)
@@ -44,6 +45,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
   const { schedule, flush } = useDebouncedSave<{ id: string; content: string }>(
     ({ id, content }) => {
       window.electronAPI.saveNote(id, content)
+      setIsEditorDirty(false)
     },
     SAVE_DEBOUNCE_MS
   )
@@ -51,6 +53,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
   const handleEditorChange = useCallback(
     (val: string, viewUpdate?: ViewUpdate) => {
       if (activeNote.id) {
+        setIsEditorDirty(true)
         schedule({ id: activeNote.id, content: val })
       }
 
@@ -72,7 +75,7 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
         }
       }
     },
-    [activeNote.id, currentNoteIndex, setNotes, schedule]
+    [activeNote.id, currentNoteIndex, setNotes, schedule, setIsEditorDirty]
   )
 
   const extensions = useEditorExtensions()
