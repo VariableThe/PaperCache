@@ -2,6 +2,17 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Safe-storage Keyring Failure Handling)
+**Change:** fix(security): generate a safe-storage master key only after a confirmed missing-key result
+
+**Details/Why:**
+1. **Preserve Existing Encrypted Data:** Previously, any keyring read error was treated as a missing credential and caused a replacement encryption key to be stored. Keyring access and platform failures now return an error instead, so PaperCache does not overwrite the key needed to decrypt existing data.
+2. **Regression Coverage:** Added focused Rust unit coverage distinguishing the confirmed-missing `NoEntry` result from a keyring failure, without reading or mutating the host keychain.
+
+**Files changed:** `src-tauri/src/commands/keychain.rs`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
 **Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
 
