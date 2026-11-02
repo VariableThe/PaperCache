@@ -2,6 +2,16 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Desktop sync command wiring)
+**Change:** feat(sync): expose the sync engine to the desktop app via Tauri commands
+
+**Details/Why:**
+1. Added `src-tauri/src/commands/sync.rs` with three commands: `sync_init_folder` (initialize a folder as a vault), `sync_push_note` (push an upsert revision), and `sync_pull_notes` (return portable notes + identity). Includes a stable per-installation `device_id` (persisted under `~/.papercache/.papercache-sync/device.json`) and RFC 3339 millisecond timestamps via `chrono`. Registered in `commands/mod.rs` and `lib.rs`, and added `syncInitFolder`/`syncPushNote`/`syncPullNotes` to `types.d.ts` + `api.ts`.
+
+**Files changed:** `src-tauri/src/commands/sync.rs` [NEW], `src-tauri/src/commands/mod.rs`, `src-tauri/src/lib.rs`, `src-tauri/Cargo.toml`, `src/types.d.ts`, `src/api.ts`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Health cleanup: remove misleading Voice Memo shortcut)
 **Change:** fix(desktop): remove dead "Hold to Record Voice Memo" shortcut from the keybinds UI
 

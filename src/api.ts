@@ -68,4 +68,14 @@ export const tauriApi: ElectronAPI = {
   onUpdateStatus: (callback) => onEvent('update-status', callback),
   saveAsset: (dataBase64, ext, folder) => invoke('save_asset', { dataBase64, ext, folder }),
   readAsset: (assetPath) => invoke('read_asset', { path: assetPath }),
+  syncInitFolder: (folderPath) => invoke('sync_init_folder', { folderPath }),
+  syncPushNote: (args) =>
+    invoke('sync_push_note', {
+      folderPath: args.folderPath,
+      noteId: args.noteId,
+      path: args.path,
+      content: args.content,
+      parentRev: args.parentRev ?? null,
+    }),
+  syncPullNotes: (folderPath) => invoke('sync_pull_notes', { folderPath }),
 }
