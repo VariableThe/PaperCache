@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
@@ -34,7 +35,11 @@ pub fn rebuild_index(records: &[Revision]) -> Index {
 
     let mut notes = BTreeMap::new();
     for (note_id, revs) in by_note {
-        notes.insert(note_id, rebuild_note(&revs));
+        // A note whose chain has no reachable root (dangling parent) is
+        // incomplete; omit it rather than emitting a ghost with an empty path.
+        if let Some(state) = rebuild_note(&revs) {
+            notes.insert(note_id, state);
+        }
     }
 
     Index {
@@ -62,7 +67,7 @@ pub fn find_conflicts(records: &[Revision]) -> Vec<String> {
         for kids in children.values() {
             if kids.len() > 1 {
                 let mut sorted = kids.clone();
-                sorted.sort_by_key(|r| r.rev_id());
+                sorted.sort_by(fork_order);
                 for k in &sorted[1..] {
                     conflicts.push(k.rev_id());
                 }
@@ -74,6 +79,20 @@ pub fn find_conflicts(records: &[Revision]) -> Vec<String> {
     conflicts
 }
 
+/// Deterministic fork resolution: a `Delete` tombstone always wins over a
+/// concurrent edit, so a delete/edit race never resurrects a note. Among same-
+/// kind branches, the smallest `rev_id` wins. Never uses wall-clock time.
+fn fork_order(a: &&Revision, b: &&Revision) -> Ordering {
+    let (a, b) = (*a, *b);
+    let a_del = a.op == Op::Delete;
+    let b_del = b.op == Op::Delete;
+    match (a_del, b_del) {
+        (true, false) => Ordering::Less,
+        (false, true) => Ordering::Greater,
+        _ => a.rev_id().cmp(&b.rev_id()),
+    }
+}
+
 fn dedup_by_rev_id(records: &[Revision]) -> Vec<&Revision> {
     let mut seen: BTreeMap<String, &Revision> = BTreeMap::new();
     for r in records {
@@ -82,7 +101,7 @@ fn dedup_by_rev_id(records: &[Revision]) -> Vec<&Revision> {
     seen.into_values().collect()
 }
 
-fn rebuild_note(revs: &[&Revision]) -> NoteState {
+fn rebuild_note(revs: &[&Revision]) -> Option<NoteState> {
     let mut children: BTreeMap<Option<String>, Vec<&Revision>> = BTreeMap::new();
     for r in revs {
         children.entry(r.parent_rev.clone()).or_default().push(r);
@@ -104,13 +123,18 @@ fn rebuild_note(revs: &[&Revision]) -> NoteState {
             break;
         }
         let mut sorted = kids.clone();
-        sorted.sort_by_key(|r| r.rev_id());
+        sorted.sort_by(fork_order);
         let head = sorted[0];
         apply_revision(head, &mut state);
         parent = Some(head.rev_id());
     }
 
-    state
+    // No reachable root means the chain is incomplete (partial sync); treat as
+    // no information rather than an empty note.
+    if state.head_rev.is_empty() {
+        return None;
+    }
+    Some(state)
 }
 
 fn apply_revision(r: &Revision, state: &mut NoteState) {

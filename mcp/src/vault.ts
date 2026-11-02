@@ -160,6 +160,7 @@ export function createNote(id: string, content: string): string {
   const vaultRoot = resolveVaultRoot()
   const rel = validateNoteId(id)
   if (!rel.endsWith('.md')) throw new Error('new notes must have a .md suffix')
+  assertWritableSize(content)
   const abs = resolveWithinVault(vaultRoot, rel)
   if (fs.existsSync(abs)) throw new Error(`note already exists: ${id}`)
   fs.mkdirSync(path.dirname(abs), { recursive: true })
@@ -170,6 +171,7 @@ export function createNote(id: string, content: string): string {
 export function updateNote(id: string, content: string, expectedHash?: string): string {
   const vaultRoot = resolveVaultRoot()
   const abs = resolveForRead(vaultRoot, id)
+  assertWritableSize(content)
   if (expectedHash) {
     const current = fs.readFileSync(abs)
     if (sha256(current) !== expectedHash) {
@@ -178,6 +180,12 @@ export function updateNote(id: string, content: string, expectedHash?: string): 
   }
   fs.writeFileSync(abs, content, 'utf8')
   return id
+}
+
+function assertWritableSize(content: string): void {
+  if (Buffer.byteLength(content, 'utf8') > MAX_NOTE_BYTES) {
+    throw new Error('note too large to write')
+  }
 }
 
 /** Move a note into a recoverable trash folder; never permanently delete. */

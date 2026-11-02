@@ -7,6 +7,47 @@ fn body_hash(s: &str) -> String {
     hash_content(s.as_bytes())
 }
 
+#[test]
+fn delete_edit_race_does_not_resurrect_the_note() {
+    let note_id = "dddddddd-dddd-4ddd-8ddd-dddddddddddd";
+    let base = Revision::upsert(
+        note_id,
+        None,
+        "note.md",
+        body_hash("base"),
+        4,
+        DEV_A,
+        "2026-01-01T00:00:00.000Z",
+    );
+    let base_rev = base.rev_id();
+
+    // A delete and a concurrent edit race on the same base.
+    let del = Revision::delete(
+        note_id,
+        Some(base_rev.clone()),
+        "note.md",
+        DEV_A,
+        "2026-01-01T00:00:01.000Z",
+    );
+    let edit = Revision::upsert(
+        note_id,
+        Some(base_rev.clone()),
+        "note.md",
+        body_hash("edited"),
+        6,
+        DEV_B,
+        "2026-01-01T00:00:01.000Z",
+    );
+
+    // The tombstone must win regardless of rev_id ordering.
+    let idx = rebuild_index(&[base.clone(), del.clone(), edit.clone()]);
+    assert!(idx.notes[note_id].deleted, "delete/edit race must not resurrect");
+
+    // The concurrent edit is preserved as a conflict, not silently dropped.
+    let conflicts = find_conflicts(&[base, del, edit.clone()]);
+    assert_eq!(conflicts, vec![edit.rev_id()]);
+}
+
 /// Pins the canonical serialization and `rev_id` values that the compatibility
 /// fixtures (`sync/fixtures/`) document. Any change to field order, key naming,
 /// or optional-field handling MUST update this test and the fixtures together,

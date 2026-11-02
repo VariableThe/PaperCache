@@ -2,6 +2,19 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-02 (Sync hardening: review-driven correctness + security fixes, Nextcloud adapter)
+**Change:** fix(sync): tombstone-race, conflict wiring, atomicity, corruption tolerance, symlink safety; add Nextcloud WebDAV adapter
+
+**Details/Why:**
+1. **Round-table review**: Two independent P8 reviewers audited `docs/sync-protocol.md`, `src-tauri/src/sync/`, and `mcp/`. Applied the concrete, low-risk findings and deferred the hard design decisions (losing-branch content location, Byzantine-safe conflict resolution) as documented.
+2. **Fixes**: (a) delete/edit fork now prefers the tombstone so a note is never resurrected; (b) `push_note` wires in conflict detection and writes losing content as a conflict copy; (c) rename moves the portable file via `fs::rename` (byte-preserving) instead of remove+write; (d) record/index/outbox writes are atomic (temp+rename); (e) `read_records`/`read_index` tolerate corruption and verify the content-address filename; (f) format-version is checked on read; (g) `write_note`/`remove_note`/`rename_note_file`/`write_conflict` reject symlink escapes and path traversal; (h) dangling-parent chains no longer produce ghost notes; (i) path canonicalization rejects `//` and `/./`.
+3. **Nextcloud adapter**: Added `src-tauri/src/sync/nextcloud.rs` — HTTPS WebDAV (`list`/`get`/`put` with ETag/If-Match conditional writes/`delete`/`mkdir`) plus Login Flow v2 (`start_login_flow`/`poll_login_flow`) that discovers the DAV user id and yields a revocable app password. Mock-server tests cover login flow, If-Match 412 conflict, and ETag round-trip. Added `quick-xml` dependency.
+4. **MCP**: enforce the 1 MiB write-size cap on `create_note`/`update_note`.
+
+**Files changed:** `src-tauri/src/sync/{index,engine,nextcloud,mod}.rs`, `src-tauri/src/sync/tests.rs`, `src-tauri/Cargo.toml`, `mcp/src/vault.ts`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Sync engine: folder-provider storage layer)
 **Change:** feat(sync): add folder-provider sync engine (records, portable notes, index, outbox)
 

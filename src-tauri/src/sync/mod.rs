@@ -1,6 +1,7 @@
 pub mod engine;
 pub mod hash;
 pub mod index;
+pub mod nextcloud;
 pub mod revision;
 pub mod vault;
 
