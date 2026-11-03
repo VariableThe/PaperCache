@@ -87,6 +87,9 @@ if (typeof window !== 'undefined') {
     onUpdateStatus: vi.fn().mockReturnValue(() => {}),
     saveAsset: vi.fn().mockResolvedValue('/.images/test.png'),
     readAsset: vi.fn().mockResolvedValue('data:image/png;base64,'),
+    syncInitFolder: vi.fn().mockResolvedValue('test-vault-id'),
+    syncPushNote: vi.fn().mockResolvedValue('test-rev-id'),
+    syncPullNotes: vi.fn().mockResolvedValue([]),
   } as ElectronAPI
 }
 

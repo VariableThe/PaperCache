@@ -3,6 +3,7 @@
 extern crate objc;
 
 mod commands;
+mod sync;
 #[cfg(target_os = "macos")]
 mod macos;
 mod tray;
@@ -185,6 +186,9 @@ pub fn run() {
             commands::notifications::cancel_all_reminders,
             commands::notifications::schedule_timer,
             commands::notifications::cancel_timer,
+            commands::sync::sync_init_folder,
+            commands::sync::sync_push_note,
+            commands::sync::sync_pull_notes,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

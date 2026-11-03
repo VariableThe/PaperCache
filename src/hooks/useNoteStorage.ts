@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useAppStore } from '../store/useAppStore'
+import { reconcileNotes } from '../lib/reconcileNotes'
 
 export function useNoteStorage() {
   const notes = useAppStore((state) => state.notes)
@@ -54,4 +55,28 @@ export function useNoteStorage() {
     window.addEventListener('open-papercache-note', handleOpenNote)
     return () => window.removeEventListener('open-papercache-note', handleOpenNote)
   }, [setNotes, setCurrentNoteIndex])
+
+  // Reconcile with external file changes when the window regains focus.
+  // Never overwrites the active unsaved buffer (see reconcileNotes).
+  useEffect(() => {
+    async function reconcile() {
+      try {
+        const fresh = await window.electronAPI.getNotes()
+        const state = useAppStore.getState()
+        const activeId = state.notes[state.currentNoteIndex]?.id ?? null
+        const result = reconcileNotes(state.notes, activeId, state.isEditorDirty, fresh)
+        if (result.conflicts.length > 0) {
+          state.addToast({
+            message: 'A note changed elsewhere while you were editing — your version was kept.',
+            type: 'warning',
+          })
+        }
+        setNotes(result.notes)
+      } catch {
+        // Reconcile is best-effort; never lose the in-memory buffer on failure.
+      }
+    }
+    window.addEventListener('focus', reconcile)
+    return () => window.removeEventListener('focus', reconcile)
+  }, [setNotes])
 }

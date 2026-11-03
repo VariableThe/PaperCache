@@ -2,6 +2,132 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-03 (Android: match desktop "Paper Light" aesthetic)
+**Change:** style(android): apply desktop PaperCache colors + JetBrains Mono to the Android app
+
+**Details/Why:**
+1. **Palette**: Replaced the blue Material default with the desktop "Paper Light" palette — purple accent `#aa3bff`, paper-white background `#fdfdfd`, near-black text `#2c2c2c`, muted `#6b6375`, border `#e5e4e7` — in `ui/theme/Theme.kt`.
+2. **Font**: Bundled JetBrains Mono (regular/medium/bold) under `res/font/` and set it as the app typography, matching the desktop's monospace editor.
+3. **Editor**: Made the note body a borderless, paper-background text field (transparent outline) with the monospace body style, matching the desktop's CodeMirror look.
+
+**Files changed:** `mobile/android/app/src/main/java/com/papercache/mobile/ui/theme/Theme.kt`, `mobile/android/app/src/main/java/com/papercache/mobile/ui/EditorScreen.kt`, `mobile/android/app/src/main/res/font/*.ttf` [NEW], `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Desktop sync command wiring)
+**Change:** feat(sync): expose the sync engine to the desktop app via Tauri commands
+
+**Details/Why:**
+1. Added `src-tauri/src/commands/sync.rs` with three commands: `sync_init_folder` (initialize a folder as a vault), `sync_push_note` (push an upsert revision), and `sync_pull_notes` (return portable notes + identity). Includes a stable per-installation `device_id` (persisted under `~/.papercache/.papercache-sync/device.json`) and RFC 3339 millisecond timestamps via `chrono`. Registered in `commands/mod.rs` and `lib.rs`, and added `syncInitFolder`/`syncPushNote`/`syncPullNotes` to `types.d.ts` + `api.ts`.
+
+**Files changed:** `src-tauri/src/commands/sync.rs` [NEW], `src-tauri/src/commands/mod.rs`, `src-tauri/src/lib.rs`, `src-tauri/Cargo.toml`, `src/types.d.ts`, `src/api.ts`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Health cleanup: remove misleading Voice Memo shortcut)
+**Change:** fix(desktop): remove dead "Hold to Record Voice Memo" shortcut from the keybinds UI
+
+**Details/Why:**
+1. Voice memo recording was previously removed from the app (extracted to a separate project), but the shortcuts/keybinds modal still listed a "Hold to Record Voice Memo" entry (default `Mod+Shift+M`) with no backing feature, so pressing it did nothing. Removed the entry from `KeybindsModal.tsx` and the `SHORTCUT_VOICE_MEMO` key from `settingsKeys.ts`. This is the "label disabled features honestly / remove broken behavior" health cleanup.
+
+**Files changed:** `src/components/KeybindsModal.tsx`, `src/lib/settingsKeys.ts`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Google Drive adapter + canonical-serialization spec clarification)
+**Change:** feat(sync): add config-gated Google Drive adapter; pin canonical JSON byte-level rules
+
+**Details/Why:**
+1. **Drive adapter**: Added `src-tauri/src/sync/drive.rs` — an OAuth-bearer Drive client (`exchange_code`, `refresh_access_token`, `list`, `get`, conditional `put` with `If-Match`/revision, `delete`) that is explicitly gated on publisher config (`client_id`/`client_secret`/`refresh_token`) and refuses to act when unconfigured (no fake sync). Endpoints are injectable for mock tests. Mock tests cover refresh, bearer+multipart upload, and the 412 revision-conflict path.
+2. **Spec**: Clarified `docs/sync-protocol.md` §3 with byte-level canonical-JSON rules (snake_case order, `null`-not-omitted, `/`/non-ASCII never escaped, lowercase `op`) and mandated RFC 3339 UTC millisecond `created_at`; added §11 capturing the deferred design decisions (losing-branch content location, Byzantine-safety, identical-content conflicts, assets).
+
+**Files changed:** `src-tauri/src/sync/drive.rs` [NEW], `src-tauri/src/sync/mod.rs`, `docs/sync-protocol.md`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Sync hardening: review-driven correctness + security fixes, Nextcloud adapter)
+**Change:** fix(sync): tombstone-race, conflict wiring, atomicity, corruption tolerance, symlink safety; add Nextcloud WebDAV adapter
+
+**Details/Why:**
+1. **Round-table review**: Two independent P8 reviewers audited `docs/sync-protocol.md`, `src-tauri/src/sync/`, and `mcp/`. Applied the concrete, low-risk findings and deferred the hard design decisions (losing-branch content location, Byzantine-safe conflict resolution) as documented.
+2. **Fixes**: (a) delete/edit fork now prefers the tombstone so a note is never resurrected; (b) `push_note` wires in conflict detection and writes losing content as a conflict copy; (c) rename moves the portable file via `fs::rename` (byte-preserving) instead of remove+write; (d) record/index/outbox writes are atomic (temp+rename); (e) `read_records`/`read_index` tolerate corruption and verify the content-address filename; (f) format-version is checked on read; (g) `write_note`/`remove_note`/`rename_note_file`/`write_conflict` reject symlink escapes and path traversal; (h) dangling-parent chains no longer produce ghost notes; (i) path canonicalization rejects `//` and `/./`.
+3. **Nextcloud adapter**: Added `src-tauri/src/sync/nextcloud.rs` — HTTPS WebDAV (`list`/`get`/`put` with ETag/If-Match conditional writes/`delete`/`mkdir`) plus Login Flow v2 (`start_login_flow`/`poll_login_flow`) that discovers the DAV user id and yields a revocable app password. Mock-server tests cover login flow, If-Match 412 conflict, and ETag round-trip. Added `quick-xml` dependency.
+4. **MCP**: enforce the 1 MiB write-size cap on `create_note`/`update_note`.
+
+**Files changed:** `src-tauri/src/sync/{index,engine,nextcloud,mod}.rs`, `src-tauri/src/sync/tests.rs`, `src-tauri/Cargo.toml`, `mcp/src/vault.ts`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Sync engine: folder-provider storage layer)
+**Change:** feat(sync): add folder-provider sync engine (records, portable notes, index, outbox)
+
+**Details/Why:**
+1. **Engine**: Added `src-tauri/src/sync/engine.rs`, a provider-agnostic sync-root implementation of the `docs/sync-protocol.md` layout: vault init (idempotent, mismatch-rejecting), immutable record read/write (idempotent by `rev_id`), portable Markdown notes under `notes/`, rebuildable `index.json`, conflict-copy storage, and a durable outbox. `push_note` verifies the content hash, writes the record + note, and rebuilds the index; `pull` reads records and rebuilds the index.
+2. **Tests**: 7 new tests cover vault idempotency/mismatch, record idempotency, portable-note push + index rebuild, content-hash mismatch rejection, delete tombstones, path-traversal rejection, and outbox dedup.
+
+**Files changed:** `src-tauri/src/sync/engine.rs` [NEW], `src-tauri/src/sync/mod.rs`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Android offline app: Kotlin/Compose/Room, debug APK built)
+**Change:** feat(android): add offline-first Android app and build a debug APK
+
+**Details/Why:**
+1. **App**: Added `mobile/android/` (Kotlin + Jetpack Compose + Room + Material 3). Implements the offline slice: note list + search, create/edit/rename, durable autosave (`Autosave` helper with debounce + flush-on-navigate, mirroring the desktop `useDebouncedSave` fix), Room persistence with a stable `noteId` (UUID) separate from the renameable `path`, tags, and undoable trash (soft-delete + restore + hard delete). Markdown is preserved byte-for-byte (plain editor, no stripping). Honest offline/"sync not configured" status.
+2. **Toolchain**: Installed user-space (no sudo): Temurin JDK 17 at `~/jdk17`, Android SDK 35 (platforms/android-35 + build-tools 35.0.0) at `~/Android/Sdk`, Gradle 8.9. Raised Gradle HTTP timeouts in `gradle.properties` for the slow network.
+3. **Build & test**: `assembleDebug` succeeds; APK at `mobile/android/app/build/outputs/apk/debug/app-debug.apk` (16 MB). `AutosaveTest` (3 tests) passes via `testDebugUnitTest`. No emulator/device testing (none available).
+
+**Files changed:** `mobile/android/` [NEW: settings/build Gradle files, `gradle.properties`, `gradle-wrapper.properties`, manifest, resources, `MainActivity.kt`, `data/{Note,NoteDao,AppDatabase,NoteRepository}.kt`, `util/Autosave.kt`, `ui/{NoteViewModel,NoteListScreen,EditorScreen,TrashScreen}.kt`, `ui/theme/Theme.kt`, `AutosaveTest.kt`], `docs/implementation-status.md` [NEW], `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Desktop reliability: external note reconciliation on window focus)
+**Change:** feat(desktop): reconcile in-memory notes with on-disk changes on window focus without overwriting unsaved buffers
+
+**Details/Why:**
+1. **Reconciliation**: The app previously loaded notes once on mount and never reconciled with files changed externally. Added a window-focus handler in `useNoteStorage.ts` that re-reads notes and reconciles via a new pure `reconcileNotes` helper.
+2. **Unsaved-buffer safety**: The active note is never overwritten when it has a pending unsaved edit. `useDebouncedSave` now exposes `isDirty()`, `Editor.tsx` tracks dirty state in the store, and `reconcileNotes` keeps the local buffer (surfacing a warning toast) when a dirty note changed or was deleted externally.
+3. **Tests**: Added `src/lib/reconcileNotes.test.ts` (7 cases) covering adopt-external, preserve-dirty, clean-overwrite, delete-while-dirty, drop-deleted, add-new, and no-op.
+
+**Files changed:** `src/lib/reconcileNotes.ts` [NEW], `src/lib/reconcileNotes.test.ts` [NEW], `src/hooks/useDebouncedSave.ts`, `src/hooks/useNoteStorage.ts`, `src/components/Editor.tsx`, `src/store/useAppStore.ts`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Shared sync protocol: spec, reference implementation, fixtures)
+**Change:** feat(sync): define the versioned cross-platform sync protocol with a Rust reference core and pinned compatibility fixtures
+
+**Details/Why:**
+1. **Spec**: Added `docs/sync-protocol.md` defining format version 1 of the single sync contract shared by desktop and Android. It specifies stable vault/note/device/revision identities, immutable content-addressed revision records with `parent_rev` ancestry and `content_hash`, a rebuildable `index.json`, deletion tombstones, deterministic conflict handling (fork branches preserved as conflict copies; head chosen by smallest `rev_id`, never by `mtime`), and a provider-agnostic sync directory layout.
+2. **Reference implementation**: Added `src-tauri/src/sync/` (`hash.rs`, `revision.rs`, `index.rs`, `vault.rs`, `mod.rs`, `tests.rs`) implementing canonical serialization + `rev_id`, index rebuild, conflict detection, and idempotent replay. Added `sha2` and `uuid` dependencies.
+3. **Fixtures**: Added `sync/fixtures/` with a `vault.json`, three pinned `records/*.json` (upsert → rename + concurrent edit fork), an expected `index.json`, and the note body. The canonical form and `rev_id` are pinned by `canonical_form_is_pinned_to_fixtures`.
+
+**Files changed:** `docs/sync-protocol.md` [NEW], `src-tauri/src/sync/*` [NEW], `sync/fixtures/*` [NEW], `src-tauri/Cargo.toml`, `src-tauri/src/lib.rs`, `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Desktop MCP server: local stdio interface for the vault)
+**Change:** feat(mcp): add a read-only-by-default local stdio MCP server for the PaperCache vault
+
+**Details/Why:**
+1. **Server**: Added a standalone Node/TypeScript package in `mcp/` using the official `@modelcontextprotocol/sdk`. It exposes bounded `list_notes`, `search_notes`, and `read_note` tools, with opt-in write tools (`create_note`, `update_note` with an SHA-256 content-hash precondition, and recoverable `trash_note`) gated behind `PAPERCACHE_MCP_WRITE=1`.
+2. **Security**: Enforces vault scoping (canonicalized root), path-traversal/backslash/NUL rejection, and symlink boundary checks on read and write. Note contents are treated as opaque untrusted data. No network listener and no keychain access.
+3. **Tests**: Added `mcp/test/vault.test.ts` (17 tests) covering traversal/symlink rejection, bounds, the hash precondition, and recoverable trash, using temporary fixture vaults.
+
+**Files changed:** `mcp/` [NEW: `package.json`, `tsconfig.json`, `vitest.config.ts`, `src/index.ts`, `src/vault.ts`, `test/vault.test.ts`, `README.md`], `AUDIT_LOG.md`.
+
+---
+
+## 2026-11-02 (Desktop reliability: fix note save loss on note switch)
+**Change:** fix(editor): flush debounced save on note switch and unmount instead of discarding it
+
+**Details/Why:**
+1. **Save-loss bug**: `Editor.tsx` scheduled a 500 ms `setTimeout` for `save_note` and cleared that timer in a `[currentNoteIndex]` cleanup effect whenever the active note changed. Any keystrokes made within the 500 ms window were therefore dropped when the user switched notes (or closed the app) before the timer fired. Extracted the debounce logic into a new `useDebouncedSave` hook (`src/hooks/useDebouncedSave.ts`) that keeps the latest pending item and exposes a `flush()` which commits it synchronously. `Editor.tsx` now calls `flush()` on note switch and the hook flushes on unmount, so an unsaved buffer is never discarded.
+2. **Regression coverage**: Added `src/hooks/useDebouncedSave.test.ts` covering flush-on-switch, flush-on-unmount, debounce collapse, and no-op flush behavior.
+
+**Files changed:** `src/hooks/useDebouncedSave.ts` [NEW], `src/hooks/useDebouncedSave.test.ts` [NEW], `src/components/Editor.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
 **Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
 

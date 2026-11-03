@@ -57,6 +57,17 @@ export interface ElectronAPI {
   onUpdateStatus: (callback: (payload: UpdateStatusPayload) => void) => () => void
   saveAsset: (dataBase64: string, ext: string, folder: string) => Promise<string>
   readAsset: (assetPath: string) => Promise<string>
+  syncInitFolder: (folderPath: string) => Promise<string>
+  syncPushNote: (args: {
+    folderPath: string
+    noteId: string
+    path: string
+    content: string
+    parentRev?: string | null
+  }) => Promise<string>
+  syncPullNotes: (
+    folderPath: string
+  ) => Promise<Array<{ noteId: string; path: string; content: string; deleted: boolean }>>
 }
 
 declare global {
