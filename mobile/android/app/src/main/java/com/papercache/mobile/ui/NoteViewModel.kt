@@ -48,9 +48,6 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
     private val _editorPath = MutableStateFlow("")
     val editorPath: StateFlow<String> = _editorPath.asStateFlow()
 
-    private val _editorTags = MutableStateFlow("")
-    val editorTags: StateFlow<String> = _editorTags.asStateFlow()
-
     private val _saveStatus = MutableStateFlow("")
     val saveStatus: StateFlow<String> = _saveStatus.asStateFlow()
 
@@ -73,7 +70,6 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
                 _editingNoteId.value = n.noteId
                 _editorContent.value = n.content
                 _editorPath.value = n.path
-                _editorTags.value = n.tags
                 _saveStatus.value = ""
             }
         }
@@ -84,7 +80,6 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
         _editingNoteId.value = null
         _editorContent.value = ""
         _editorPath.value = ""
-        _editorTags.value = ""
         _saveStatus.value = ""
     }
 
@@ -93,14 +88,6 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
         val id = _editingNoteId.value ?: return
         _saveStatus.value = "Saving…"
         autosave.schedule(id, content)
-    }
-
-    fun onTagsChange(tags: String) {
-        _editorTags.value = tags
-        val id = _editingNoteId.value ?: return
-        viewModelScope.launch {
-            repo.get(id)?.let { repo.upsert(it.copy(tags = tags, mtime = System.currentTimeMillis())) }
-        }
     }
 
     fun createNote() {

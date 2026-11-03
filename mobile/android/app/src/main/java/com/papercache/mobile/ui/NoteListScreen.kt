@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.papercache.mobile.data.Note
@@ -149,8 +150,13 @@ private fun NoteRow(note: Note, onOpen: () -> Unit, onTrash: () -> Unit) {
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    if (note.tags.isNotBlank()) {
-                        Text("Tags: ${note.tags}", style = MaterialTheme.typography.labelSmall)
+                    val tags = extractTags(note.content)
+                    if (tags.isNotEmpty()) {
+                        Text(
+                            text = tags.joinToString("  ") { "!$it" },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF3B82F6),
+                        )
                     }
                 }
             },
@@ -163,3 +169,8 @@ private fun NoteRow(note: Note, onOpen: () -> Unit, onTrash: () -> Unit) {
         )
     }
 }
+
+private val TAG_REGEX = Regex("!([a-zA-Z0-9_-]+)")
+
+private fun extractTags(content: String): List<String> =
+    TAG_REGEX.findAll(content).map { it.groupValues[1] }.distinct().toList()

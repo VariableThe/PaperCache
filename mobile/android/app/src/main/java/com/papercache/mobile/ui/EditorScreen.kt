@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 fun EditorScreen(vm: NoteViewModel, onBack: () -> Unit) {
     val content by vm.editorContent.collectAsState()
     val path by vm.editorPath.collectAsState()
-    val tags by vm.editorTags.collectAsState()
     val status by vm.saveStatus.collectAsState()
     var showRename by remember { mutableStateOf(false) }
 
@@ -65,16 +64,6 @@ fun EditorScreen(vm: NoteViewModel, onBack: () -> Unit) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-            )
-            OutlinedTextField(
-                value = tags,
-                onValueChange = vm::onTagsChange,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                label = { Text("Tags (comma-separated)") },
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium,
             )
             OutlinedTextField(
                 value = content,
