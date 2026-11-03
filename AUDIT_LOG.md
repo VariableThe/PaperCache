@@ -2,6 +2,18 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-03 (Android: match desktop "Paper Light" aesthetic)
+**Change:** style(android): apply desktop PaperCache colors + JetBrains Mono to the Android app
+
+**Details/Why:**
+1. **Palette**: Replaced the blue Material default with the desktop "Paper Light" palette — purple accent `#aa3bff`, paper-white background `#fdfdfd`, near-black text `#2c2c2c`, muted `#6b6375`, border `#e5e4e7` — in `ui/theme/Theme.kt`.
+2. **Font**: Bundled JetBrains Mono (regular/medium/bold) under `res/font/` and set it as the app typography, matching the desktop's monospace editor.
+3. **Editor**: Made the note body a borderless, paper-background text field (transparent outline) with the monospace body style, matching the desktop's CodeMirror look.
+
+**Files changed:** `mobile/android/app/src/main/java/com/papercache/mobile/ui/theme/Theme.kt`, `mobile/android/app/src/main/java/com/papercache/mobile/ui/EditorScreen.kt`, `mobile/android/app/src/main/res/font/*.ttf` [NEW], `AUDIT_LOG.md`.
+
+---
+
 ## 2026-11-02 (Desktop sync command wiring)
 **Change:** feat(sync): expose the sync engine to the desktop app via Tauri commands
 
