@@ -68,4 +68,35 @@ class AutosaveTest {
         assertEquals(listOf("n1" to "v1", "n1" to "v2"), saved)
         assertFalse(autosave.isDirty())
     }
+
+    @Test
+    fun keepsPendingEditsPerNoteRatherThanASingleSlot() = runTest {
+        val saved = mutableListOf<Pair<String, String>>()
+        val autosave = Autosave(this, 500L) { id, content -> saved.add(id to content) }
+
+        autosave.schedule("a", "a1")
+        autosave.flush() // a1 in flight
+        autosave.schedule("a", "a2") // pending a2
+        autosave.schedule("b", "b1") // pending b1 (must not displace a2)
+        advanceUntilIdle()
+
+        assertTrue(saved.contains("a" to "a2"))
+        assertTrue(saved.contains("b" to "b1"))
+    }
+
+    @Test
+    fun preservesPendingContentWhenSaveFails() = runTest {
+        var calls = 0
+        val autosave = Autosave(this, 500L) { _, _ ->
+            calls++
+            throw RuntimeException("disk full")
+        }
+
+        autosave.schedule("a", "v1")
+        autosave.flush()
+        advanceUntilIdle()
+
+        assertEquals(1, calls)
+        assertTrue(autosave.isDirty())
+    }
 }

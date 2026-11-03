@@ -43,10 +43,12 @@ export const Editor = forwardRef<EditorRef>((_props, ref) => {
   }))
 
   const { schedule, flush } = useDebouncedSave<{ id: string; content: string }>(
-    ({ id, content }) => {
-      window.electronAPI.saveNote(id, content)
-      setIsEditorDirty(false)
-    },
+    ({ id, content }) =>
+      // Return the save promise so the hook awaits it; only mark the buffer
+      // clean once the save has actually succeeded (a rejection keeps it dirty).
+      window.electronAPI.saveNote(id, content).then(() => {
+        setIsEditorDirty(false)
+      }),
     SAVE_DEBOUNCE_MS
   )
 

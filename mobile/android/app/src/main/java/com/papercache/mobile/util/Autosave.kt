@@ -7,24 +7,24 @@ import kotlinx.coroutines.launch
 
 /**
  * Debounced save with a guaranteed flush on navigation away from the editor,
- * and serialized (one-at-a-time) async saves.
+ * serialized (one-at-a-time) async saves, and per-note pending state.
  *
- * Mirrors the desktop `useDebouncedSave` behavior: `schedule` restarts a timer
- * that eventually commits the latest pending (noteId, content); `flush` commits
- * the latest pending immediately on navigation. Saves run one at a time so an
- * in-flight save is never overtaken by (and never loses) a newer edit.
+ * Each note's latest content is keyed by `noteId`, so an edit to one note can
+ * never displace a pending edit to another note. Saves run one at a time so an
+ * in-flight save is never overtaken by (and never loses) a newer edit, and a
+ * failed save re-queues its content so the buffer stays dirty.
  */
 class Autosave(
     private val scope: CoroutineScope,
     private val delayMs: Long = 500L,
     private val onSave: suspend (String, String) -> Unit,
 ) {
-    private var pending: Pair<String, String>? = null
+    private val pending = mutableMapOf<String, String>()
     private var debounceJob: Job? = null
     private var saving = false
 
     fun schedule(noteId: String, content: String) {
-        pending = noteId to content
+        pending[noteId] = content
         debounceJob?.cancel()
         debounceJob = scope.launch {
             delay(delayMs)
@@ -38,21 +38,30 @@ class Autosave(
         kick()
     }
 
-    /** Run at most one save at a time, looping while a newer item is pending. */
+    /** Run at most one save at a time, looping over the per-note pending map. */
     private fun kick() {
         if (saving) return
-        val p = pending ?: return
-        pending = null
+        val entry = pending.entries.firstOrNull() ?: return
+        val noteId = entry.key
+        val content = entry.value
+        pending.remove(noteId)
         saving = true
         scope.launch {
-            try {
-                onSave(p.first, p.second)
-            } finally {
-                saving = false
+            val success = try {
+                onSave(noteId, content)
+                true
+            } catch (_: Exception) {
+                false
+            }
+            saving = false
+            if (success) {
                 kick()
+            } else if (!pending.containsKey(noteId)) {
+                // Preserve as dirty, unless a newer edit already superseded it.
+                pending[noteId] = content
             }
         }
     }
 
-    fun isDirty(): Boolean = pending != null || saving
+    fun isDirty(): Boolean = pending.isNotEmpty() || saving
 }

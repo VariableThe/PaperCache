@@ -177,6 +177,12 @@ impl SyncRoot {
     pub fn rename_note_file(&self, old_path: &str, new_path: &str) -> Result<(), String> {
         let src = self.safe_note_path(old_path)?;
         let dst = self.safe_note_path(new_path)?;
+        // Idempotent: if a previous attempt already moved the file (old gone,
+        // new present), treat the rename as already done rather than failing on
+        // retry — so a rename that succeeded before its record write can recover.
+        if !src.exists() && dst.exists() {
+            return Ok(());
+        }
         fs::rename(&src, &dst).map_err(|e| e.to_string())
     }
 
@@ -477,6 +483,37 @@ mod tests {
         push_note(&root, &r1, b"IGNORED").unwrap();
         assert_eq!(root.read_note("notes/b.md").unwrap(), b"# original");
         assert!(!root.notes_dir().join("notes/a.md").exists());
+    }
+
+    #[test]
+    fn rename_recovery_after_partial_failure_is_idempotent() {
+        let root = SyncRoot::new(tmp());
+        root.init_vault("v1", "2026-01-01T00:00:00.000Z").unwrap();
+        let r0 = upsert("n1", None, "notes/a.md", "content");
+        push_note(&root, &r0, b"content").unwrap();
+
+        let r1 = Revision::rename(
+            "n1",
+            Some(r0.rev_id()),
+            "notes/a.md",
+            "notes/b.md",
+            "dev",
+            "2026-01-01T00:00:01.000Z",
+        );
+
+        // Simulate the partial failure: the file rename succeeded but the record
+        // write did not (old path is already gone).
+        root.rename_note_file("notes/a.md", "notes/b.md").unwrap();
+
+        // Retry push_note: the rename must be idempotent (already done) and the
+        // record gets written, recovering cleanly without erroring on the missing
+        // old path.
+        push_note(&root, &r1, b"content").unwrap();
+
+        assert_eq!(root.read_note("notes/b.md").unwrap(), b"content");
+        assert!(!root.notes_dir().join("notes/a.md").exists());
+        let (_records, index) = pull(&root).unwrap();
+        assert_eq!(index.notes["n1"].path, "notes/b.md");
     }
 
     #[test]
