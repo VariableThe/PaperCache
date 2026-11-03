@@ -2,6 +2,7 @@ package com.papercache.mobile
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
@@ -37,6 +38,12 @@ class MainActivity : ComponentActivity() {
 private fun App(vm: NoteViewModel) {
     val editingId by vm.editingNoteId.collectAsState()
     var showTrash by remember { mutableStateOf(false) }
+
+    // System Back navigates editor -> list (flushing the save) and trash -> list,
+    // rather than exiting the app.
+    BackHandler(enabled = editingId != null || showTrash) {
+        if (editingId != null) vm.closeEditor() else showTrash = false
+    }
 
     when {
         editingId != null -> EditorScreen(vm, onBack = { vm.closeEditor() })

@@ -75,4 +75,43 @@ describe('useDebouncedSave', () => {
     expect(save).toHaveBeenCalledTimes(1)
     expect(save).toHaveBeenCalledWith({ id: 'a.md', content: '3' })
   })
+
+  it('serializes an in-flight async save so a newer edit is not lost', async () => {
+    let resolveFirst!: (v: unknown) => void
+    const saved: Array<{ id: string; content: string }> = []
+    const save = vi.fn((item: { id: string; content: string }) => {
+      if (saved.length === 0) {
+        saved.push(item)
+        return new Promise((resolve) => {
+          resolveFirst = resolve
+        })
+      }
+      saved.push(item)
+      return Promise.resolve()
+    })
+
+    const { result } = renderHook(() => useDebouncedSave(save))
+
+    // First edit fires an async save that stays in flight.
+    act(() => result.current.schedule({ id: 'a.md', content: 'v1' }))
+    act(() => vi.advanceTimersByTime(500))
+    expect(saved).toEqual([{ id: 'a.md', content: 'v1' }])
+
+    // A newer edit arrives while the first save is still in flight.
+    act(() => result.current.schedule({ id: 'a.md', content: 'v2' }))
+    act(() => vi.advanceTimersByTime(500))
+    // The second save must not be issued while the first is in flight.
+    expect(saved).toEqual([{ id: 'a.md', content: 'v1' }])
+    expect(result.current.isDirty()).toBe(true)
+
+    // Resolve the in-flight save; the newer edit must now be saved.
+    await act(async () => {
+      resolveFirst(undefined)
+      await Promise.resolve()
+    })
+    expect(saved).toEqual([
+      { id: 'a.md', content: 'v1' },
+      { id: 'a.md', content: 'v2' },
+    ])
+  })
 })

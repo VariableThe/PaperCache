@@ -305,14 +305,24 @@ pub fn push_note(root: &SyncRoot, rev: &Revision, content: &[u8]) -> Result<(), 
         }
     }
 
-    root.write_record(rev)?;
+    // Commit-point ordering: write content before the record for upsert/rename,
+    // so a crash never leaves a record whose content file is missing (at worst
+    // orphan content, which heals on the next idempotent push). For delete, the
+    // tombstone record is committed before the file is removed, so a crash leaves
+    // a tombstone-with-file (consistent) rather than a missing file with no tombstone.
     match rev.op {
         Op::Upsert => root.write_note(&rev.path, content)?,
         Op::Rename => {
             let old = rev.old_path.as_deref().ok_or("rename missing old_path")?;
             root.rename_note_file(old, &rev.path)?;
         }
-        Op::Delete => root.remove_note(&rev.path)?,
+        Op::Delete => {}
+    }
+
+    root.write_record(rev)?;
+
+    if rev.op == Op::Delete {
+        root.remove_note(&rev.path)?;
     }
 
     let records = root.read_records()?;

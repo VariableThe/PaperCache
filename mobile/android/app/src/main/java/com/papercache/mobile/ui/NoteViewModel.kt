@@ -52,11 +52,9 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
     val saveStatus: StateFlow<String> = _saveStatus.asStateFlow()
 
     val autosave = Autosave(viewModelScope) { id, content ->
-        viewModelScope.launch {
-            repo.get(id)?.let { existing ->
-                repo.upsert(existing.copy(content = content, mtime = System.currentTimeMillis()))
-                _saveStatus.value = "Saved"
-            }
+        repo.get(id)?.let { existing ->
+            repo.upsert(existing.copy(content = content, mtime = System.currentTimeMillis()))
+            _saveStatus.value = "Saved"
         }
     }
 

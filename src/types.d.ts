@@ -65,9 +65,9 @@ export interface ElectronAPI {
     content: string
     parentRev?: string | null
   }) => Promise<string>
-  syncPullNotes: (folderPath: string) => Promise<
-    Array<{ noteId: string; path: string; content: string; deleted: boolean }>
-  >
+  syncPullNotes: (
+    folderPath: string
+  ) => Promise<Array<{ noteId: string; path: string; content: string; deleted: boolean }>>
 }
 
 declare global {
