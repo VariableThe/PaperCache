@@ -280,6 +280,21 @@ class NoteRepositoryTest {
     }
 
     @Test
+    fun separateRepositoriesCannotCreateSamePath() = runTest {
+        val dao = FakeNoteDao()
+        val one = NoteRepository(dao)
+        val two = NoteRepository(dao)
+        dao.writeGate = kotlinx.coroutines.CompletableDeferred()
+        val a = async { one.createUntitled("a", "", 1) }
+        val b = async { two.createUntitled("b", "", 2) }
+        advanceUntilIdle()
+        dao.writeGate!!.complete(Unit)
+        advanceUntilIdle()
+        a.await(); b.await()
+        assertEquals(2, dao.snapshot().filter { !it.deleted }.map { it.path }.toSet().size)
+    }
+
+    @Test
     fun createAndRestoreToSamePathNeverDuplicateIt() = runTest {
         val dao = FakeNoteDao()
         val repo = NoteRepository(dao)

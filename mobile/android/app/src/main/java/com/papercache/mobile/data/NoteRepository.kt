@@ -26,7 +26,10 @@ class NoteRepository(private val dao: NoteDao) {
      * for path uniqueness; this does NOT claim cross-process protection
      * (Room is single-process by design).
      */
-    private val pathMutex = Mutex()
+    companion object {
+        // All repository instances in this process share the same path lock.
+        private val pathMutex = Mutex()
+    }
 
 
     val activeNotes: Flow<List<Note>> = dao.observeActiveNotes()
