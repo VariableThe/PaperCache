@@ -52,9 +52,17 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
     val saveStatus: StateFlow<String> = _saveStatus.asStateFlow()
 
     val autosave = Autosave(viewModelScope) { id, content ->
-        repo.get(id)?.let { existing ->
-            repo.upsert(existing.copy(content = content, mtime = System.currentTimeMillis()))
-            _saveStatus.value = "Saved"
+        try {
+            // A single conditional UPDATE: the content lands only while the
+            // row is still ACTIVE. A note trashed or hard-deleted while this
+            // save was queued/in flight is NOT resurrected — the save simply
+            // reports the discard. (A read-then-upsert would have a window in
+            // which a stale ACTIVE snapshot could overwrite the delete.)
+            val saved = repo.saveActiveContent(id, content, System.currentTimeMillis())
+            _saveStatus.value = if (saved) "Saved" else "Note deleted"
+        } catch (e: Exception) {
+            _saveStatus.value = "Save failed — retrying"
+            throw e
         }
     }
 
@@ -90,14 +98,11 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
 
     fun createNote() {
         val noteId = UUID.randomUUID().toString()
-        val note = Note(
-            noteId = noteId,
-            path = "Untitled.md",
-            content = "",
-            mtime = System.currentTimeMillis(),
-        )
         viewModelScope.launch {
-            repo.upsert(note)
+            // Collision-free default path, serialized against concurrent
+            // creates: never two live notes on the same path (they would be
+            // the same vault file once sync lands).
+            repo.createUntitled(noteId, "", System.currentTimeMillis())
             openNote(noteId)
         }
     }
@@ -106,29 +111,77 @@ class NoteViewModel(private val repo: NoteRepository) : ViewModel() {
         val id = _editingNoteId.value ?: return
         val safePath = if (newPath.endsWith(".md")) newPath else "$newPath.md"
         viewModelScope.launch {
-            repo.rename(id, safePath, System.currentTimeMillis())
-            _editorPath.value = safePath
+            // Refused when another live note already has this path; both
+            // notes (and any pending autosave) stay untouched and retryable.
+            val renamed = repo.renameIfFree(id, safePath, System.currentTimeMillis())
+            if (renamed) {
+                _editorPath.value = safePath
+                _saveStatus.value = ""
+            } else {
+                _saveStatus.value = "A note with that name already exists"
+            }
         }
     }
 
     fun trashCurrent() {
         val id = _editingNoteId.value ?: return
         viewModelScope.launch {
-            repo.softDelete(id, System.currentTimeMillis())
-            _editingNoteId.value = null
+            try {
+                repo.softDelete(id, System.currentTimeMillis())
+                // The trash SUCCEEDED: only now are the queued autosave
+                // bytes discarded deliberately (and a save still in flight
+                // is a conditional UPDATE that finds no active row — it
+                // cannot resurrect the note). Cancelling BEFORE the delete
+                // would discard the user's pending edit even when the
+                // delete fails.
+                autosave.cancel(id)
+                _editingNoteId.value = null
+                _editorContent.value = ""
+                _editorPath.value = ""
+                _saveStatus.value = ""
+            } catch (e: Exception) {
+                // The delete failed: keep the editor open and the pending
+                // edit queued — nothing is lost, the user can retry.
+                _saveStatus.value = "Move to trash failed"
+            }
         }
     }
 
     fun softDelete(noteId: String) {
-        viewModelScope.launch { repo.softDelete(noteId, System.currentTimeMillis()) }
+        viewModelScope.launch {
+            try {
+                repo.softDelete(noteId, System.currentTimeMillis())
+                autosave.cancel(noteId)
+            } catch (e: Exception) {
+                _saveStatus.value = "Move to trash failed"
+            }
+        }
     }
 
     fun restore(noteId: String) {
-        viewModelScope.launch { repo.restore(noteId, System.currentTimeMillis()) }
+        viewModelScope.launch {
+            // Refused when another active note now holds the trashed note's
+            // path (it may have been reused while the note was in the trash).
+            // The note then stays in the trash, recoverable once freed.
+            if (!repo.restore(noteId, System.currentTimeMillis())) {
+                _saveStatus.value = "A note with that name already exists"
+            }
+        }
     }
 
     fun hardDelete(noteId: String) {
-        viewModelScope.launch { repo.hardDelete(noteId) }
+        viewModelScope.launch {
+            try {
+                repo.hardDelete(noteId)
+                // The permanent delete SUCCEEDED: the queued autosave bytes
+                // go with it (and a save still in flight is a conditional
+                // UPDATE that finds no row — it cannot resurrect the note).
+                autosave.cancel(noteId)
+            } catch (e: Exception) {
+                // The delete failed: the note and any pending edit survive.
+                _saveStatus.value = "Delete failed"
+            }
+        }
     }
 
     companion object {
