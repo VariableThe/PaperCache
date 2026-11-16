@@ -16,7 +16,7 @@ class NoteRepository(private val dao: NoteDao) {
 
     /**
      * Serializes every multi-statement path decision: create's
-     * path-selection + INSERT, and rename's check + conditional UPDATE.
+     * path-selection + INSERT, and rename/restore conditional UPDATEs.
      * Rename is already atomic on its own (check inside the UPDATE), but it
      * must ALSO be serialized against a concurrent create, whose INSERT is a
      * plain REPLACE with no path condition — otherwise a rename could slip
@@ -45,7 +45,7 @@ class NoteRepository(private val dao: NoteDao) {
      * the note then stays in the trash, recoverable once the path is free.
      */
     suspend fun restore(noteId: String, mtime: Long): Boolean =
-        dao.restoreIfFree(noteId, mtime) > 0
+        pathMutex.withLock { dao.restoreIfFree(noteId, mtime) > 0 }
 
     suspend fun hardDelete(noteId: String) = dao.hardDelete(noteId)
 

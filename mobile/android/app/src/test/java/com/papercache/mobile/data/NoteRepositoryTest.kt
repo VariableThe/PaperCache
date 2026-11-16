@@ -280,6 +280,24 @@ class NoteRepositoryTest {
     }
 
     @Test
+    fun createAndRestoreToSamePathNeverDuplicateIt() = runTest {
+        val dao = FakeNoteDao()
+        val repo = NoteRepository(dao)
+        dao.upsert(note("old", "Untitled.md"))
+        repo.softDelete("old", 1)
+        dao.writeGate = kotlinx.coroutines.CompletableDeferred()
+        val created = async { repo.createUntitled("new", "", 2) }
+        advanceUntilIdle()
+        val restored = async { repo.restore("old", 3) }
+        advanceUntilIdle()
+        dao.writeGate!!.complete(Unit)
+        advanceUntilIdle()
+        created.await()
+        restored.await()
+        assertEquals(1, dao.snapshot().count { !it.deleted && it.path == "Untitled.md" })
+    }
+
+    @Test
     fun restoringATrashedNoteRefusesWhenAnotherActiveNoteNowHoldsItsPath() = runTest {
         val dao = FakeNoteDao()
         val repo = NoteRepository(dao)
