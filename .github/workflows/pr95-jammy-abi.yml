@@ -1,0 +1,105 @@
+name: PaperCache PR95 public baseline Ubuntu 22.04 ABI QA
+on:
+  push:
+    branches: ['qa/pr95-jammy-abi-20261121']
+permissions:
+  contents: read
+jobs:
+  ubuntu-abi:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    env:
+      HUSKY: '0'
+      RUSTUP_TOOLCHAIN: '1.100.0'
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Verify Jammy and prepare the runner
+        run: |
+          set -euo pipefail
+          . /etc/os-release
+          test "$ID:$VERSION_ID" = ubuntu:22.04
+          test "$(getconf GNU_LIBC_VERSION)" = 'glibc 2.35'
+          test "$(dpkg --print-architecture)" = amd64
+          printf 'Ubuntu %s, %s, %s\n' "$VERSION_ID" "$(getconf GNU_LIBC_VERSION)" "$(uname -m)"
+          node --version
+          rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal --no-self-update
+          rustc --version
+          cargo --version
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            binutils build-essential libwebkit2gtk-4.1-dev libssl-dev libgtk-3-dev \
+            libayatana-appindicator3-dev librsvg2-dev
+          pkg-config --modversion webkit2gtk-4.1 gtk+-3.0 openssl ayatana-appindicator3-0.1 librsvg-2.0
+      - name: Install locked build dependencies
+        run: |
+          npm ci
+          cargo fetch --manifest-path src-tauri/Cargo.toml --locked
+      - name: Build an unsigned Debian package on this runner only
+        env:
+          CARGO_NET_OFFLINE: 'true'
+        run: |
+          unset TAURI_SIGNING_PRIVATE_KEY TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+          ./node_modules/.bin/tauri build --bundles deb --no-sign --ci \
+            --config '{"bundle":{"createUpdaterArtifacts":false}}' -- --locked --offline
+      - name: Check packaged ELF symbol requirements without executing the app
+        run: |
+          set -euo pipefail
+          stage=$(mktemp -d "$RUNNER_TEMP/papercache-abi.XXXXXX")
+          trap 'rm -rf -- "$stage"' EXIT
+          shopt -s nullglob
+          packages=(src-tauri/target/release/bundle/deb/*.deb)
+          test "${#packages[@]}" -eq 1
+          package="${packages[0]}"
+          test "$(dpkg-deb --field "$package" Architecture)" = amd64
+          sha256sum "$package"
+          dpkg-deb --field "$package" Package Version Architecture Depends
+          apt-get --simulate install "./$package"
+          dpkg-deb --extract "$package" "$stage/root"
+          python3 - "$stage/root" <<'PY'
+          import re
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          root = Path(sys.argv[1])
+          floor = (2, 35)
+          seen = {}
+          for path in sorted(root.rglob("*")):
+              if path.is_symlink() or not path.is_file():
+                  continue
+              with path.open("rb") as stream:
+                  if stream.read(4) != b"\x7fELF":
+                      continue
+              versions = subprocess.check_output(
+                  ["readelf", "--wide", "--version-info", str(path)], text=True
+              ).partition("Version needs section")[2]
+              needed = set(re.findall(r"\bName:\s+(GLIBC_[^\s]+)", versions))
+              for name in needed:
+                  match = re.fullmatch(r"GLIBC_(\d+(?:\.\d+)+)", name)
+                  if match is None:
+                      raise SystemExit(f"{path.relative_to(root)} requires unrecognized {name}")
+                  version = tuple(map(int, match[1].split(".")))
+                  while len(version) > 2 and version[-1] == 0:
+                      version = version[:-1]
+                  if version > floor:
+                      raise SystemExit(f"{path.relative_to(root)} requires {name} > GLIBC_2.35")
+              rel = str(path.relative_to(root))
+              seen[rel] = needed
+              print(f"{rel}: {', '.join(sorted(needed)) or 'no GLIBC version needs'}")
+          if not seen.get("usr/bin/papercache"):
+              raise SystemExit("Missing packaged PaperCache executable or its GLIBC version needs")
+          print(f"Ubuntu 22.04 ABI check passed for {len(seen)} packaged ELF file(s)")
+          PY
+      - name: Web tests and checks
+        run: |
+          ./node_modules/.bin/tsc -b
+          npm run lint
+          npm run format:check
+          npm test
+      - name: Native library tests using local fixtures
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib --locked --offline
