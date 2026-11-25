@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Keep keyboard note search usable when results change, and keep note actions attached to the note whose menu was opened.
 
 ## [v0.5.9] - 2026-07-01
 
