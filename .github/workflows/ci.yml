@@ -22,6 +22,9 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run test
+      - name: Test release planning offline
+        if: startsWith(matrix.os, 'ubuntu')
+        run: node --test scripts/release-plan.test.mjs
       - name: Check version bump and new features note
         if: startsWith(matrix.os, 'ubuntu') && github.event_name == 'pull_request'
         run: |
