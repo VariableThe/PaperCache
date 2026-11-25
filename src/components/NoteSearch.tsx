@@ -20,6 +20,7 @@ export function NoteSearch() {
   const setActionMenuIndex = useAppStore((state) => state.setActionMenuIndex)
   const isHyprland = useAppStore((state) => state.isHyprland)
 
+  const [actionNoteId, setActionNoteId] = useState<string | null>(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [tagActionMenuIndex, setTagActionMenuIndex] = useState(0)
   const [tagMenuPos, setTagMenuPos] = useState({ x: 0, y: 0 })
@@ -47,6 +48,27 @@ export function NoteSearch() {
       getNoteTitle(n).toLowerCase().includes(noteSearchQuery.toLowerCase())
   )
 
+  const selectedIndex =
+    filteredNotes.length === 0
+      ? -1
+      : Math.min(Math.max(searchSelectedIndex, 0), filteredNotes.length - 1)
+  const selectedNote = filteredNotes[selectedIndex]
+  // The results can move or disappear while a menu is open.
+  const actionNote = showNoteActionMenu
+    ? filteredNotes.find((n) => n.id === actionNoteId)
+    : undefined
+
+  function openNoteActionMenu(noteId: string) {
+    setActionNoteId(noteId)
+    setShowNoteActionMenu(true)
+    setActionMenuIndex(0)
+  }
+
+  function closeNoteActionMenu() {
+    setActionNoteId(null)
+    setShowNoteActionMenu(false)
+  }
+
   const allTags = new Set<string>()
   notes.forEach((n) => {
     getNoteTags(n).forEach((m) => allTags.add(m.toLowerCase()))
@@ -58,7 +80,7 @@ export function NoteSearch() {
       className="note-search-overlay"
       onClick={() => {
         setShowNoteSearch(false)
-        setShowNoteActionMenu(false)
+        closeNoteActionMenu()
       }}
       onKeyDown={(e) => e.stopPropagation()}
     >
@@ -127,6 +149,11 @@ export function NoteSearch() {
           }
 
           if (showNoteActionMenu) {
+            if (!actionNote) {
+              if (e.key === 'Enter') e.preventDefault()
+              closeNoteActionMenu()
+              return
+            }
             if (e.key === 'ArrowDown') {
               e.preventDefault()
               setActionMenuIndex((prev) => Math.min(prev + 1, 1))
@@ -135,12 +162,11 @@ export function NoteSearch() {
               setActionMenuIndex((prev) => Math.max(prev - 1, 0))
             } else if (e.key === 'Enter') {
               e.preventDefault()
-              const selNote = filteredNotes[searchSelectedIndex]
-              if (!selNote) return
+              const selNote = actionNote
               if (actionMenuIndex === 0) {
                 if (selNote.id.startsWith('commands/')) {
                   alert('Files in the commands folder cannot be deleted.')
-                  setShowNoteActionMenu(false)
+                  closeNoteActionMenu()
                   return
                 }
                 const doDelete = async () => {
@@ -161,7 +187,7 @@ export function NoteSearch() {
                             : currentNoteIndex
                         setCurrentNoteIndex(newIdx)
                         setShowNoteSearch(false)
-                        setShowNoteActionMenu(false)
+                        closeNoteActionMenu()
                       }
                     })
                   }
@@ -175,39 +201,36 @@ export function NoteSearch() {
                 a.download = selNote.id.split('/').pop() || selNote.id
                 a.click()
                 URL.revokeObjectURL(url)
-                setShowNoteActionMenu(false)
+                closeNoteActionMenu()
               }
             } else if (e.key === 'Escape') {
               e.preventDefault()
-              setShowNoteActionMenu(false)
+              closeNoteActionMenu()
             } else if (e.key === 'k' && (isHyprland ? e.altKey : e.metaKey || e.ctrlKey)) {
               e.preventDefault()
-              setShowNoteActionMenu(false)
+              closeNoteActionMenu()
             }
             return
           }
 
           if (e.key === 'ArrowDown') {
             e.preventDefault()
-            setSearchSelectedIndex((prev) => Math.min(prev + 1, filteredNotes.length - 1))
+            if (selectedNote) {
+              setSearchSelectedIndex(Math.min(selectedIndex + 1, filteredNotes.length - 1))
+            }
           } else if (e.key === 'ArrowUp') {
             e.preventDefault()
-            setSearchSelectedIndex((prev) => Math.max(prev - 1, 0))
+            if (selectedNote) setSearchSelectedIndex(Math.max(selectedIndex - 1, 0))
           } else if (e.key === 'Enter') {
             e.preventDefault()
-            if (showNoteActionMenu) return
-            if (filteredNotes.length > 0) {
-              const selNote = filteredNotes[searchSelectedIndex]!
-              const idx = notes.findIndex((note) => note.id === selNote.id)
+            if (selectedNote) {
+              const idx = notes.findIndex((note) => note.id === selectedNote.id)
               if (idx !== -1) setCurrentNoteIndex(idx)
               setShowNoteSearch(false)
             }
           } else if (e.key === 'k' && (isHyprland ? e.altKey : e.metaKey || e.ctrlKey)) {
             e.preventDefault()
-            if (filteredNotes.length > 0) {
-              setShowNoteActionMenu(true)
-              setActionMenuIndex(0)
-            }
+            if (selectedNote) openNoteActionMenu(selectedNote.id)
           } else if (e.key === 'Escape') {
             e.preventDefault()
             setShowNoteSearch(false)
@@ -332,7 +355,7 @@ export function NoteSearch() {
           onChange={(e) => {
             setNoteSearchQuery(e.target.value)
             setSearchSelectedIndex(0)
-            setShowNoteActionMenu(false)
+            closeNoteActionMenu()
           }}
         />
         {tagArray.length > 0 && (
@@ -357,6 +380,7 @@ export function NoteSearch() {
                   setNoteSearchQuery(newQ)
                   setSearchSelectedIndex(0)
                   setActiveTag(null)
+                  closeNoteActionMenu()
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault()
@@ -364,7 +388,7 @@ export function NoteSearch() {
                   setActiveTag(tag)
                   setTagActionMenuIndex(0)
                   setTagMenuPos({ x: e.clientX, y: e.clientY })
-                  setShowNoteActionMenu(false)
+                  closeNoteActionMenu()
                 }}
               >
                 {tag}
@@ -377,22 +401,25 @@ export function NoteSearch() {
             const title = getNoteTitle(n)
             const pathParts = n.id.replace(/\.md$/, '').split('/')
             pathParts.pop()
-            const isSelected = index === searchSelectedIndex
+            const isMenuTarget = actionNote?.id === n.id
+            const isSelected = actionNote ? isMenuTarget : index === selectedIndex
             return (
               <div
                 key={n.id}
                 className={`note-search-item ${isSelected ? 'selected' : ''}`}
-                onMouseEnter={() => setSearchSelectedIndex(index)}
+                onMouseEnter={() => {
+                  if (!actionNote) setSearchSelectedIndex(index)
+                }}
                 onClick={() => {
                   const idx = notes.findIndex((note) => note.id === n.id)
                   if (idx !== -1) setCurrentNoteIndex(idx)
                   setShowNoteSearch(false)
+                  closeNoteActionMenu()
                 }}
                 onContextMenu={(e) => {
                   e.preventDefault()
                   setSearchSelectedIndex(index)
-                  setShowNoteActionMenu(true)
-                  setActionMenuIndex(0)
+                  openNoteActionMenu(n.id)
                 }}
               >
                 <div className="ns-left">
@@ -413,7 +440,7 @@ export function NoteSearch() {
                 </div>
                 <span className="ns-date">{new Date(n.mtime).toLocaleDateString()}</span>
 
-                {isSelected && showNoteActionMenu && (
+                {isMenuTarget && (
                   <div className="note-action-menu" onClick={(e) => e.stopPropagation()}>
                     <button
                       className={actionMenuIndex === 0 ? 'focused' : ''}
@@ -421,7 +448,7 @@ export function NoteSearch() {
                         e.stopPropagation()
                         if (n.id.startsWith('commands/')) {
                           alert('Files in the commands folder cannot be deleted.')
-                          setShowNoteActionMenu(false)
+                          closeNoteActionMenu()
                           return
                         }
                         const doDelete = async () => {
@@ -442,7 +469,7 @@ export function NoteSearch() {
                                     : currentNoteIndex
                                 setCurrentNoteIndex(newIdx)
                                 setShowNoteSearch(false)
-                                setShowNoteActionMenu(false)
+                                closeNoteActionMenu()
                               }
                             })
                           }
@@ -463,7 +490,7 @@ export function NoteSearch() {
                         a.download = n.id.split('/').pop() || n.id
                         a.click()
                         URL.revokeObjectURL(url)
-                        setShowNoteActionMenu(false)
+                        closeNoteActionMenu()
                       }}
                     >
                       Export

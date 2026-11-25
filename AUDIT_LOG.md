@@ -2,6 +2,15 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-25 (Stable note search selection)
+**Change:** Keep the highlighted result valid when the list shrinks or is empty. Bind the action menu to the chosen note ID so a list refresh cannot redirect the action.
+
+**Details/Why:** Enter previously used a stale index after result updates. Action menus now keep their target across reordering, and a disappeared target cannot trigger an action on another note. Component tests cover keyboard navigation and action-menu behavior.
+
+**Files changed:** `src/components/NoteSearch.tsx`, `src/components/NoteSearch.test.tsx`, `CHANGELOG.md`, `AUDIT_LOG.md`.
+
+---
+
 ## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
 **Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
 
