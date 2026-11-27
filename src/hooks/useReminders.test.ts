@@ -1,3 +1,4 @@
+import { listen } from '@tauri-apps/api/event'
 import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { useReminders } from './useReminders'
@@ -26,7 +27,7 @@ describe('useReminders', () => {
 
     localStorage.clear()
     vi.clearAllMocks()
-    useAppStore.setState({ notes: [] })
+    useAppStore.setState({ notes: [], toasts: [] })
   })
 
   afterEach(() => {
@@ -129,5 +130,95 @@ describe('useReminders', () => {
     const { unmount } = renderHook(() => useReminders())
     unmount()
     expect(cancelRemindersMock).toHaveBeenCalled()
+  })
+
+  function setReminderFixture() {
+    vi.setSystemTime(new Date(2030, 0, 2, 10))
+    const first = { id: 'morning.md', content: '/task Proofread @ 2030-01-02 11:00', mtime: 0 }
+    const second = { id: 'later.md', content: '/task Mail form @ 2030-01-02 12:00', mtime: 0 }
+    const firstKey = `morning.md-${new Date(2030, 0, 2, 11).getTime()}-Proofread`
+    const secondKey = `later.md-${new Date(2030, 0, 2, 12).getTime()}-Mail form`
+    useAppStore.setState({ notes: [first] })
+
+    let fire: ((event: { payload: string }) => void) | undefined
+    vi.mocked(listen).mockImplementation((_event, callback) => {
+      fire = callback as (event: { payload: string }) => void
+      return Promise.resolve(() => {})
+    })
+    return { first, second, firstKey, secondKey, fire: (key: string) => fire?.({ payload: key }) }
+  }
+
+  it.each(['{not JSON', '{"unrecognized":1}', 'null'])(
+    'still schedules and shows a reminder when the local cache is %s',
+    (stored) => {
+      const { firstKey, fire } = setReminderFixture()
+      localStorage.setItem(SETTINGS_KEYS.NOTIFIED_REMINDERS, stored)
+
+      renderHook(() => useReminders())
+      expect(scheduleRemindersMock).toHaveBeenLastCalledWith([
+        expect.objectContaining({ key: firstKey }),
+      ])
+
+      act(() => fire(firstKey))
+      expect(useAppStore.getState().toasts).toEqual([
+        expect.objectContaining({ message: '🔔 Reminder: Proofread' }),
+      ])
+      expect(localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS)).toBe(stored)
+    }
+  )
+
+  it('schedules reminders when storage reads are unavailable', () => {
+    const { firstKey } = setReminderFixture()
+    const read = vi.spyOn(localStorage, 'getItem').mockImplementation(() => {
+      throw new Error('Storage access denied')
+    })
+    try {
+      renderHook(() => useReminders())
+      expect(scheduleRemindersMock).toHaveBeenLastCalledWith([
+        expect.objectContaining({ key: firstKey }),
+      ])
+    } finally {
+      read.mockRestore()
+    }
+  })
+
+  it('shows a reminder once and avoids rescheduling it even when cache writes fail', () => {
+    const { first, second, firstKey, secondKey, fire } = setReminderFixture()
+    const write = vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
+      throw new Error('Storage quota exceeded')
+    })
+    try {
+      renderHook(() => useReminders())
+      act(() => {
+        fire(firstKey)
+        fire(firstKey)
+        useAppStore.setState({ notes: [first, second] })
+      })
+      expect(useAppStore.getState().toasts).toEqual([
+        expect.objectContaining({ message: '🔔 Reminder: Proofread' }),
+      ])
+      expect(scheduleRemindersMock).toHaveBeenLastCalledWith([
+        expect.objectContaining({ key: secondKey }),
+      ])
+    } finally {
+      write.mockRestore()
+    }
+  })
+
+  it('honors existing notified keys and preserves them when recording a new one', () => {
+    const { first, second, firstKey, secondKey, fire } = setReminderFixture()
+    localStorage.setItem(SETTINGS_KEYS.NOTIFIED_REMINDERS, JSON.stringify([firstKey]))
+    useAppStore.setState({ notes: [first, second] })
+
+    renderHook(() => useReminders())
+    expect(scheduleRemindersMock).toHaveBeenLastCalledWith([
+      expect.objectContaining({ key: secondKey }),
+    ])
+
+    act(() => fire(secondKey))
+    expect(JSON.parse(localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS) ?? '[]')).toEqual([
+      firstKey,
+      secondKey,
+    ])
   })
 })

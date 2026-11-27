@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore, type Note } from '../store/useAppStore'
 import { SETTINGS_KEYS } from '../lib/settingsKeys'
@@ -26,9 +26,21 @@ function parseReminders(content: string, noteId: string): ReminderPayload[] {
   return reminders
 }
 
-function collectFutureReminders(notes: Note[]): ReminderPayload[] {
-  const notifiedStr = localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS) || '[]'
-  const notified = new Set<string>(JSON.parse(notifiedStr))
+// This is a cache, not the source of reminders. An unreadable value should
+// neither stop scheduling nor be overwritten with a guessed interpretation.
+function readNotifiedKeys(): string[] | undefined {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS)
+    if (raw === null) return []
+    const stored: unknown = JSON.parse(raw)
+    if (!Array.isArray(stored) || !stored.every((key) => typeof key === 'string')) return undefined
+    return stored
+  } catch {
+    return undefined
+  }
+}
+
+function collectFutureReminders(notes: Note[], notified: ReadonlySet<string>): ReminderPayload[] {
   const now = Date.now()
 
   return notes
@@ -38,10 +50,13 @@ function collectFutureReminders(notes: Note[]): ReminderPayload[] {
 
 export function useReminders() {
   const notes = useAppStore((state) => state.notes)
+  const notifiedThisSession = useRef(new Set<string>())
 
   useEffect(() => {
     const token = ++scheduleToken
-    const pending = collectFutureReminders(notes)
+    const notified = notifiedThisSession.current
+    readNotifiedKeys()?.forEach((key) => notified.add(key))
+    const pending = collectFutureReminders(notes, notified)
     if (token !== scheduleToken) return
 
     window.electronAPI
@@ -56,11 +71,22 @@ export function useReminders() {
     let disposed = false
 
     listen<string>('reminder-fired', (event) => {
+      if (disposed) return
+
       const key = event.payload
-      const notifiedStr = localStorage.getItem(SETTINGS_KEYS.NOTIFIED_REMINDERS) || '[]'
-      const notified = new Set<string>(JSON.parse(notifiedStr))
+      const saved = readNotifiedKeys()
+      const notified = notifiedThisSession.current
+      saved?.forEach((stored) => notified.add(stored))
+      if (notified.has(key)) return
       notified.add(key)
-      localStorage.setItem(SETTINGS_KEYS.NOTIFIED_REMINDERS, JSON.stringify(Array.from(notified)))
+      if (saved !== undefined) {
+        try {
+          localStorage.setItem(SETTINGS_KEYS.NOTIFIED_REMINDERS, JSON.stringify([...notified]))
+        } catch {
+          // Permission or quota failure must not suppress the reminder toast.
+          // The in-memory set still prevents repeats until the app is closed.
+        }
+      }
 
       const currentNotes = useAppStore.getState().notes
       const allReminders = currentNotes.flatMap((n) => parseReminders(n.content, n.id))
