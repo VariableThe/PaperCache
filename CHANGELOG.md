@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dynamic Typography in Timers**: Ensure the Timers menu respects custom font family selections made in App Settings.
 
 ### Fixed
+- **Desktop reminders:** Reminders still schedule and appear when the local reminder cache is unreadable or cannot be written.
 - **Linux Compatibility (`glibc` version mismatch)**: Pinned GitHub Actions Linux runner to `ubuntu-22.04` across CI and release workflows instead of `ubuntu-latest` (Ubuntu 24.04). This ensures built Linux binaries and AppImages link against `glibc 2.35` so they can run out-of-the-box on Ubuntu 22.04 LTS, Debian 12, and other distributions without throwing `version glibc 2.38 not found` errors.
 
 

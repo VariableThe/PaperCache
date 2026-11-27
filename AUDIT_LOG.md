@@ -2,6 +2,10 @@
 
 This log tracks all significant changes, updates, and versions in the PaperCache project.
 
+## 2026-11-27 (Desktop: resilient reminder cache)
+- A corrupt or inaccessible notification cache no longer stops desktop reminder scheduling or in-app notices. The current renderer remembers delivered keys if the cache cannot be written; unknown stored data is left untouched.
+- Existing reminder parsing, Tauri scheduling, and on-disk note content are unchanged. Added synthetic cache-failure regressions at the renderer hook entry point.
+
 ## 2026-07-01 (v0.5.9 Release: Image Support & UI Consistency)
 **Change:** feat(release): bump version to 0.5.9; implement image paste support and markdown image widget; align background blur and font typography across modals and timers; extract audio recording features to external project
 
